@@ -359,8 +359,7 @@ class BaseTabLayout
 		return l;
 	}
 
-	private void resizeColumns(final int oldWidth, final int newWidth,
-		final int startColumn)
+	private void resizeColumns(final int oldWidth, final int newWidth, final int startColumn)
 	{
 		if (oldWidth == newWidth)
 			return;
@@ -370,8 +369,7 @@ class BaseTabLayout
 		// because of column width rounding we have to handle
 		// last column as special case to minimize flickering of horizontal scroll bar
 		for (int i = startColumn; i < cols.length - 1; ++i) {
-			final int width = Math
-				.round((float) newWidth * cols[i].getWidth() / oldWidth);
+			final int width = Math.round((float) newWidth * cols[i].getWidth() / oldWidth);
 			used += width;
 			cols[i].setData("resized", "");
 			cols[i].setWidth(width);
