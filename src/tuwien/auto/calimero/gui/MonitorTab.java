@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006-2012 B. Malinowsky
+    Copyright (c) 2006-2013 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ class MonitorTab extends BaseTabLayout
 {
 	private NetworkMonitor m;
 
-	MonitorTab(final CTabFolder tf, final String name, final String host,
+	MonitorTab(final CTabFolder tf, final String name, final String localhost, final String host,
 		final String port, final boolean useNAT)
 	{
 		super(tf, "Monitor for " + name, "Open monitor"
@@ -66,16 +66,17 @@ class MonitorTab extends BaseTabLayout
 		asdu.setWidth(100);
 		enableColumnAdjusting();
 
-		startMonitor(host, port, useNAT);
+		startMonitor(localhost, host, port, useNAT);
 	}
 
-	private void startMonitor(final String host, final String port, final boolean useNAT)
+	private void startMonitor(final String localhost, final String host, final String port,
+		final boolean useNAT)
 	{
 		final java.util.List<String> args = new ArrayList<String>();
 		if (!host.isEmpty()) {
-			if (!Main.getLocalHost().isEmpty()) {
+			if (!localhost.isEmpty()) {
 				args.add("-localhost");
-				args.add(Main.getLocalHost());
+				args.add(localhost);
 			}
 			args.add(host);
 			if (useNAT)

@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006-2012 B. Malinowsky
+    Copyright (c) 2006-2013 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ import tuwien.auto.calimero.tools.IPConfig;
  */
 class IPConfigTab extends BaseTabLayout
 {
-	IPConfigTab(final CTabFolder tf, final String name, final String host,
+	IPConfigTab(final CTabFolder tf, final String name, final String localhost, final String host,
 		final String port, final boolean useNAT, final String knxAddr)
 	{
 		super(tf, "KNXnet/IP configuration for " + name, "Query configuration from "
@@ -54,19 +54,19 @@ class IPConfigTab extends BaseTabLayout
 		value.setWidth(200);
 		enableColumnAdjusting();
 		
-		readConfig(host, port, useNAT, knxAddr);
+		readConfig(localhost, host, port, useNAT, knxAddr);
 	}
 
-	private void readConfig(final String host, final String port, final boolean useNAT,
-		final String knxAddr)
+	private void readConfig(final String localhost, final String host, final String port,
+		final boolean useNAT, final String knxAddr)
 	{
 		list.removeAll();
 		log.removeAll();
 		final List<String> args = new ArrayList<String>();
 		if (!host.isEmpty()) {
-			if (!Main.getLocalHost().isEmpty()) {
+			if (!localhost.isEmpty()) {
 				args.add("-localhost");
-				args.add(Main.getLocalHost());
+				args.add(localhost);
 			}
 			args.add(host);
 			if (knxAddr.isEmpty())

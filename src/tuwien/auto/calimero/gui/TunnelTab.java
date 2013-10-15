@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006-2012 B. Malinowsky
+    Copyright (c) 2006-2013 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -114,7 +114,7 @@ class TunnelTab extends BaseTabLayout
 	private Combo points;
 	private DatapointMap model = new DatapointMap();
 
-	TunnelTab(final CTabFolder tf, final String name, final String host,
+	TunnelTab(final CTabFolder tf, final String name, final String localhost, final String host,
 		final String port, final boolean useNAT, final boolean routing)
 	{
 		super(tf, (routing ? "Routing to " : "Tunnel to ") + name, "Connecting"
@@ -138,7 +138,7 @@ class TunnelTab extends BaseTabLayout
 		decoded.setWidth(100);
 		enableColumnAdjusting();
 
-		openTunnel(host, port, useNAT, routing);
+		openTunnel(localhost, host, port, useNAT, routing);
 	}
 
 	/* (non-Javadoc)
@@ -268,9 +268,9 @@ class TunnelTab extends BaseTabLayout
 		gc.dispose();
 		field.setLayoutData(new RowData(field.computeSize(width, height)));
 	}
-	
-	private void openTunnel(final String host, final String port, final boolean useNAT,
-		final boolean routing)
+
+	private void openTunnel(final String localhost, final String host, final String port,
+		final boolean useNAT, final boolean routing)
 	{
 		// setup tool argument array
 		final java.util.List<String> args = new ArrayList<String>();
@@ -278,9 +278,9 @@ class TunnelTab extends BaseTabLayout
 		// if no conditions fits, the tool returns with error
 		if (!host.isEmpty()) {
 			// setup for KNXnet/IP
-			if (!Main.getLocalHost().isEmpty()) {
+			if (!localhost.isEmpty()) {
 				args.add("-localhost");
-				args.add(Main.getLocalHost());
+				args.add(localhost);
 			}
 			args.add(host);
 			if (useNAT)

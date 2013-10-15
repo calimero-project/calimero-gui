@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006-2012 B. Malinowsky
+    Copyright (c) 2006-2013 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -41,8 +41,8 @@ import tuwien.auto.calimero.knxnetip.KNXnetIPConnection;
  */
 class ConnectDialog
 {
-	ConnectDialog(final CTabFolder tf, final String name, final String host,
-		final String port, final String mcast, final boolean useNAT)
+	ConnectDialog(final CTabFolder tf, final String name, final String host, final String port,
+		final String mcast, final boolean useNAT)
 	{
 		final Shell shell = new Shell(Main.shell, SWT.DIALOG_TRIM | SWT.RESIZE);
 		shell.setLayout(new GridLayout());
@@ -60,20 +60,10 @@ class ConnectDialog
 		final Composite c = new Composite(shell, SWT.NONE);
 		c.setLayout(new GridLayout(2, false));
 		c.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
-		final Label hostLabel = new Label(c, SWT.NONE);
-		hostLabel.setLayoutData(new GridData(SWT.LEFT, SWT.NONE, false, false));
-		hostLabel.setText("IP address or host name:");
-		if (serial)
-			hostLabel.setEnabled(false);
-
-		final Text hostData = new Text(c, SWT.BORDER);
-		hostData.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
-		if (serial)
-			hostData.setEnabled(false);
-		else {
-			hostData.setText(host);
-		}
 		
+		final Text localhostData = addHostInput(c, "Local host:", Main.getLocalHost(), serial);
+		final Text hostData = addHostInput(c, "IP address or host name:", host, serial);
+
 		final Label portLabel = new Label(c, SWT.NONE);
 		portLabel.setLayoutData(new GridData(SWT.LEFT, SWT.NONE, false, false));
 		portLabel.setText(confirm ? serial ? "Serial port ID:" : "UDP port:" : "Port or ID:");
@@ -147,6 +137,7 @@ class ConnectDialog
 			@Override
 			public void widgetSelected(final SelectionEvent e)
 			{
+				final String local = localhostData.getText();
 				final String h = hostData.getText();
 				String p = portData.getText();
 				if (h.isEmpty() && p.isEmpty())
@@ -158,13 +149,13 @@ class ConnectDialog
 				
 				final boolean natChecked = serial ? false : nat.getSelection();
 				if (monitor.getSelection())
-					new MonitorTab(tf, n, h, p, natChecked);
+					new MonitorTab(tf, n, local, h, p, natChecked);
 				else if (config.getSelection())
-					new IPConfigTab(tf, n, h, p, natChecked, knxAddr.getText());
+					new IPConfigTab(tf, n, local, h, p, natChecked, knxAddr.getText());
 				else if (tunnel.getSelection())
-					new TunnelTab(tf, n, h, p, natChecked, false);
+					new TunnelTab(tf, n, local, h, p, natChecked, false);
 				else if (routing.getSelection())
-					new TunnelTab(tf, n, h, p, natChecked, true);
+					new TunnelTab(tf, n, local, h, p, natChecked, true);
 				shell.dispose();
 			}
 		});
@@ -182,6 +173,7 @@ class ConnectDialog
 		});
 
 		shell.setDefaultButton(connect);
+		hostData.setFocus();
 		shell.pack();
 		final String currentHost = hostData.getText();
 		// calculate dialog size with a minimum text width for an IP numerical address
@@ -192,5 +184,22 @@ class ConnectDialog
 		shell.setMinimumSize(size);
 		shell.setSize(size);
 		shell.open();
+	}
+	
+	private Text addHostInput(final Composite c, final String description, final String host,
+		final boolean serial)
+	{
+		final Label label = new Label(c, SWT.NONE);
+		label.setLayoutData(new GridData(SWT.LEFT, SWT.NONE, false, false));
+		label.setText(description);
+		if (serial)
+			label.setEnabled(false);
+		final Text data = new Text(c, SWT.BORDER);
+		data.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
+		if (serial)
+			data.setEnabled(false);
+		else
+			data.setText(host);
+		return data;
 	}
 }
