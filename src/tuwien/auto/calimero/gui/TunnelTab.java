@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006-2013 B. Malinowsky
+    Copyright (c) 2006-2014 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -36,7 +36,9 @@
 
 package tuwien.auto.calimero.gui;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 
 import org.eclipse.swt.SWT;
@@ -60,7 +62,6 @@ import org.eclipse.swt.widgets.Sash;
 import org.eclipse.swt.widgets.TableColumn;
 
 import tuwien.auto.calimero.DataUnitBuilder;
-import tuwien.auto.calimero.DetachEvent;
 import tuwien.auto.calimero.GroupAddress;
 import tuwien.auto.calimero.datapoint.Datapoint;
 import tuwien.auto.calimero.datapoint.DatapointMap;
@@ -72,7 +73,6 @@ import tuwien.auto.calimero.exception.KNXFormatException;
 import tuwien.auto.calimero.exception.KNXIllegalArgumentException;
 import tuwien.auto.calimero.log.LogManager;
 import tuwien.auto.calimero.process.ProcessEvent;
-import tuwien.auto.calimero.process.ProcessListenerEx;
 import tuwien.auto.calimero.tools.ProcComm;
 import tuwien.auto.calimero.xml.KNXMLException;
 import tuwien.auto.calimero.xml.XMLFactory;
@@ -116,7 +116,33 @@ class TunnelTab extends BaseTabLayout
 				asyncAddLog(e.getMessage());
 			}
 		}
-		
+
+		@Override
+		protected void onGroupEvent(final ProcessEvent e)
+		{
+			final Datapoint dp = model.get(e.getDestination());
+			final String svc = e.getServiceCode() == 0x00 ? "read request"
+					: e.getServiceCode() == 0x40 ? "read response" : "write";
+			try {
+				final byte[] asdu = e.getASDU();
+				String value = "[empty]";
+				if (asdu.length > 0)
+					value = dp != null ? asString(asdu, dp.getMainNumber(), dp.getDPT()) : "n/a";
+					
+				final String now = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance()
+						.getTime());
+				final String[] item = new String[] { now, e.getSourceAddr().toString(),
+					e.getDestination().toString(), svc, DataUnitBuilder.toHex(asdu, " "), value };
+				asyncAddListItem(item, null, null);
+			}
+			catch (final KNXException e1) {
+				asyncAddLog("error: " + e1.getMessage());
+			}
+			catch (final KNXIllegalArgumentException e1) {
+				asyncAddLog("error: " + e1.getMessage());
+			}
+		}
+
 		@Override
 		protected void onCompletion(final Exception thrown, final boolean canceled)
 		{
@@ -138,6 +164,10 @@ class TunnelTab extends BaseTabLayout
 				+ (host.isEmpty() ? "" : " to " + host) + " on port " + port
 				+ (useNAT ? ", using NAT" : ""));
 		list.setLinesVisible(true);
+
+		final TableColumn time = new TableColumn(list, SWT.RIGHT);
+		time.setText("Time");
+		time.setWidth(35);
 		final TableColumn src = new TableColumn(list, SWT.LEFT);
 		src.setText("Source");
 		src.setWidth(50);
@@ -314,56 +344,12 @@ class TunnelTab extends BaseTabLayout
 			args.add("-s");
 			args.add(port);
 		}
-		// add dummy to satisfy constructor
-		args.add("read");
-		args.add("bool");
-		args.add("0/0/0");
+		args.add("monitor");
 		
 		list.removeAll();
 		log.removeAll();
 
-		final class Listener extends ProcessListenerEx
-		{
-			@Override
-			public void groupReadRequest(final ProcessEvent e)
-			{
-				add(model.get(e.getDestination()), "read request", e);
-			}
-
-			@Override
-			public void groupReadResponse(final ProcessEvent e)
-			{
-				add(model.get(e.getDestination()), "read response", e);
-			}
-
-			public void detached(final DetachEvent e)
-			{}
-
-			public void groupWrite(final ProcessEvent e)
-			{
-				add(model.get(e.getDestination()), "write", e);
-			}
-
-			private void add(final Datapoint dp, final String svc, final ProcessEvent e)
-			{
-				try {
-					final String[] item = new String[] { e.getSourceAddr().toString(),
-						e.getDestination().toString(), svc,
-						DataUnitBuilder.toHex(e.getASDU(), " "),
-						dp != null ? asString(e, dp.getMainNumber(), dp.getDPT()) : "n/a" };
-					asyncAddListItem(item, null, null);
-				}
-				catch (final KNXException e1) {
-					asyncAddLog("error: " + e1.getMessage());
-				}
-				catch (final KNXIllegalArgumentException e1) {
-					asyncAddLog("error: " + e1.getMessage());
-				}
-			}
-		}
-
-		// this thread is just used for connecting, it quits as soon
-		// communicator is running
+		// thread for connecting, it quits as soon communicator is running
 		new Thread()
 		{
 			@Override
@@ -371,7 +357,7 @@ class TunnelTab extends BaseTabLayout
 			{
 				try {
 					pc = new ProcCommWrapper(args.toArray(new String[args.size()]));
-					pc.start(new Listener());
+					pc.start(null);
 					Main.asyncExec(new Runnable()
 					{
 						public void run()
