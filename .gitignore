@@ -1,6 +1,15 @@
 *.class
+*.log
 
 # Package Files #
 *.jar
 *.war
 *.ear
+/.settings
+/.classpath
+
+/doc
+/target/
+
+# OS X
+.DS_Store
