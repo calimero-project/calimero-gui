@@ -55,10 +55,7 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
-import tuwien.auto.calimero.knxnetip.Discoverer;
 import tuwien.auto.calimero.knxnetip.servicetype.SearchResponse;
-import tuwien.auto.calimero.log.LogManager;
-import tuwien.auto.calimero.log.LogService;
 import tuwien.auto.calimero.tools.Discover;
 
 /**
@@ -140,8 +137,8 @@ class DiscoverTab extends BaseTabLayout
 			args.add("-nat");
 		list.removeAll();
 		log.removeAll();
-		final LogService logService = LogManager.getManager().getLogService(Discoverer.LOG_SERVICE);
-		logService.addWriter(logWriter);
+//		final LogService logService = LogManager.getManager().getLogService(Discoverer.LOG_SERVICE);
+//		logService.addWriter(logWriter);
 		try {
 			final Runnable r = new Discover(args.toArray(new String[0]))
 			{
@@ -197,7 +194,7 @@ class DiscoverTab extends BaseTabLayout
 					if (thrown != null)
 						asyncAddLog("error: " + thrown.getMessage());
 					asyncAddLog("search finished");
-					logService.removeWriter(logWriter);
+//					logService.removeWriter(logWriter);
 				}
 			};
 			new Thread(r).start();

@@ -62,9 +62,6 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
-import tuwien.auto.calimero.log.LogLevel;
-import tuwien.auto.calimero.log.LogWriter;
-
 /**
  * @author B. Malinowsky
  */
@@ -74,7 +71,6 @@ class BaseTabLayout
 	final Composite workArea;
 	final Table list;
 	final List log;
-	final LogWriter logWriter;
 
 	int listItemMargin = 2;
 
@@ -151,38 +147,38 @@ class BaseTabLayout
 		});
 		initTableBottom(splitted, sash);
 		log = createLogView(splitted, sash);
-		logWriter = new LogWriter()
-		{
-			@Override
-			public void close()
-			{}
-
-			@Override
-			public void flush()
-			{}
-
-			@Override
-			public void write(final String logService, final LogLevel level, final String msg)
-			{
-				write(logService, level, msg, null);
-			}
-
-			@Override
-			public void write(final String logService, final LogLevel level, final String msg,
-				final Throwable t)
-			{
-				String s = "[" + level.toString() + "] " + msg;
-				if (t != null && t.getMessage() != null)
-					s += " (" + t.getMessage() + ")";
-				asyncAddLog(s);
-				if (t != null) {
-					final StackTraceElement[] ste = t.getStackTrace();
-					asyncAddLog("Error trace:");
-					for (final StackTraceElement e : ste)
-						asyncAddLog("    " + e.toString());
-				}
-			}
-		};
+//		logWriter = new LogWriter()
+//		{
+//			@Override
+//			public void close()
+//			{}
+//
+//			@Override
+//			public void flush()
+//			{}
+//
+//			@Override
+//			public void write(final String logService, final LogLevel level, final String msg)
+//			{
+//				write(logService, level, msg, null);
+//			}
+//
+//			@Override
+//			public void write(final String logService, final LogLevel level, final String msg,
+//				final Throwable t)
+//			{
+//				String s = "[" + level.toString() + "] " + msg;
+//				if (t != null && t.getMessage() != null)
+//					s += " (" + t.getMessage() + ")";
+//				asyncAddLog(s);
+//				if (t != null) {
+//					final StackTraceElement[] ste = t.getStackTrace();
+//					asyncAddLog("Error trace:");
+//					for (final StackTraceElement e : ste)
+//						asyncAddLog("    " + e.toString());
+//				}
+//			}
+//		};
 		workArea.layout();
 	}
 

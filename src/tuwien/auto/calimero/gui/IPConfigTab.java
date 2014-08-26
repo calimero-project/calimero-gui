@@ -45,8 +45,6 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
 import tuwien.auto.calimero.exception.KNXIllegalArgumentException;
-import tuwien.auto.calimero.log.LogManager;
-import tuwien.auto.calimero.log.LogService;
 import tuwien.auto.calimero.tools.IPConfig;
 
 /**
@@ -105,14 +103,11 @@ class IPConfigTab extends BaseTabLayout
 			args.add(knxAddr);
 		}
 		
-		final LogService logService = LogManager.getManager().getLogService("tools");
-		logService.removeWriter(logWriter);
-		logService.addWriter(logWriter);
 		try {
 			final IPConfig config = new IPConfig(args.toArray(new String[0]))
 			{
 				@Override
-				protected void onConfigurationReceived(final List config)
+				protected void onConfigurationReceived(final List<String[]> config)
 				{
 					Main.asyncExec(new Runnable()
 					{
@@ -121,7 +116,7 @@ class IPConfigTab extends BaseTabLayout
 							if (list.isDisposed())
 								return;
 							list.setRedraw(false);
-							for (final String[] s : (List<String[]>) config) {
+							for (final String[] s : config) {
 								final TableItem i = new TableItem(list, SWT.NONE);
 								i.setText(s);
 							}

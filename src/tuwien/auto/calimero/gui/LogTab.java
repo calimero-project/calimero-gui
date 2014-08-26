@@ -43,8 +43,6 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Sash;
 
-import tuwien.auto.calimero.log.LogManager;
-
 /**
  * @author B. Malinowsky
  */
@@ -53,7 +51,7 @@ class LogTab extends BaseTabLayout
 	LogTab(final CTabFolder tf)
 	{
 		super(tf, "Logging", "Shows all current log output");
-		LogManager.getManager().addWriter("", logWriter);
+//		LogManager.getManager().addWriter("", logWriter);
 	}
 
 	/* (non-Javadoc)
@@ -75,6 +73,6 @@ class LogTab extends BaseTabLayout
 	@Override
 	protected void onDispose(final DisposeEvent e)
 	{
-		LogManager.getManager().removeWriter("", logWriter);
+//		LogManager.getManager().removeWriter("", logWriter);
 	}
 }

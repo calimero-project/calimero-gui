@@ -39,7 +39,6 @@ package tuwien.auto.calimero.gui;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -71,7 +70,6 @@ import tuwien.auto.calimero.dptxlator.TranslatorTypes.MainType;
 import tuwien.auto.calimero.exception.KNXException;
 import tuwien.auto.calimero.exception.KNXFormatException;
 import tuwien.auto.calimero.exception.KNXIllegalArgumentException;
-import tuwien.auto.calimero.log.LogManager;
 import tuwien.auto.calimero.process.ProcessEvent;
 import tuwien.auto.calimero.tools.ProcComm;
 import tuwien.auto.calimero.xml.KNXMLException;
@@ -85,10 +83,9 @@ class TunnelTab extends BaseTabLayout
 {
 	private final class ProcCommWrapper extends ProcComm
 	{
-		private ProcCommWrapper(final String[] args) throws KNXException
+		private ProcCommWrapper(final String[] args)
 		{
-			super(args, logWriter);
-			LogManager.getManager().addWriter("tools", logWriter);
+			super(args);
 		}
 
 		private void read(final Datapoint dp)
@@ -141,14 +138,6 @@ class TunnelTab extends BaseTabLayout
 			catch (final KNXIllegalArgumentException e1) {
 				asyncAddLog("error: " + e1.getMessage());
 			}
-		}
-
-		@Override
-		protected void onCompletion(final Exception thrown, final boolean canceled)
-		{
-			super.onCompletion(thrown, canceled);
-			// we might lose the last log output from ProcComm (i.e., not dispatched yet)
-			LogManager.getManager().removeWriter("tools", logWriter);
 		}
 	}
 
@@ -277,7 +266,7 @@ class TunnelTab extends BaseTabLayout
 					final MainType t = TranslatorTypes.getMainType(dp.getMainNumber());
 					if (t != null) {
 						if (t.getSubTypes().containsKey(dp.getDPT())) {
-							final DPT dpt = (DPT) t.getSubTypes().get(dp.getDPT());
+							final DPT dpt = t.getSubTypes().get(dp.getDPT());
 							value.add(dpt.getLowerValue());
 							value.add(dpt.getUpperValue());
 							unit.setText(dpt.getUnit());
@@ -397,7 +386,7 @@ class TunnelTab extends BaseTabLayout
 					+ ", line " + e.getLineNumber() + ", item " + e.getBadItem());
 		}
 		points.removeAll();
-		for (final Datapoint dp : (Collection<Datapoint>) model.getDatapoints())
+		for (final Datapoint dp : model.getDatapoints())
 			points.add(dp.getMainAddress().toString());
 	}
 }

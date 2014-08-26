@@ -165,7 +165,7 @@ public class Main
 			if (!display.readAndDispatch())
 				display.sleep();
 	}
-
+	
 	/**
 	 * The main entry routine of the GUI.
 	 * <p>

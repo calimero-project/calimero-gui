@@ -50,7 +50,6 @@ import tuwien.auto.calimero.exception.KNXException;
 import tuwien.auto.calimero.link.MonitorFrameEvent;
 import tuwien.auto.calimero.link.medium.RawFrame;
 import tuwien.auto.calimero.link.medium.RawFrameBase;
-import tuwien.auto.calimero.log.LogManager;
 import tuwien.auto.calimero.tools.NetworkMonitor;
 
 /**
@@ -113,7 +112,6 @@ class MonitorTab extends BaseTabLayout
 			Monitor(final String[] args)
 			{
 				super(args);
-				LogManager.getManager().addWriter("tools", logWriter);
 			}
 
 			
@@ -141,7 +139,6 @@ class MonitorTab extends BaseTabLayout
 				if (thrown != null)
 					asyncAddLog("error: " + thrown.getMessage());
 				asyncAddLog("network monitor closed " + (canceled ? "(canceled)" : ""));
-				LogManager.getManager().removeWriter("tools", logWriter);
 			}
 
 			/* (non-Javadoc)
