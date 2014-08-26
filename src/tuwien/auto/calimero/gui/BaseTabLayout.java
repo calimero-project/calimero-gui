@@ -36,6 +36,11 @@
 
 package tuwien.auto.calimero.gui;
 
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
@@ -67,6 +72,34 @@ import org.eclipse.swt.widgets.TableItem;
  */
 class BaseTabLayout
 {
+	private static class StreamRedirector extends PrintStream
+	{
+		public StreamRedirector(final OutputStream out)
+		{
+			super(out, true);
+		}
+
+		@Override
+		public void print(final String s)
+		{
+			for (final WeakReference<BaseTabLayout> ref : logSubscriber) {
+				final BaseTabLayout tab = ref.get();
+				if (tab != null)
+					tab.asyncAddLog(s);
+			}
+		}
+	}
+
+	static {
+		System.setProperty("org.slf4j.simpleLogger.logFile", "System.out");
+		System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "trace");
+		final PrintStream oldSystemOut = System.out;
+		final PrintStream redirector = new StreamRedirector(oldSystemOut);
+		System.setOut(redirector);
+	}
+
+	static java.util.List<WeakReference<BaseTabLayout>> logSubscriber = new ArrayList<>();
+
 	final CTabItem tab;
 	final Composite workArea;
 	final Table list;
@@ -81,7 +114,7 @@ class BaseTabLayout
 	{
 		this(tf, tabTitle, info, true);
 	}
-	
+
 	BaseTabLayout(final CTabFolder tf, final String tabTitle, final String info,
 		final boolean showClose)
 	{
@@ -179,6 +212,7 @@ class BaseTabLayout
 //				}
 //			}
 //		};
+		logSubscriber.add(new WeakReference<BaseTabLayout>(this));
 		workArea.layout();
 	}
 
@@ -190,7 +224,7 @@ class BaseTabLayout
 
 	/**
 	 * Override in subtypes.
-	 * 
+	 *
 	 * @param parent parent composite
 	 * @param sash sash delimiter on bottom of table
 	 */
@@ -199,7 +233,7 @@ class BaseTabLayout
 
 	/**
 	 * Override in subtypes.
-	 * 
+	 *
 	 * @param e dispose event
 	 */
 	protected void onDispose(final DisposeEvent e)
@@ -207,7 +241,7 @@ class BaseTabLayout
 
 	/**
 	 * Sets some textual information (help) into the empty list control.
-	 * 
+	 *
 	 * @param info info text to set
 	 */
 	protected final void setListBanner(final String info)
@@ -225,10 +259,10 @@ class BaseTabLayout
 	{
 		infoLabel.setText(info);
 	}
-	
+
 	/**
 	 * Override in subtypes.
-	 * 
+	 *
 	 * @param e table selection event
 	 */
 	protected void onListItemSelected(final SelectionEvent e)
@@ -236,7 +270,7 @@ class BaseTabLayout
 
 	/**
 	 * Adds a log string asynchronously to the log list.
-	 * 
+	 *
 	 * @param s log text
 	 */
 	protected final void asyncAddLog(final String s)
@@ -255,7 +289,7 @@ class BaseTabLayout
 
 	/**
 	 * Adds a list item asynchronously to the list.
-	 * 
+	 *
 	 * @param itemText list item text of each column
 	 * @param keys key entry of the item for each column, might be <code>null</code>
 	 * @param data data entry of the item for each column, might be <code>null</code> if
@@ -285,7 +319,7 @@ class BaseTabLayout
 				item.setData(keys[i], data[i]);
 		list.showItem(item);
 	}
-	
+
 	/**
 	 * Enables automatic list column adjusting for the main list.
 	 */
