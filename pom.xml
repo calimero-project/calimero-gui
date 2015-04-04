@@ -1,9 +1,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.github.calimero</groupId>
+	<parent>
+		<groupId>com.github.calimero</groupId>
+		<artifactId>calimero-parent</artifactId>
+		<version>2.2</version>
+	</parent>
 	<artifactId>calimero-gui</artifactId>
-	<version>2.2.0-SNAPSHOT</version>
 	<name>Calimero GUI</name>
 	<description>A simple graphical user interface for the Calimero tool collection</description>
 	<scm>
@@ -17,12 +20,6 @@
 			<url>LICENSE.txt</url>
 		</license>
 	</licenses>
-	<developers>
-		<developer>
-			<name>Boris Malinowsky</name>
-			<email>b.malinowsky@gmail.com</email>
-		</developer>
-	</developers>
 
 	<properties>
 		<swt.version>4.3</swt.version>
@@ -134,52 +131,12 @@
 				<artifactId>maven-jar-plugin</artifactId>
 				<configuration>
 					<archive>
-						<manifestEntries>
-							<Built-By>calimero-project</Built-By>
-						</manifestEntries>
+						<manifest>
+							<addClasspath>true</addClasspath>
+							<mainClass>tuwien.auto.calimero.gui.Main</mainClass>
+						</manifest>
 					</archive>
 				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>2.9.1</version>
-				<configuration>
-					<overview>src/overview.html</overview>
-					<additionalparam>-Xdoclint:none</additionalparam>
-					<archive>
-						<manifestEntries>
-							<Built-By>calimero-project</Built-By>
-						</manifestEntries>
-					</archive>
-				</configuration>
-				<executions>
-					<execution>
-						<id>attach-javadocs</id>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<artifactId>maven-source-plugin</artifactId>
-				<version>2.3</version>
-				<configuration>
-					<archive>
-						<manifestEntries>
-							<Built-By>calimero-project</Built-By>
-						</manifestEntries>
-					</archive>
-				</configuration>
-				<executions>
-					<execution>
-						<id>attach-sources</id>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-					</execution>
-				</executions>
 			</plugin>
 		</plugins>
 	</build>
@@ -187,19 +144,12 @@
 		<dependency>
 			<groupId>com.github.calimero</groupId>
 			<artifactId>calimero-core</artifactId>
-			<version>2.2-beta</version>
+			<version>2.2</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.calimero</groupId>
 			<artifactId>calimero-tools</artifactId>
-			<version>2.2-beta</version>
-		</dependency>
-		<dependency>
-			<groupId>
-				org.eclipse.swt.org.eclipse.swt.cocoa.macosx.x86_64.4.3.swt
-			</groupId>
-			<artifactId>org.eclipse.swt.cocoa.macosx.x86_64</artifactId>
-			<version>4.3</version>
+			<version>2.2</version>
 		</dependency>
 		<dependency>
 			<groupId>${swt.groupId}</groupId>
@@ -208,14 +158,4 @@
 			<scope>compile</scope>
 		</dependency>
 	</dependencies>
-	<distributionManagement>
-		<snapshotRepository>
-			<id>sonatype</id>
-			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-		</snapshotRepository>
-		<repository>
-			<id>sonatype</id>
-			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
-		</repository>
-	</distributionManagement>
 </project>
