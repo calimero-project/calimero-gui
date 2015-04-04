@@ -62,6 +62,10 @@
 				<artifactId>maven-jar-plugin</artifactId>
 				<configuration>
 					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+							<mainClass>tuwien.auto.calimero.gui.Main</mainClass>
+						</manifest>
 						<manifestEntries>
 							<Built-By>calimero-project</Built-By>
 						</manifestEntries>
