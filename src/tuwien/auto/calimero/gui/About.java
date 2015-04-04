@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006-2014 B. Malinowsky
+    Copyright (c) 2006, 2015 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -69,7 +69,7 @@ public class About
 	private static final String catchPhrase = "Calimero 2 - A Java library for KNX access";
 
 	private static final String about = "Graphical user interface for Calimero 2, " +
-			"using the Calimero 2 tools and library for KNX access. The library design " +
+			"using the Calimero 2 tools and core library for KNX access. The library design " +
 			"supports the Java 2 Platform, and Java ME CDC technology with the Foundation Profile.";
 
 	private static final String universityLink = "http://www.tuwien.ac.at";
@@ -81,21 +81,21 @@ public class About
 
 	private static final String license = "The Calimero library, tools, documentation, "
 		+ "and this GUI are licensed under the GPL, with the Classpath Exception.";
-	private static final String copyright = "Copyright (c) 2006-2014.";
+	private static final String copyright = "Copyright (c) 2006, 2015.";
 
 	private static final String swtLink = "http://www.eclipse.org/swt/";
 	private static final String swtInfo = "This GUI uses the "
 			+ "Standard Widget Toolkit (SWT).\n<A>" + swtLink + "</A>";
 
 	private static final Font headerFont;
-	
+
 	static {
 		final FontData fd = Main.display.getSystemFont().getFontData()[0];
 		fd.setHeight(fd.getHeight() + 4);
 		fd.setStyle(SWT.BOLD);
 		headerFont = new Font(Main.display, fd);
 	}
-	
+
 	About(final Shell parent)
 	{
 		final Shell shell = new Shell(parent, SWT.DIALOG_TRIM | SWT.RESIZE);
@@ -137,7 +137,7 @@ public class About
 		});
 		final Label asg = new Label(c, SWT.NONE);
 		asg.setLayoutData(new GridData(SWT.END, SWT.TOP, false, false));
-		final InputStream is = getClass().getResourceAsStream("asg-small.png");
+		final InputStream is = getClass().getResourceAsStream("/asg-small.png");
 		if (is != null) {
 			try {
 				final Image img = new Image(Main.display, is);
