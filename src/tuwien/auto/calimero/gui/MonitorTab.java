@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006-2013 B. Malinowsky
+    Copyright (c) 2006, 2015 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -91,12 +91,12 @@ class MonitorTab extends BaseTabLayout
 		final java.util.List<String> args = new ArrayList<String>();
 		if (!host.isEmpty()) {
 			if (!localhost.isEmpty()) {
-				args.add("-localhost");
+				args.add("--localhost");
 				args.add(localhost);
 			}
 			args.add(host);
 			if (useNAT)
-				args.add("-nat");
+				args.add("--nat");
 			if (!port.isEmpty())
 				args.add("-p");
 		}
@@ -114,7 +114,7 @@ class MonitorTab extends BaseTabLayout
 				super(args);
 			}
 
-			
+
 			@Override
 			public void start() throws KNXException, InterruptedException
 			{
@@ -128,7 +128,7 @@ class MonitorTab extends BaseTabLayout
 					}
 				});
 			}
-			
+
 			/* (non-Javadoc)
 			 * @see tuwien.auto.calimero.tools.NetworkMonitor#onCompletion(
 			 * java.lang.Exception, boolean)

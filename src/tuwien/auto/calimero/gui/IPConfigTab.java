@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006-2013 B. Malinowsky
+    Copyright (c) 2006, 2015 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -68,7 +68,7 @@ class IPConfigTab extends BaseTabLayout
 		value.setText("Value");
 		value.setWidth(200);
 		enableColumnAdjusting();
-		
+
 		readConfig(localhost, host, port, useNAT, knxAddr);
 	}
 
@@ -80,7 +80,7 @@ class IPConfigTab extends BaseTabLayout
 		final List<String> args = new ArrayList<String>();
 		if (!host.isEmpty()) {
 			if (!localhost.isEmpty()) {
-				args.add("-localhost");
+				args.add("--localhost");
 				args.add(localhost);
 			}
 			args.add(host);
@@ -102,7 +102,7 @@ class IPConfigTab extends BaseTabLayout
 			args.add("-r");
 			args.add(knxAddr);
 		}
-		
+
 		try {
 			final IPConfig config = new IPConfig(args.toArray(new String[0]))
 			{
@@ -121,7 +121,7 @@ class IPConfigTab extends BaseTabLayout
 								i.setText(s);
 							}
 							list.setRedraw(true);
-							
+
 							setHeaderInfo("Configuration received from "
 									+ (knxAddr.isEmpty() ? "" : knxAddr + " over ") + host
 									+ " port " + port + (useNAT ? ", using NAT" : ""));

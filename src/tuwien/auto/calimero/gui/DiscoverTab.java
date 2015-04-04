@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006-2012 B. Malinowsky
+    Copyright (c) 2006, 2015 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -134,7 +134,7 @@ class DiscoverTab extends BaseTabLayout
 		final java.util.List<String> args = new ArrayList<String>();
 		args.add("-s");
 		if (nat.getSelection())
-			args.add("-nat");
+			args.add("--nat");
 		list.removeAll();
 		log.removeAll();
 //		final LogService logService = LogManager.getManager().getLogService(Discoverer.LOG_SERVICE);

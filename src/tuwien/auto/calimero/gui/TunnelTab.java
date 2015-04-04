@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006-2014 B. Malinowsky
+    Copyright (c) 2006, 2015 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -125,7 +125,7 @@ class TunnelTab extends BaseTabLayout
 				String value = "[empty]";
 				if (asdu.length > 0)
 					value = dp != null ? asString(asdu, dp.getMainNumber(), dp.getDPT()) : "n/a";
-					
+
 				final String now = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance()
 						.getTime());
 				final String[] item = new String[] { now, e.getSourceAddr().toString(),
@@ -209,7 +209,7 @@ class TunnelTab extends BaseTabLayout
 		});
 		points = new Combo(editArea, SWT.DROP_DOWN);
 		setFieldSize(points, 15);
-		
+
 		final Button read = new Button(editArea, SWT.NONE);
 		read.setText("Read");
 		read.addSelectionListener(new SelectionAdapter()
@@ -229,13 +229,13 @@ class TunnelTab extends BaseTabLayout
 				}
 			}
 		});
-		
+
 		final Button write = new Button(editArea, SWT.NONE);
 		write.setText("Write");
 		final Combo value = new Combo(editArea, SWT.DROP_DOWN);
 		setFieldSize(value, 15);
 		final Label unit = new Label(editArea, SWT.NONE);
-		
+
 		write.addSelectionListener(new SelectionAdapter()
 		{
 			@Override
@@ -279,7 +279,7 @@ class TunnelTab extends BaseTabLayout
 				unit.pack(true);
 			}
 		});
-		
+
 		for (final Control c : editArea.getChildren())
 			c.setEnabled(false);
 	}
@@ -310,19 +310,19 @@ class TunnelTab extends BaseTabLayout
 	{
 		// setup tool argument array
 		final java.util.List<String> args = new ArrayList<String>();
-		args.add("-verbose");
+		args.add("--verbose");
 		// if no conditions fits, the tool returns with error
 		if (!host.isEmpty()) {
 			// setup for KNXnet/IP
 			if (!localhost.isEmpty()) {
-				args.add("-localhost");
+				args.add("--localhost");
 				args.add(localhost);
 			}
 			args.add(host);
 			if (useNAT)
-				args.add("-nat");
+				args.add("--nat");
 			if (routing)
-				args.add("-routing");
+				args.add("--routing");
 			if (!port.isEmpty()) {
 				args.add("-p");
 				args.add(port);
@@ -334,7 +334,7 @@ class TunnelTab extends BaseTabLayout
 			args.add(port);
 		}
 		args.add("monitor");
-		
+
 		list.removeAll();
 		log.removeAll();
 
