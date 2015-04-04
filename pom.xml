@@ -24,6 +24,91 @@
 		</developer>
 	</developers>
 
+	<properties>
+		<swt.version>4.3</swt.version>
+	</properties>
+
+	<profiles>
+		<profile>
+			<id>osx</id>
+			<activation>
+				<os>
+					<family>mac</family>
+				</os>
+			</activation>
+			<properties>
+				<swt.groupId>org.eclipse.swt.org.eclipse.swt.cocoa.macosx.${os.arch}.${swt.version}.swt</swt.groupId>
+				<swt.artifactId>org.eclipse.swt.cocoa.macosx.${os.arch}</swt.artifactId>
+			</properties>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>exec-maven-plugin</artifactId>
+						<version>1.4.0</version>
+						<executions>
+							<execution>
+								<goals>
+									<!-- exec forks the java process and lets us pass the -X arg -->
+									<goal>exec</goal>
+								</goals>
+							</execution>
+						</executions>
+						<configuration>
+							<executable>java</executable>
+							<longClasspath>true</longClasspath>
+							<arguments>
+								<argument>-XstartOnFirstThread</argument>
+								<argument>-classpath</argument>
+								<classpath />
+								<argument>tuwien.auto.calimero.gui.Main</argument>
+							</arguments>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>unix</id>
+			<activation>
+				<os>
+					<family>unix</family>
+					<name>!mac os x</name>
+				</os>
+			</activation>
+			<properties>
+				<!-- some platforms use os.arch amd64, but we need x86_64 -->
+				<swt.groupId>org.eclipse.swt.org.eclipse.swt.gtk.linux.x86_64.${swt.version}.swt</swt.groupId>
+				<swt.artifactId>org.eclipse.swt.gtk.linux.x86_64</swt.artifactId>
+			</properties>
+		</profile>
+		<profile>
+			<id>unix-32</id>
+			<activation>
+				<os>
+					<family>unix</family>
+					<name>!mac os x</name>
+					<arch>x86</arch>
+				</os>
+			</activation>
+			<properties>
+				<swt.groupId>org.eclipse.swt.org.eclipse.swt.gtk.linux.${os.arch}.${swt.version}.swt</swt.groupId>
+				<swt.artifactId>org.eclipse.swt.gtk.linux.${os.arch}</swt.artifactId>
+			</properties>
+		</profile>
+		<profile>
+			<id>windows</id>
+			<activation>
+				<os>
+					<family>windows</family>
+				</os>
+			</activation>
+			<properties>
+				<swt.groupId>org.eclipse.swt.org.eclipse.swt.win32.win32.${os.arch}.${swt.version}.swt</swt.groupId>
+				<swt.artifactId>org.eclipse.swt.win32.win32.${os.arch}</swt.artifactId>
+			</properties>
+		</profile>
+	</profiles>
 	<build>
 		<sourceDirectory>src</sourceDirectory>
 		<testSourceDirectory>test</testSourceDirectory>
@@ -115,6 +200,12 @@
 			</groupId>
 			<artifactId>org.eclipse.swt.cocoa.macosx.x86_64</artifactId>
 			<version>4.3</version>
+		</dependency>
+		<dependency>
+			<groupId>${swt.groupId}</groupId>
+			<artifactId>${swt.artifactId}</artifactId>
+			<version>${swt.version}</version>
+			<scope>compile</scope>
 		</dependency>
 	</dependencies>
 	<distributionManagement>
