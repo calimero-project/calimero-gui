@@ -26,6 +26,7 @@
 
 	<profiles>
 		<profile>
+			<id>osx</id>
 			<activation>
 				<os>
 					<family>mac</family>
@@ -33,13 +34,38 @@
 			</activation>
 			<dependencies>
 				<dependency>
-					<groupId>
-						org.eclipse.swt.org.eclipse.swt.cocoa.macosx.x86_64.4.3.swt
-					</groupId>
-					<artifactId>org.eclipse.swt.cocoa.macosx.x86_64</artifactId>
+					<groupId>org.eclipse.swt.org.eclipse.swt.cocoa.macosx.${os.arch}.4.3.swt</groupId>
+					<artifactId>org.eclipse.swt.cocoa.macosx.${os.arch}</artifactId>
 					<version>4.3</version>
 				</dependency>
 			</dependencies>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>exec-maven-plugin</artifactId>
+						<version>1.4.0</version>
+						<executions>
+							<execution>
+								<goals>
+									<!-- exec forks the java process and lets us pass the -X arg -->
+									<goal>exec</goal>
+								</goals>
+							</execution>
+						</executions>
+						<configuration>
+							<executable>java</executable>
+							<longClasspath>true</longClasspath>
+							<arguments>
+								<argument>-XstartOnFirstThread</argument>
+								<argument>-classpath</argument>
+								<classpath />
+								<argument>tuwien.auto.calimero.gui.Main</argument>
+							</arguments>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
 		</profile>
 	</profiles>
 
@@ -69,6 +95,7 @@
 				<configuration>
 					<archive>
 						<manifest>
+							<addClasspath>true</addClasspath>
 							<mainClass>tuwien.auto.calimero.gui.Main</mainClass>
 						</manifest>
 						<manifestEntries>
@@ -76,28 +103,6 @@
 						</manifestEntries>
 					</archive>
 				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>2.9.1</version>
-				<configuration>
-					<overview>src/overview.html</overview>
-					<additionalparam>-Xdoclint:none</additionalparam>
-					<archive>
-						<manifestEntries>
-							<Built-By>calimero-project</Built-By>
-						</manifestEntries>
-					</archive>
-				</configuration>
-				<executions>
-					<execution>
-						<id>attach-javadocs</id>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-					</execution>
-				</executions>
 			</plugin>
 			<plugin>
 				<artifactId>maven-source-plugin</artifactId>
