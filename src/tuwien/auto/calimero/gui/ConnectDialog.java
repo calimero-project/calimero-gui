@@ -138,6 +138,10 @@ class ConnectDialog
 		final Button config = new Button(mode, SWT.RADIO);
 		config.setText("Configure KNXnet/IP");
 
+		final Button scan = new Button(mode, SWT.RADIO);
+		scan.setText("Scan for KNX devices");
+		scan.setToolTipText("Requires a KNX area.line or KNX device address (hex)");
+
 		final Button devinfo = new Button(mode, SWT.RADIO);
 		devinfo.setText("Read KNX device information");
 		devinfo.setToolTipText("Requires a KNX device address");
@@ -173,6 +177,8 @@ class ConnectDialog
 					new MonitorTab(tf, n, local, h, p, natChecked);
 				else if (config.getSelection())
 					new IPConfigTab(tf, n, local, h, p, natChecked, knxAddr.getText());
+				else if (scan.getSelection())
+					new ScanDevicesTab(tf, n, local, h, p, natChecked, knxAddr.getText());
 				else if (devinfo.getSelection())
 					new DeviceInfoTab(tf, n, local, h, p, natChecked, knxAddr.getText());
 				else if (tunnel.getSelection())
