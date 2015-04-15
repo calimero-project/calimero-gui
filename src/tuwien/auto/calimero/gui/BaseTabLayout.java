@@ -36,6 +36,11 @@
 
 package tuwien.auto.calimero.gui;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
@@ -43,9 +48,12 @@ import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.MenuDetectEvent;
+import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
@@ -57,6 +65,8 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Sash;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -84,6 +94,12 @@ class BaseTabLayout
 	// debounce the menu right click on OS X
 	private static final long bounce = 50; //ms
 	private long timeLastMenu;
+
+	// filters for list output, column-based
+	final Map<Integer, String> includeFilter = Collections
+			.synchronizedMap(new HashMap<Integer, String>());
+	final Map<Integer, ArrayList<String>> excludeFilter = Collections
+			.synchronizedMap(new HashMap<Integer, ArrayList<String>>());
 
 	BaseTabLayout(final CTabFolder tf, final String tabTitle, final String info)
 	{
@@ -204,6 +220,90 @@ class BaseTabLayout
 	 */
 	protected void initTableBottom(final Composite parent, final Sash sash)
 	{}
+
+	protected void initFilterMenu()
+	{
+		list.addMenuDetectListener(new MenuDetectListener() {
+			public void menuDetected(final MenuDetectEvent e)
+			{
+				final long now = e.time & 0xFFFFFFFFL;
+				if (timeLastMenu + bounce >= now)
+					return;
+				timeLastMenu = now;
+
+				final int index = list.getSelectionIndex();
+				if (index == -1)
+					return;
+				final TableItem item = list.getItem(index);
+				final int c = getColumn(e, item);
+				if (c == -1)
+					return;
+				final String content = item.getText(c);
+
+				final Menu menu = new Menu(list.getShell(), SWT.POP_UP);
+				final MenuItem mi1 = new MenuItem(menu, SWT.PUSH);
+				mi1.setText("Show only " + content);
+				mi1.setData("column", c);
+				mi1.setData("pattern", content);
+				final MenuItem mi2 = new MenuItem(menu, SWT.PUSH);
+				mi2.setText("Exclude " + content);
+				mi2.setData("column", c);
+				mi2.setData("pattern", content);
+
+				final SelectionAdapter selection = new SelectionAdapter() {
+					public void widgetSelected(final SelectionEvent e)
+					{
+						final Integer col = (Integer) mi1.getData("column");
+						final String pattern = (String) mi1.getData("pattern");
+						if (e.widget == mi1)
+							includeFilter.put(col, pattern);
+						else if (e.widget == mi2) {
+							ArrayList<String> patterns = excludeFilter.get(col);
+							if (patterns == null) {
+								patterns = new ArrayList<String>();
+								excludeFilter.put(col, patterns);
+							}
+							patterns.add(pattern);
+						}
+						asyncAddLog("add filter on column " + list.getColumn(col).getText()
+								+ " for \"" + pattern + "\"");
+					}
+				};
+				mi1.addSelectionListener(selection);
+				mi2.addSelectionListener(selection);
+
+				final Point pt = new Point(e.x, e.y);
+				menu.setLocation(pt);
+				menu.setVisible(true);
+			}
+
+			private int getColumn(final MenuDetectEvent event, final TableItem item)
+			{
+				final Point pt = list.toControl(event.x, event.y);
+				for (int i = 0; i < list.getColumnCount(); i++) {
+					final Rectangle rect = item.getBounds(i);
+					if (rect.contains(pt))
+						return i;
+				}
+				return -1;
+			}
+		});
+	}
+
+	protected boolean applyFilter(final String[] item)
+	{
+		for (int i = 0; i < item.length; i++) {
+			final String s = item[i];
+			final String include = includeFilter.get(i);
+			if (include != null && !include.equals(s))
+				return true;
+
+			final ArrayList<String> exclude = excludeFilter.get(i);
+			if (exclude != null && exclude.contains(s))
+				return true;
+		}
+		return false;
+	}
 
 	/**
 	 * Override in subtypes.

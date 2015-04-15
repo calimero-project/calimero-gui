@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006-2013 B. Malinowsky
+    Copyright (c) 2006, 2015 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -60,6 +60,7 @@ class MonitorTab extends BaseTabLayout
 {
 	private NetworkMonitor m;
 
+
 	MonitorTab(final CTabFolder tf, final String name, final String localhost, final String host,
 		final String port, final boolean useNAT)
 	{
@@ -82,6 +83,8 @@ class MonitorTab extends BaseTabLayout
 		asdu.setText("TPCI / APCI");
 		asdu.setWidth(100);
 		enableColumnAdjusting();
+
+		initFilterMenu();
 
 		startMonitor(localhost, host, port, useNAT);
 	}
@@ -116,7 +119,6 @@ class MonitorTab extends BaseTabLayout
 				LogManager.getManager().addWriter("tools", logWriter);
 			}
 
-			
 			@Override
 			public void start() throws KNXException, InterruptedException
 			{
@@ -130,7 +132,7 @@ class MonitorTab extends BaseTabLayout
 					}
 				});
 			}
-			
+
 			/* (non-Javadoc)
 			 * @see tuwien.auto.calimero.tools.NetworkMonitor#onCompletion(
 			 * java.lang.Exception, boolean)
@@ -171,7 +173,10 @@ class MonitorTab extends BaseTabLayout
 						item.add(DataUnitBuilder.decode(f.getTPDU(), f.getDestination()));
 					}
 				}
-				asyncAddListItem(item.toArray(new String[0]), null, null);
+				final String[] sa = item.toArray(new String[0]);
+				if (applyFilter(sa))
+					return;
+				asyncAddListItem(sa, null, null);
 			}
 		}
 
