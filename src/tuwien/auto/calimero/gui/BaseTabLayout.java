@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006-2014 B. Malinowsky
+    Copyright (c) 2006, 2015 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -81,11 +81,15 @@ class BaseTabLayout
 	private final CTabFolder tf;
 	private Label infoLabel;
 
+	// debounce the menu right click on OS X
+	private static final long bounce = 50; //ms
+	private long timeLastMenu;
+
 	BaseTabLayout(final CTabFolder tf, final String tabTitle, final String info)
 	{
 		this(tf, tabTitle, info, true);
 	}
-	
+
 	BaseTabLayout(final CTabFolder tf, final String tabTitle, final String info,
 		final boolean showClose)
 	{
@@ -194,7 +198,7 @@ class BaseTabLayout
 
 	/**
 	 * Override in subtypes.
-	 * 
+	 *
 	 * @param parent parent composite
 	 * @param sash sash delimiter on bottom of table
 	 */
@@ -203,7 +207,7 @@ class BaseTabLayout
 
 	/**
 	 * Override in subtypes.
-	 * 
+	 *
 	 * @param e dispose event
 	 */
 	protected void onDispose(final DisposeEvent e)
@@ -211,7 +215,7 @@ class BaseTabLayout
 
 	/**
 	 * Sets some textual information (help) into the empty list control.
-	 * 
+	 *
 	 * @param info info text to set
 	 */
 	protected final void setListBanner(final String info)
@@ -229,10 +233,10 @@ class BaseTabLayout
 	{
 		infoLabel.setText(info);
 	}
-	
+
 	/**
 	 * Override in subtypes.
-	 * 
+	 *
 	 * @param e table selection event
 	 */
 	protected void onListItemSelected(final SelectionEvent e)
@@ -240,7 +244,7 @@ class BaseTabLayout
 
 	/**
 	 * Adds a log string asynchronously to the log list.
-	 * 
+	 *
 	 * @param s log text
 	 */
 	protected final void asyncAddLog(final String s)
@@ -259,7 +263,7 @@ class BaseTabLayout
 
 	/**
 	 * Adds a list item asynchronously to the list.
-	 * 
+	 *
 	 * @param itemText list item text of each column
 	 * @param keys key entry of the item for each column, might be <code>null</code>
 	 * @param data data entry of the item for each column, might be <code>null</code> if
@@ -282,14 +286,29 @@ class BaseTabLayout
 	{
 		if (list.isDisposed())
 			return;
+
+		// we only scroll to show the new item if the list is completely scrolled down
+		// hence, check what items are shown currently
+		final int first = list.getTopIndex();
+		final Rectangle area = list.getClientArea();
+		final int height = list.getItemHeight();
+		final int headerHeight = list.getHeaderHeight();
+		final int visible = (area.height - headerHeight + height - 1) / height;
+		final int last = first + visible;
+		final int total = list.getItemCount();
+		final boolean atEnd = last >= total;
+
+		// add item
 		final TableItem item = new TableItem(list, SWT.NONE);
 		item.setText(itemText);
 		if (keys != null)
 			for (int i = 0; i < keys.length; i++)
 				item.setData(keys[i], data[i]);
-		list.showItem(item);
+
+		if (atEnd)
+			list.showItem(item);
 	}
-	
+
 	/**
 	 * Enables automatic list column adjusting for the main list.
 	 */
