@@ -114,12 +114,10 @@ class ConnectDialog
 		mode.setLayout(col);
 
 		final Button tunnel = new Button(mode, SWT.RADIO);
-		tunnel.setText("Open tunnel connection");
+		tunnel.setText("Process communication/monitor (Tunneling)");
 		tunnel.setSelection(true);
-		final Button monitor = new Button(mode, SWT.RADIO);
-		monitor.setText("Open monitor connection");
 		final Button routing = new Button(mode, SWT.RADIO);
-		routing.setText("Open routing connection");
+		routing.setText("Process communication/monitor (Routing)");
 		if (serial)
 			routing.setEnabled(false);
 		else {
@@ -135,6 +133,8 @@ class ConnectDialog
 				}
 			});
 		}
+		final Button monitor = new Button(mode, SWT.RADIO);
+		monitor.setText("Network monitor (Tunneling)");
 		final Button config = new Button(mode, SWT.RADIO);
 		config.setText("Configure KNXnet/IP");
 
