@@ -36,8 +36,12 @@
 
 package tuwien.auto.calimero.gui;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -60,8 +64,10 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Listener;
@@ -82,6 +88,7 @@ class BaseTabLayout
 {
 	final CTabItem tab;
 	final Composite workArea;
+	final Composite top;
 	final Table list;
 	final List log;
 	final LogWriter logWriter;
@@ -101,6 +108,9 @@ class BaseTabLayout
 	final Map<Integer, ArrayList<String>> excludeFilter = Collections
 			.synchronizedMap(new HashMap<Integer, ArrayList<String>>());
 
+	private String filenameSuffix;
+	private String prevFilename;
+
 	BaseTabLayout(final CTabFolder tf, final String tabTitle, final String info)
 	{
 		this(tf, tabTitle, info, true);
@@ -114,6 +124,10 @@ class BaseTabLayout
 		tab.setText(tabTitle);
 		workArea = new Composite(tf, SWT.NONE);
 		workArea.setLayout(new GridLayout());
+		top = new Composite(workArea, SWT.NONE);
+		final GridData gridData = new GridData(SWT.FILL, SWT.NONE, true, false);
+		top.setLayoutData(gridData);
+
 		tab.setControl(workArea);
 		tab.addDisposeListener(new DisposeListener()
 		{
@@ -125,8 +139,8 @@ class BaseTabLayout
 		tf.setSelection(tab);
 
 		if (info != null) {
-			infoLabel = new Label(workArea, SWT.WRAP);
-			infoLabel.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
+			infoLabel = new Label(top, SWT.WRAP);
+			infoLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
 			setHeaderInfo(info);
 		}
 		initWorkAreaTop();
@@ -210,7 +224,12 @@ class BaseTabLayout
 	 * Override in subtypes.
 	 */
 	protected void initWorkAreaTop()
-	{}
+	{
+		final GridLayout layout = new GridLayout(1, false);
+		layout.marginHeight = 0;
+		layout.marginWidth = 0;
+		top.setLayout(layout);
+	}
 
 	/**
 	 * Override in subtypes.
@@ -329,7 +348,7 @@ class BaseTabLayout
 		item.setData("internal", "");
 	}
 
-	protected final void setHeaderInfo(final String info)
+	protected void setHeaderInfo(final String info)
 	{
 		infoLabel.setText(info);
 	}
@@ -479,6 +498,92 @@ class BaseTabLayout
 	protected CTabFolder getTabFolder()
 	{
 		return tf;
+	}
+
+	protected void addResetAndExport(final String exportNameSuffix)
+	{
+		filenameSuffix = exportNameSuffix;
+
+		((GridLayout) top.getLayout()).numColumns = 4;
+		final Label spacer = new Label(top, SWT.NONE);
+		spacer.setLayoutData(new GridData(SWT.NONE, SWT.CENTER, true, false));
+		final Button resetFilter = new Button(top, SWT.NONE);
+		resetFilter.setFont(Main.font);
+		resetFilter.setText("Reset filter");
+		resetFilter.addSelectionListener(new SelectionAdapter()
+		{
+			@Override
+			public void widgetSelected(final SelectionEvent e)
+			{
+				includeFilter.clear();
+				excludeFilter.clear();
+				asyncAddLog("reset output filter (all subsequent events will be shown)");
+			}
+		});
+		final Button export = new Button(top, SWT.NONE);
+		export.setFont(Main.font);
+		export.setText("Export data...");
+		export.addSelectionListener(new SelectionAdapter()
+		{
+			@Override
+			public void widgetSelected(final SelectionEvent e)
+			{
+				final FileDialog dlg = new FileDialog(Main.shell, SWT.SAVE);
+				dlg.setText("Export data to CSV");
+				dlg.setOverwrite(true);
+
+				// provide a default filename with time stamp, but allow overruling by user
+				final String filename;
+				if (prevFilename != null)
+					filename = prevFilename;
+				else {
+					// ISO 8601 would be yyyyMMddTHHmmss, but its not really readable.
+					final String timestamp = new SimpleDateFormat("yyyy-MM-dd--HH-mm-ss")
+							.format(new Date());
+					filename = timestamp + filenameSuffix;
+				}
+				dlg.setFileName(filename);
+				final String resource = dlg.open();
+				if (resource == null)
+					return;
+				if (!filename.equals(dlg.getFileName()))
+					prevFilename = dlg.getFileName();
+
+				saveAs(resource);
+			}
+		});
+	}
+
+	protected void saveAs(final String resource)
+	{
+		asyncAddLog("Export data in CSV format to " + resource);
+		try {
+			final char comma = ',';
+			final char quote = '\"';
+			final char delim = '\n';
+
+			final FileWriter w = new FileWriter(resource);
+			// write list header
+			w.append(list.getColumn(0).getText());
+			for (int i = 1; i < list.getColumnCount(); i++)
+				w.append(comma).append(list.getColumn(i).getText());
+			w.write(delim);
+
+			// write list
+			for (int i = 0; i < list.getItemCount(); i++) {
+				final TableItem ti = list.getItem(i);
+				w.append(quote).append(ti.getText(0)).append(quote);
+				for (int k = 1; k < list.getColumnCount(); k++)
+					w.append(comma).append(quote).append(ti.getText(k)).append(quote);
+				w.write('\n');
+			}
+			w.close();
+			asyncAddLog("Export completed successfully");
+		}
+		catch (final IOException e) {
+			e.printStackTrace();
+			asyncAddLog("Export aborted with error: " + e.getMessage());
+		}
 	}
 
 	private List createLogView(final Composite parent, final Sash sash)

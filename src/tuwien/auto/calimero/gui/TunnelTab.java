@@ -165,14 +165,15 @@ class TunnelTab extends BaseTabLayout
 	private long eventCounter;
 	private long eventCounterFiltered = 1;
 
+
 	TunnelTab(final CTabFolder tf, final String name, final String localhost, final String host,
 		final String port, final boolean useNAT, final boolean routing)
 	{
 		super(tf, (routing ? "Routing to " : "Tunnel to ") + name, "Connecting"
 				+ (host.isEmpty() ? "" : " to " + host) + " on port " + port
 				+ (useNAT ? ", using NAT" : ""));
-		list.setLinesVisible(true);
 
+		list.setLinesVisible(true);
 		final TableColumn cnt = new TableColumn(list, SWT.RIGHT);
 		cnt.setText("#");
 		cnt.setWidth(30);
@@ -184,7 +185,7 @@ class TunnelTab extends BaseTabLayout
 		time.setWidth(35);
 		final TableColumn src = new TableColumn(list, SWT.LEFT);
 		src.setText("Source");
-		src.setWidth(50);
+		src.setWidth(40);
 		final TableColumn dst = new TableColumn(list, SWT.LEFT);
 		dst.setText("Destination");
 		dst.setWidth(50);
@@ -202,6 +203,13 @@ class TunnelTab extends BaseTabLayout
 		initFilterMenu();
 
 		openTunnel(localhost, host, port, useNAT, routing);
+	}
+
+	@Override
+	protected void initWorkAreaTop()
+	{
+		super.initWorkAreaTop();
+		addResetAndExport("_tunnel.csv");
 	}
 
 	/* (non-Javadoc)
@@ -309,19 +317,6 @@ class TunnelTab extends BaseTabLayout
 
 		for (final Control c : editArea.getChildren())
 			c.setEnabled(false);
-
-		final Button resetFilter = new Button(editArea, SWT.NONE);
-		resetFilter.setText("Reset filter");
-		resetFilter.addSelectionListener(new SelectionAdapter()
-		{
-			@Override
-			public void widgetSelected(final org.eclipse.swt.events.SelectionEvent e)
-			{
-				includeFilter.clear();
-				excludeFilter.clear();
-				asyncAddLog("reset output filter (all subsequent events will be shown)");
-			}
-		});
 	}
 
 	/* (non-Javadoc)

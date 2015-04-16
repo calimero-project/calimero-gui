@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006-2012 B. Malinowsky
+    Copyright (c) 2006, 2015 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -49,6 +49,7 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
@@ -113,9 +114,11 @@ class DiscoverTab extends BaseTabLayout
 	@Override
 	protected void initWorkAreaTop()
 	{
-		final Button start = new Button(workArea, SWT.PUSH);
+		super.initWorkAreaTop();
+		((GridLayout) top.getLayout()).numColumns = 2;
+		final Button start = new Button(top, SWT.PUSH);
+		start.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		start.setText("Discover KNXnet/IP devices");
-		//start.setFont(Main.font);
 		start.addSelectionListener(new SelectionAdapter()
 		{
 			@Override
@@ -126,10 +129,10 @@ class DiscoverTab extends BaseTabLayout
 		});
 		start.setFocus();
 
-		nat = new Button(workArea, SWT.CHECK);
+		nat = new Button(top, SWT.CHECK);
 		nat.setText("Be aware of NAT (Network Address Translation) during search");
-		nat.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		nat.setToolTipText("Some KNXnet/IP devices might not answer if using this mode");
+		nat.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false));
+		nat.setToolTipText("Some KNXnet/IP devices might not answer in this mode");
 	}
 
 	private void discover()

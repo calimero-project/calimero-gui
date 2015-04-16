@@ -201,6 +201,13 @@ class MonitorTab extends BaseTabLayout
 		}
 	}
 
+	@Override
+	protected void initWorkAreaTop()
+	{
+		super.initWorkAreaTop();
+		addResetAndExport("_monitor.csv");
+	}
+
 	/* (non-Javadoc)
 	 * @see tuwien.auto.calimero.gui.BaseTabLayout#onDispose(
 	 * org.eclipse.swt.events.DisposeEvent)
