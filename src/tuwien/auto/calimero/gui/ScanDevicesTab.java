@@ -63,9 +63,12 @@ class ScanDevicesTab extends BaseTabLayout
 		super(tf, "Scan devices of subnet " + (knxAddr.isEmpty() ? "" : knxAddr),
 				"Scanning ... Using connection " + host + " port " + port
 						+ (useNAT ? ", using NAT" : ""));
+		final TableColumn cnt = new TableColumn(list, SWT.RIGHT);
+		cnt.setText("#");
+		cnt.setWidth(30);
 		final TableColumn pid = new TableColumn(list, SWT.LEFT);
-		pid.setText("Existing KNX device addresses");
-		pid.setWidth(200);
+		pid.setText("Existing KNX device address");
+		pid.setWidth(180);
 
 		list.addSelectionListener(new SelectionListener() {
 			public void widgetSelected(final SelectionEvent e) {}
@@ -73,7 +76,7 @@ class ScanDevicesTab extends BaseTabLayout
 			public void widgetDefaultSelected(final SelectionEvent e)
 			{
 				final TableItem row = list.getSelection()[0];
-				final String device = row.getText(0);
+				final String device = row.getText(1);
 				asyncAddLog("Read device information of KNX device " + device);
 				new DeviceInfoTab(tf, name, localhost, host, port, useNAT, device);
 			}
@@ -127,9 +130,10 @@ class ScanDevicesTab extends BaseTabLayout
 							list.setRedraw(false);
 							list.setToolTipText("Select an address to read the "
 									+ "KNX device information");
+							long eventCounter = 0;
 							for (final IndividualAddress d : devices) {
 								final TableItem i = new TableItem(list, SWT.NONE);
-								i.setText(d.toString());
+								i.setText(new String[] { "" + ++eventCounter, d.toString() });
 							}
 							list.setRedraw(true);
 

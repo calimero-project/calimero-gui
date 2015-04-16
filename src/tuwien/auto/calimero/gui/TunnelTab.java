@@ -131,10 +131,13 @@ class TunnelTab extends BaseTabLayout
 
 				final String now = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance()
 						.getTime());
-				final String[] item = new String[] { now, e.getSourceAddr().toString(),
+				final String[] item = new String[] { "" + ++eventCounter,
+					"" + eventCounterFiltered, now, e.getSourceAddr().toString(),
 					e.getDestination().toString(), svc, DataUnitBuilder.toHex(asdu, " "), value };
 				if (applyFilter(item))
 					return;
+				// increment filtered counter after filter
+				++eventCounterFiltered;
 				asyncAddListItem(item, null, null);
 			}
 			catch (final KNXException e1) {
@@ -159,6 +162,8 @@ class TunnelTab extends BaseTabLayout
 	private Combo points;
 	private DatapointMap model = new DatapointMap();
 
+	private long eventCounter;
+	private long eventCounterFiltered = 1;
 
 	TunnelTab(final CTabFolder tf, final String name, final String localhost, final String host,
 		final String port, final boolean useNAT, final boolean routing)
@@ -168,6 +173,12 @@ class TunnelTab extends BaseTabLayout
 				+ (useNAT ? ", using NAT" : ""));
 		list.setLinesVisible(true);
 
+		final TableColumn cnt = new TableColumn(list, SWT.RIGHT);
+		cnt.setText("#");
+		cnt.setWidth(30);
+		final TableColumn cntf = new TableColumn(list, SWT.RIGHT);
+		cntf.setText("# (Filtered)");
+		cntf.setWidth(40);
 		final TableColumn time = new TableColumn(list, SWT.RIGHT);
 		time.setText("Time");
 		time.setWidth(35);
