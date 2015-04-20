@@ -111,6 +111,9 @@ class BaseTabLayout
 	private String filenameSuffix;
 	private String prevFilename;
 
+	private final java.util.List<String[][]> itemBuffer = Collections
+			.synchronizedList(new ArrayList<String[][]>());
+
 	BaseTabLayout(final CTabFolder tf, final String tabTitle, final String info)
 	{
 		this(tf, tabTitle, info, true);
@@ -391,22 +394,27 @@ class BaseTabLayout
 	protected void asyncAddListItem(final String[] itemText, final String[] keys,
 		final String[] data)
 	{
+		itemBuffer.add(new String[][] {itemText, keys, data});
+		// TODO Runnables might be executed with delay, because SWT enforces a minimum inter-arrival
+		// time. We create a runnable for every new item, and even though addListItems
+		// finished adding all items to the list, remaining runnables that piled up get executed.
+		// Maybe replace with a timed execution every x ms.
 		Main.asyncExec(new Runnable()
 		{
 			public void run()
 			{
-				addListItem(itemText, keys, data);
+				addListItems();
 			}
 		});
 	}
 
 	// this method must be invoked from the GUI thread only
-	void addListItem(final String[] itemText, final String[] keys, final String[] data)
+	private void addListItems()
 	{
 		if (list.isDisposed())
 			return;
 
-		// we only scroll to show the new item if the list is completely scrolled down
+		// we only scroll to show the newest item if the list is completely scrolled down
 		// hence, check what items are shown currently
 		final int first = list.getTopIndex();
 		final Rectangle area = list.getClientArea();
@@ -417,15 +425,32 @@ class BaseTabLayout
 		final int total = list.getItemCount();
 		final boolean atEnd = last >= total;
 
-		// add item
-		final TableItem item = new TableItem(list, SWT.NONE);
-		item.setText(itemText);
-		if (keys != null)
-			for (int i = 0; i < keys.length; i++)
-				item.setData(keys[i], data[i]);
+		list.setRedraw(false);
+		int added = 0;
+		while (itemBuffer.size() > 0 && added < 500) {
+			final String[][] e = itemBuffer.remove(0);
+			final String[] itemText = e[0];
+			final String[] keys = e[1];
+			final String[] data = e[2];
+			// add item
+			final TableItem item = new TableItem(list, SWT.NONE);
+			item.setText(itemText);
+			if (keys != null)
+				for (int i = 0; i < keys.length; i++)
+					item.setData(keys[i], data[i]);
+			added++;
+		}
 
 		if (atEnd)
-			list.showItem(item);
+			list.showItem(list.getItem(list.getItemCount() - 1));
+		list.setRedraw(true);
+	}
+
+	// this method must be invoked from the GUI thread only
+	void addListItem(final String[] itemText, final String[] keys, final String[] data)
+	{
+		itemBuffer.add(new String[][] { itemText, keys, data });
+		addListItems();
 	}
 
 	/**
