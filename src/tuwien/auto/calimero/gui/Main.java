@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006-2012 B. Malinowsky
+    Copyright (c) 2006, 2015 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -68,17 +68,17 @@ public class Main
 
 	private static Text localHost;
 	private final CTabFolder tf;
-	
+
 	Main()
 	{
 		shell.setSize(300, 200);
 		shell.setText("Calimero 2 - The Open Source Java library for KNX access");
 		shell.setLayout(new GridLayout());
-	
+
 		final ToolBar header = new ToolBar(shell, SWT.FLAT | SWT.WRAP);
 		final ToolItem connect = new ToolItem(header, SWT.NONE);
 		connect.setText("Connect ...");
-		
+
 		final ToolItem showLog = new ToolItem(header, SWT.NONE);
 		showLog.setText("Show log");
 		showLog.addSelectionListener(new SelectionAdapter()
@@ -89,7 +89,7 @@ public class Main
 				new LogTab(tf);
 			}
 		});
-		
+
 		final ToolItem about = new ToolItem(header, SWT.NONE);
 		about.setText("About");
 		about.addSelectionListener(new SelectionAdapter()
@@ -100,10 +100,10 @@ public class Main
 				new About(shell);
 			}
 		});
-		
+
 		// use separator to start area for local host fields
 		new ToolItem(header, SWT.SEPARATOR);
-		
+
 		// add local host label, use a composite to vertically center the label
 		final Composite comp = new Composite(header, SWT.NONE);
 		final GridLayout layout = new GridLayout();
@@ -112,20 +112,20 @@ public class Main
 		comp.setLayout(layout);
 
 		final Label localHostLabel = new Label(comp, SWT.NONE);
-		localHostLabel.setFont(font);
+		localHostLabel.setFont(header.getFont());
 		localHostLabel.setText("Local host:");
 		final GridData gridData = new GridData();
 		gridData.verticalAlignment = SWT.CENTER;
 		gridData.grabExcessVerticalSpace = true;
 		gridData.horizontalAlignment = SWT.CENTER;
 		localHostLabel.setLayoutData(gridData);
-		
+
 		// set composite (with label) by using a separator item
 		final ToolItem labelItem = new ToolItem(header, SWT.SEPARATOR);
 		labelItem.setControl(comp);
 		Point size = comp.computeSize(SWT.DEFAULT, SWT.DEFAULT);
 		labelItem.setWidth(size.x);
-		
+
 		localHost = new Text(header, SWT.BORDER);
 		try {
 			localHost.setText(InetAddress.getLocalHost().getHostAddress());
@@ -135,10 +135,10 @@ public class Main
 		final ToolItem hostItem = new ToolItem(header, SWT.SEPARATOR);
 		hostItem.setControl(localHost);
 		hostItem.setWidth(size.x + 100);
-		
+
 		new Label(shell, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(
 			SWT.FILL, SWT.NONE, true, false));
-	
+
 		tf = new CTabFolder(shell, SWT.NONE | SWT.CAP_ROUND | SWT.BORDER);
 		tf.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		tf.setUnselectedCloseVisible(false);
@@ -156,10 +156,10 @@ public class Main
 				new ConnectDialog(tf, null, "", "", null, false);
 			}
 		});
-	
+
 		new DiscoverTab(tf);
 		shell.pack();
-		shell.setSize(shell.getSize().x + 80, shell.getSize().y + 100);
+		shell.setSize(shell.getSize().x + 150, shell.getSize().y + 100);
 		shell.open();
 		while (!shell.isDisposed())
 			if (!display.readAndDispatch())
@@ -169,7 +169,7 @@ public class Main
 	/**
 	 * The main entry routine of the GUI.
 	 * <p>
-	 * 
+	 *
 	 * @param args none expected
 	 */
 	public static void main(final String[] args)
@@ -193,14 +193,14 @@ public class Main
 	{
 		return localHost.getText();
 	}
-	
+
 	static void asyncExec(final Runnable task)
 	{
 		if (display.isDisposed())
 			return;
 		display.asyncExec(task);
 	}
-	
+
 	static void syncExec(final Runnable task)
 	{
 		if (display.isDisposed())

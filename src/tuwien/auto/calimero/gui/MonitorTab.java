@@ -58,6 +58,8 @@ import tuwien.auto.calimero.tools.NetworkMonitor;
 class MonitorTab extends BaseTabLayout
 {
 	private NetworkMonitor m;
+	private long eventCounter;
+	private long eventCounterFiltered = 1;
 
 	MonitorTab(final CTabFolder tf, final String name, final String localhost, final String host,
 		final String port, final boolean useNAT)
@@ -65,6 +67,12 @@ class MonitorTab extends BaseTabLayout
 		super(tf, "Monitor for " + name, "Open monitor"
 			+ (host.isEmpty() ? "" : " on host " + host) + " on port " + port
 			+ (useNAT ? ", using NAT" : ""));
+		final TableColumn cnt = new TableColumn(list, SWT.RIGHT);
+		cnt.setText("#");
+		cnt.setWidth(30);
+		final TableColumn cntf = new TableColumn(list, SWT.RIGHT);
+		cntf.setText("# (Filtered)");
+		cntf.setWidth(40);
 		final TableColumn timestamp = new TableColumn(list, SWT.RIGHT);
 		timestamp.setText("Timestamp");
 		timestamp.setWidth(80);
@@ -81,6 +89,8 @@ class MonitorTab extends BaseTabLayout
 		asdu.setText("TPCI / APCI");
 		asdu.setWidth(100);
 		enableColumnAdjusting();
+
+		initFilterMenu();
 
 		startMonitor(localhost, host, port, useNAT);
 	}
@@ -113,7 +123,6 @@ class MonitorTab extends BaseTabLayout
 			{
 				super(args);
 			}
-
 
 			@Override
 			public void start() throws KNXException, InterruptedException
@@ -149,6 +158,9 @@ class MonitorTab extends BaseTabLayout
 			public void onIndication(final FrameEvent e)
 			{
 				final java.util.List<String> item = new ArrayList<String>();
+				// monitor event counters
+				item.add(Long.toString(++eventCounter));
+				item.add(Long.toString(eventCounterFiltered));
 				// timestamp
 				item.add(Long.toString(((CEMIBusMon) e.getFrame()).getTimestamp()));
 				final String s = e.getFrame().toString();
@@ -168,7 +180,12 @@ class MonitorTab extends BaseTabLayout
 						item.add(DataUnitBuilder.decode(f.getTPDU(), f.getDestination()));
 					}
 				}
-				asyncAddListItem(item.toArray(new String[0]), null, null);
+				final String[] sa = item.toArray(new String[0]);
+				if (applyFilter(sa))
+					return;
+				// increment filtered counter after filter
+				++eventCounterFiltered;
+				asyncAddListItem(sa, null, null);
 			}
 		}
 
@@ -179,6 +196,13 @@ class MonitorTab extends BaseTabLayout
 		catch (final RuntimeException e) {
 			log.add("error: " + e.getMessage());
 		}
+	}
+
+	@Override
+	protected void initWorkAreaTop()
+	{
+		super.initWorkAreaTop();
+		addResetAndExport("_monitor.csv");
 	}
 
 	/* (non-Javadoc)

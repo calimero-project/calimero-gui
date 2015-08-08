@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006-2013 B. Malinowsky
+    Copyright (c) 2006, 2015 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -77,7 +77,7 @@ class ConnectDialog
 		final Composite c = new Composite(shell, SWT.NONE);
 		c.setLayout(new GridLayout(2, false));
 		c.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
-		
+
 		final Text localhostData = addHostInput(c, "Local host:", Main.getLocalHost(), serial);
 		final Text hostData = addHostInput(c, "IP address or host name:", host, serial);
 
@@ -103,7 +103,7 @@ class ConnectDialog
 		new Label(c, SWT.NONE);
 
 		final Label configKNXAddress = new Label(c, SWT.NONE);
-		configKNXAddress.setText("KNX address for remote config: ");
+		configKNXAddress.setText("KNX device address (optional): ");
 		final Text knxAddr = new Text(c, SWT.BORDER);
 		knxAddr.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
@@ -114,12 +114,10 @@ class ConnectDialog
 		mode.setLayout(col);
 
 		final Button tunnel = new Button(mode, SWT.RADIO);
-		tunnel.setText("Open tunnel connection");
+		tunnel.setText("Process communication/monitor (Tunneling)");
 		tunnel.setSelection(true);
-		final Button monitor = new Button(mode, SWT.RADIO);
-		monitor.setText("Open monitor connection");
 		final Button routing = new Button(mode, SWT.RADIO);
-		routing.setText("Open routing connection");
+		routing.setText("Process communication/monitor (Routing)");
 		if (serial)
 			routing.setEnabled(false);
 		else {
@@ -135,8 +133,18 @@ class ConnectDialog
 				}
 			});
 		}
+		final Button monitor = new Button(mode, SWT.RADIO);
+		monitor.setText("Network monitor (Tunneling)");
 		final Button config = new Button(mode, SWT.RADIO);
 		config.setText("Configure KNXnet/IP");
+
+		final Button scan = new Button(mode, SWT.RADIO);
+		scan.setText("Scan for KNX devices");
+		scan.setToolTipText("Requires a KNX area.line or KNX device address (hex)");
+
+		final Button devinfo = new Button(mode, SWT.RADIO);
+		devinfo.setText("Read KNX device information");
+		devinfo.setToolTipText("Requires a KNX device address");
 
 		final Composite buttons = new Composite(shell, SWT.NONE);
 		buttons.setLayoutData(new GridData(SWT.RIGHT, SWT.BOTTOM, false, true));
@@ -163,12 +171,16 @@ class ConnectDialog
 				// if no port is supplied for KNXnet/IP, we use default port
 				if (p.isEmpty())
 					p = Integer.toString(KNXnetIPConnection.DEFAULT_PORT);
-				
+
 				final boolean natChecked = serial ? false : nat.getSelection();
 				if (monitor.getSelection())
 					new MonitorTab(tf, n, local, h, p, natChecked);
 				else if (config.getSelection())
 					new IPConfigTab(tf, n, local, h, p, natChecked, knxAddr.getText());
+				else if (scan.getSelection())
+					new ScanDevicesTab(tf, n, local, h, p, natChecked, knxAddr.getText());
+				else if (devinfo.getSelection())
+					new DeviceInfoTab(tf, n, local, h, p, natChecked, knxAddr.getText());
 				else if (tunnel.getSelection())
 					new TunnelTab(tf, n, local, h, p, natChecked, false);
 				else if (routing.getSelection())
@@ -202,7 +214,7 @@ class ConnectDialog
 		shell.setSize(size);
 		shell.open();
 	}
-	
+
 	private Text addHostInput(final Composite c, final String description, final String host,
 		final boolean serial)
 	{

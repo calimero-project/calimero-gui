@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006-2014 B. Malinowsky
+    Copyright (c) 2006, 2015 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -39,7 +39,14 @@ package tuwien.auto.calimero.gui;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.ref.WeakReference;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -48,20 +55,27 @@ import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.MenuDetectEvent;
+import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Sash;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -102,6 +116,7 @@ class BaseTabLayout
 
 	final CTabItem tab;
 	final Composite workArea;
+	final Composite top;
 	final Table list;
 	final List log;
 
@@ -109,6 +124,22 @@ class BaseTabLayout
 
 	private final CTabFolder tf;
 	private Label infoLabel;
+
+	// debounce the menu right click on OS X
+	private static final long bounce = 50; //ms
+	private long timeLastMenu;
+
+	// filters for list output, column-based
+	final Map<Integer, String> includeFilter = Collections
+			.synchronizedMap(new HashMap<Integer, String>());
+	final Map<Integer, ArrayList<String>> excludeFilter = Collections
+			.synchronizedMap(new HashMap<Integer, ArrayList<String>>());
+
+	private String filenameSuffix;
+	private String prevFilename;
+
+	private final java.util.List<String[][]> itemBuffer = Collections
+			.synchronizedList(new ArrayList<String[][]>());
 
 	BaseTabLayout(final CTabFolder tf, final String tabTitle, final String info)
 	{
@@ -123,6 +154,10 @@ class BaseTabLayout
 		tab.setText(tabTitle);
 		workArea = new Composite(tf, SWT.NONE);
 		workArea.setLayout(new GridLayout());
+		top = new Composite(workArea, SWT.NONE);
+		final GridData gridData = new GridData(SWT.FILL, SWT.NONE, true, false);
+		top.setLayoutData(gridData);
+
 		tab.setControl(workArea);
 		tab.addDisposeListener(new DisposeListener()
 		{
@@ -134,8 +169,8 @@ class BaseTabLayout
 		tf.setSelection(tab);
 
 		if (info != null) {
-			infoLabel = new Label(workArea, SWT.WRAP);
-			infoLabel.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
+			infoLabel = new Label(top, SWT.WRAP);
+			infoLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
 			setHeaderInfo(info);
 		}
 		initWorkAreaTop();
@@ -220,7 +255,12 @@ class BaseTabLayout
 	 * Override in subtypes.
 	 */
 	protected void initWorkAreaTop()
-	{}
+	{
+		final GridLayout layout = new GridLayout(1, false);
+		layout.marginHeight = 0;
+		layout.marginWidth = 0;
+		top.setLayout(layout);
+	}
 
 	/**
 	 * Override in subtypes.
@@ -230,6 +270,90 @@ class BaseTabLayout
 	 */
 	protected void initTableBottom(final Composite parent, final Sash sash)
 	{}
+
+	protected void initFilterMenu()
+	{
+		list.addMenuDetectListener(new MenuDetectListener() {
+			public void menuDetected(final MenuDetectEvent e)
+			{
+				final long now = e.time & 0xFFFFFFFFL;
+				if (timeLastMenu + bounce >= now)
+					return;
+				timeLastMenu = now;
+
+				final int index = list.getSelectionIndex();
+				if (index == -1)
+					return;
+				final TableItem item = list.getItem(index);
+				final int c = getColumn(e, item);
+				if (c == -1)
+					return;
+				final String content = item.getText(c);
+
+				final Menu menu = new Menu(list.getShell(), SWT.POP_UP);
+				final MenuItem mi1 = new MenuItem(menu, SWT.PUSH);
+				mi1.setText("Show only " + content);
+				mi1.setData("column", c);
+				mi1.setData("pattern", content);
+				final MenuItem mi2 = new MenuItem(menu, SWT.PUSH);
+				mi2.setText("Exclude " + content);
+				mi2.setData("column", c);
+				mi2.setData("pattern", content);
+
+				final SelectionAdapter selection = new SelectionAdapter() {
+					public void widgetSelected(final SelectionEvent e)
+					{
+						final Integer col = (Integer) mi1.getData("column");
+						final String pattern = (String) mi1.getData("pattern");
+						if (e.widget == mi1)
+							includeFilter.put(col, pattern);
+						else if (e.widget == mi2) {
+							ArrayList<String> patterns = excludeFilter.get(col);
+							if (patterns == null) {
+								patterns = new ArrayList<String>();
+								excludeFilter.put(col, patterns);
+							}
+							patterns.add(pattern);
+						}
+						asyncAddLog("add filter on column " + list.getColumn(col).getText()
+								+ " for \"" + pattern + "\"");
+					}
+				};
+				mi1.addSelectionListener(selection);
+				mi2.addSelectionListener(selection);
+
+				final Point pt = new Point(e.x, e.y);
+				menu.setLocation(pt);
+				menu.setVisible(true);
+			}
+
+			private int getColumn(final MenuDetectEvent event, final TableItem item)
+			{
+				final Point pt = list.toControl(event.x, event.y);
+				for (int i = 0; i < list.getColumnCount(); i++) {
+					final Rectangle rect = item.getBounds(i);
+					if (rect.contains(pt))
+						return i;
+				}
+				return -1;
+			}
+		});
+	}
+
+	protected boolean applyFilter(final String[] item)
+	{
+		for (int i = 0; i < item.length; i++) {
+			final String s = item[i];
+			final String include = includeFilter.get(i);
+			if (include != null && !include.equals(s))
+				return true;
+
+			final ArrayList<String> exclude = excludeFilter.get(i);
+			if (exclude != null && exclude.contains(s))
+				return true;
+		}
+		return false;
+	}
 
 	/**
 	 * Override in subtypes.
@@ -298,26 +422,63 @@ class BaseTabLayout
 	protected void asyncAddListItem(final String[] itemText, final String[] keys,
 		final String[] data)
 	{
+		itemBuffer.add(new String[][] {itemText, keys, data});
+		// TODO Runnables might be executed with delay, because SWT enforces a minimum inter-arrival
+		// time. We create a runnable for every new item, and even though addListItems
+		// finished adding all items to the list, remaining runnables that piled up get executed.
+		// Maybe replace with a timed execution every x ms.
 		Main.asyncExec(new Runnable()
 		{
 			public void run()
 			{
-				addListItem(itemText, keys, data);
+				addListItems();
 			}
 		});
 	}
 
 	// this method must be invoked from the GUI thread only
-	void addListItem(final String[] itemText, final String[] keys, final String[] data)
+	private void addListItems()
 	{
 		if (list.isDisposed())
 			return;
-		final TableItem item = new TableItem(list, SWT.NONE);
-		item.setText(itemText);
-		if (keys != null)
-			for (int i = 0; i < keys.length; i++)
-				item.setData(keys[i], data[i]);
-		list.showItem(item);
+
+		// we only scroll to show the newest item if the list is completely scrolled down
+		// hence, check what items are shown currently
+		final int first = list.getTopIndex();
+		final Rectangle area = list.getClientArea();
+		final int height = list.getItemHeight();
+		final int headerHeight = list.getHeaderHeight();
+		final int visible = (area.height - headerHeight + height - 1) / height;
+		final int last = first + visible;
+		final int total = list.getItemCount();
+		final boolean atEnd = last >= total;
+
+		list.setRedraw(false);
+		int added = 0;
+		while (itemBuffer.size() > 0 && added < 500) {
+			final String[][] e = itemBuffer.remove(0);
+			final String[] itemText = e[0];
+			final String[] keys = e[1];
+			final String[] data = e[2];
+			// add item
+			final TableItem item = new TableItem(list, SWT.NONE);
+			item.setText(itemText);
+			if (keys != null)
+				for (int i = 0; i < keys.length; i++)
+					item.setData(keys[i], data[i]);
+			added++;
+		}
+
+		if (atEnd)
+			list.showItem(list.getItem(list.getItemCount() - 1));
+		list.setRedraw(true);
+	}
+
+	// this method must be invoked from the GUI thread only
+	void addListItem(final String[] itemText, final String[] keys, final String[] data)
+	{
+		itemBuffer.add(new String[][] { itemText, keys, data });
+		addListItems();
 	}
 
 	/**
@@ -390,6 +551,92 @@ class BaseTabLayout
 	protected CTabFolder getTabFolder()
 	{
 		return tf;
+	}
+
+	protected void addResetAndExport(final String exportNameSuffix)
+	{
+		filenameSuffix = exportNameSuffix;
+
+		((GridLayout) top.getLayout()).numColumns = 4;
+		final Label spacer = new Label(top, SWT.NONE);
+		spacer.setLayoutData(new GridData(SWT.NONE, SWT.CENTER, true, false));
+		final Button resetFilter = new Button(top, SWT.NONE);
+		resetFilter.setFont(Main.font);
+		resetFilter.setText("Reset filter");
+		resetFilter.addSelectionListener(new SelectionAdapter()
+		{
+			@Override
+			public void widgetSelected(final SelectionEvent e)
+			{
+				includeFilter.clear();
+				excludeFilter.clear();
+				asyncAddLog("reset output filter (all subsequent events will be shown)");
+			}
+		});
+		final Button export = new Button(top, SWT.NONE);
+		export.setFont(Main.font);
+		export.setText("Export data...");
+		export.addSelectionListener(new SelectionAdapter()
+		{
+			@Override
+			public void widgetSelected(final SelectionEvent e)
+			{
+				final FileDialog dlg = new FileDialog(Main.shell, SWT.SAVE);
+				dlg.setText("Export data to CSV");
+				dlg.setOverwrite(true);
+
+				// provide a default filename with time stamp, but allow overruling by user
+				final String filename;
+				if (prevFilename != null)
+					filename = prevFilename;
+				else {
+					// ISO 8601 would be yyyyMMddTHHmmss, but its not really readable.
+					final String timestamp = new SimpleDateFormat("yyyy-MM-dd--HH-mm-ss")
+							.format(new Date());
+					filename = timestamp + filenameSuffix;
+				}
+				dlg.setFileName(filename);
+				final String resource = dlg.open();
+				if (resource == null)
+					return;
+				if (!filename.equals(dlg.getFileName()))
+					prevFilename = dlg.getFileName();
+
+				saveAs(resource);
+			}
+		});
+	}
+
+	protected void saveAs(final String resource)
+	{
+		asyncAddLog("Export data in CSV format to " + resource);
+		try {
+			final char comma = ',';
+			final char quote = '\"';
+			final char delim = '\n';
+
+			final FileWriter w = new FileWriter(resource);
+			// write list header
+			w.append(list.getColumn(0).getText());
+			for (int i = 1; i < list.getColumnCount(); i++)
+				w.append(comma).append(list.getColumn(i).getText());
+			w.write(delim);
+
+			// write list
+			for (int i = 0; i < list.getItemCount(); i++) {
+				final TableItem ti = list.getItem(i);
+				w.append(quote).append(ti.getText(0)).append(quote);
+				for (int k = 1; k < list.getColumnCount(); k++)
+					w.append(comma).append(quote).append(ti.getText(k)).append(quote);
+				w.write('\n');
+			}
+			w.close();
+			asyncAddLog("Export completed successfully");
+		}
+		catch (final IOException e) {
+			e.printStackTrace();
+			asyncAddLog("Export aborted with error: " + e.getMessage());
+		}
 	}
 
 	private List createLogView(final Composite parent, final Sash sash)
