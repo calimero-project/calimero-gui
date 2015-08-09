@@ -36,17 +36,17 @@
 
 package tuwien.auto.calimero.gui;
 
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.lang.ref.WeakReference;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -96,11 +96,7 @@ class BaseTabLayout
 		@Override
 		public void print(final String s)
 		{
-			for (final WeakReference<BaseTabLayout> ref : logSubscriber) {
-				final BaseTabLayout tab = ref.get();
-				if (tab != null)
-					tab.asyncAddLog(s);
-			}
+			logBuffer.forEach((k, v) -> { v.add(s); k.asyncAddLog(); });
 		}
 	}
 
@@ -112,7 +108,8 @@ class BaseTabLayout
 		System.setOut(redirector);
 	}
 
-	static java.util.List<WeakReference<BaseTabLayout>> logSubscriber = new ArrayList<>();
+	private static Map<BaseTabLayout, java.util.List<String>> logBuffer = Collections
+			.synchronizedMap(new WeakHashMap<>());
 
 	final CTabItem tab;
 	final Composite workArea;
@@ -215,39 +212,7 @@ class BaseTabLayout
 		});
 		initTableBottom(splitted, sash);
 		log = createLogView(splitted, sash);
-//		logWriter = new LogWriter()
-//		{
-//			@Override
-//			public void close()
-//			{}
-//
-//			@Override
-//			public void flush()
-//			{}
-//
-//			@Override
-//			public void write(final String logService, final LogLevel level, final String msg)
-//			{
-//				write(logService, level, msg, null);
-//			}
-//
-//			@Override
-//			public void write(final String logService, final LogLevel level, final String msg,
-//				final Throwable t)
-//			{
-//				String s = "[" + level.toString() + "] " + msg;
-//				if (t != null && t.getMessage() != null)
-//					s += " (" + t.getMessage() + ")";
-//				asyncAddLog(s);
-//				if (t != null) {
-//					final StackTraceElement[] ste = t.getStackTrace();
-//					asyncAddLog("Error trace:");
-//					for (final StackTraceElement e : ste)
-//						asyncAddLog("    " + e.toString());
-//				}
-//			}
-//		};
-		logSubscriber.add(new WeakReference<BaseTabLayout>(this));
+		logBuffer.put(this, Collections.synchronizedList(new ArrayList<>()));
 		workArea.layout();
 	}
 
@@ -382,6 +347,7 @@ class BaseTabLayout
 	protected final void setHeaderInfo(final String info)
 	{
 		infoLabel.setText(info);
+		top.layout();
 	}
 
 	/**
@@ -393,22 +359,32 @@ class BaseTabLayout
 	{}
 
 	/**
-	 * Adds a log string asynchronously to the log list.
-	 *
-	 * @param s log text
+	 * Adds a log strings of the log buffer asynchronously to the log list.
 	 */
-	protected final void asyncAddLog(final String s)
+	private void asyncAddLog()
 	{
-		Main.asyncExec(new Runnable()
-		{
-			public void run()
-			{
-				if (log.isDisposed())
-					return;
-				log.add(s);
+		Main.asyncExec(() -> {
+			if (log.isDisposed())
+				return;
+			final java.util.List<String> buf = logBuffer.get(this);
+			if (buf != null) {
+				buf.forEach(log::add);
+				buf.clear();
 				log.setTopIndex(log.getItemCount() - 1);
 			}
 		});
+	}
+
+	/**
+	 * Adds a log string asynchronously to the log list.
+	 */
+	protected final void asyncAddLog(final String s)
+	{
+		final java.util.List<String> buf = logBuffer.get(this);
+		if (buf != null) {
+			buf.add(s);
+			asyncAddLog();
+		}
 	}
 
 	/**

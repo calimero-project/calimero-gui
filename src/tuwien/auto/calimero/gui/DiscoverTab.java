@@ -56,6 +56,7 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
+import tuwien.auto.calimero.knxnetip.Discoverer.Result;
 import tuwien.auto.calimero.knxnetip.servicetype.SearchResponse;
 import tuwien.auto.calimero.tools.Discover;
 
@@ -105,9 +106,6 @@ class DiscoverTab extends BaseTabLayout
 		enableColumnAdjusting();
 	}
 
-	/* (non-Javadoc)
-	 * @see tuwien.auto.calimero.gui.BaseTabLayout#createWorkAreaTop()
-	 */
 	@Override
 	protected void initWorkAreaTop()
 	{
@@ -140,17 +138,16 @@ class DiscoverTab extends BaseTabLayout
 			args.add("--nat");
 		list.removeAll();
 		log.removeAll();
-//		final LogService logService = LogManager.getManager().getLogService(Discoverer.LOG_SERVICE);
-//		logService.addWriter(logWriter);
 		try {
 			final Runnable r = new Discover(args.toArray(new String[0]))
 			{
 				@Override
-				protected void onEndpointReceived(final SearchResponse r)
+				protected void onEndpointReceived(final Result<SearchResponse> result)
 				{
 					final String sep = "\n";
 					final StringBuilder buf = new StringBuilder();
 					buf.append("Control endpoint ");
+					final SearchResponse r = result.getResponse();
 					buf.append(r.getControlEndpoint().toString()).append(sep);
 					buf.append(r.getDevice().toString()).append(sep);
 					buf.append("Supported service families:").append(sep).append("    ");
@@ -187,17 +184,12 @@ class DiscoverTab extends BaseTabLayout
 					});
 				}
 
-				/* (non-Javadoc)
-				 * @see tuwien.auto.calimero.tools.Discover
-				 * #exceptionThrown(java.lang.Exception)
-				 */
 				@Override
 				protected void onCompletion(final Exception thrown, final boolean canceled)
 				{
 					if (thrown != null)
 						asyncAddLog("error: " + thrown.getMessage());
 					asyncAddLog("search finished");
-//					logService.removeWriter(logWriter);
 				}
 			};
 			new Thread(r).start();
@@ -207,10 +199,6 @@ class DiscoverTab extends BaseTabLayout
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see tuwien.auto.calimero.gui.BaseTabLayout#listItemSelected(
-	 * org.eclipse.swt.events.SelectionEvent)
-	 */
 	@Override
 	protected void onListItemSelected(final SelectionEvent e)
 	{

@@ -62,14 +62,14 @@ import org.eclipse.swt.widgets.TableColumn;
 
 import tuwien.auto.calimero.DataUnitBuilder;
 import tuwien.auto.calimero.GroupAddress;
+import tuwien.auto.calimero.KNXException;
+import tuwien.auto.calimero.KNXFormatException;
+import tuwien.auto.calimero.KNXIllegalArgumentException;
 import tuwien.auto.calimero.datapoint.Datapoint;
 import tuwien.auto.calimero.datapoint.DatapointMap;
 import tuwien.auto.calimero.dptxlator.DPT;
 import tuwien.auto.calimero.dptxlator.TranslatorTypes;
 import tuwien.auto.calimero.dptxlator.TranslatorTypes.MainType;
-import tuwien.auto.calimero.exception.KNXException;
-import tuwien.auto.calimero.exception.KNXFormatException;
-import tuwien.auto.calimero.exception.KNXIllegalArgumentException;
 import tuwien.auto.calimero.process.ProcessEvent;
 import tuwien.auto.calimero.tools.ProcComm;
 import tuwien.auto.calimero.xml.KNXMLException;
@@ -149,7 +149,7 @@ class TunnelTab extends BaseTabLayout
 	private Composite editArea;
 	private ProcCommWrapper pc;
 	private Combo points;
-	private DatapointMap model = new DatapointMap();
+	private DatapointMap<Datapoint> model = new DatapointMap<>();
 
 	private long eventCounter;
 	private long eventCounterFiltered = 1;
@@ -398,7 +398,7 @@ class TunnelTab extends BaseTabLayout
 		final String systemID = new FileDialog(Main.shell, SWT.OPEN).open();
 		if (systemID == null)
 			return;
-		model = new DatapointMap();
+		model = new DatapointMap<>();
 		try {
 			final XMLReader r = XMLFactory.getInstance().createXMLReader(systemID);
 			model.load(r);

@@ -44,7 +44,7 @@ import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
-import tuwien.auto.calimero.exception.KNXIllegalArgumentException;
+import tuwien.auto.calimero.KNXIllegalArgumentException;
 import tuwien.auto.calimero.tools.IPConfig;
 
 /**

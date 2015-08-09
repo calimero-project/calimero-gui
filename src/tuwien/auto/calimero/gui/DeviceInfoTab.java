@@ -46,9 +46,7 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
 import tuwien.auto.calimero.IndividualAddress;
-import tuwien.auto.calimero.exception.KNXIllegalArgumentException;
-import tuwien.auto.calimero.log.LogManager;
-import tuwien.auto.calimero.log.LogService;
+import tuwien.auto.calimero.KNXIllegalArgumentException;
 import tuwien.auto.calimero.tools.DeviceInfo;
 
 /**
@@ -81,12 +79,12 @@ class DeviceInfoTab extends BaseTabLayout
 		final List<String> args = new ArrayList<String>();
 		if (!host.isEmpty()) {
 			if (!localhost.isEmpty()) {
-				args.add("-localhost");
+				args.add("--localhost");
 				args.add(localhost);
 			}
 			args.add(host);
 			if (useNAT)
-				args.add("-nat");
+				args.add("--nat");
 			if (!port.isEmpty()) {
 				args.add("-p");
 				args.add(port);
@@ -98,10 +96,6 @@ class DeviceInfoTab extends BaseTabLayout
 		}
 
 		args.add(knxAddr);
-
-		final LogService logService = LogManager.getManager().getLogService("tools");
-		logService.removeWriter(logWriter);
-		logService.addWriter(logWriter);
 		try {
 			final DeviceInfo config = new DeviceInfo(args.toArray(new String[0]))
 			{

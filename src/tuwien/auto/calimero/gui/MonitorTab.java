@@ -45,8 +45,8 @@ import org.eclipse.swt.widgets.TableColumn;
 
 import tuwien.auto.calimero.DataUnitBuilder;
 import tuwien.auto.calimero.FrameEvent;
+import tuwien.auto.calimero.KNXException;
 import tuwien.auto.calimero.cemi.CEMIBusMon;
-import tuwien.auto.calimero.exception.KNXException;
 import tuwien.auto.calimero.link.MonitorFrameEvent;
 import tuwien.auto.calimero.link.medium.RawFrame;
 import tuwien.auto.calimero.link.medium.RawFrameBase;
@@ -128,20 +128,11 @@ class MonitorTab extends BaseTabLayout
 			public void start() throws KNXException, InterruptedException
 			{
 				super.start();
-				Main.asyncExec(new Runnable()
-				{
-					public void run()
-					{
-						setHeaderInfo("Monitoring" + (host.isEmpty() ? "" : " on host " + host)
-								+ " on port " + port + (useNAT ? ", using NAT" : ""));
-					}
-				});
+				Main.asyncExec(() -> setHeaderInfo("Monitoring"
+						+ (host.isEmpty() ? "" : " on host " + host) + " on port " + port
+						+ (useNAT ? ", using NAT" : "")));
 			}
 
-			/* (non-Javadoc)
-			 * @see tuwien.auto.calimero.tools.NetworkMonitor#onCompletion(
-			 * java.lang.Exception, boolean)
-			 */
 			@Override
 			protected void onCompletion(final Exception thrown, final boolean canceled)
 			{
@@ -150,10 +141,6 @@ class MonitorTab extends BaseTabLayout
 				asyncAddLog("network monitor closed " + (canceled ? "(canceled)" : ""));
 			}
 
-			/* (non-Javadoc)
-			 * @see tuwien.auto.calimero.tools.NetworkMonitor#onIndication
-			 * (tuwien.auto.calimero.FrameEvent)
-			 */
 			@Override
 			public void onIndication(final FrameEvent e)
 			{
@@ -205,10 +192,6 @@ class MonitorTab extends BaseTabLayout
 		addResetAndExport("_monitor.csv");
 	}
 
-	/* (non-Javadoc)
-	 * @see tuwien.auto.calimero.gui.BaseTabLayout#onDispose(
-	 * org.eclipse.swt.events.DisposeEvent)
-	 */
 	@Override
 	protected void onDispose(final DisposeEvent e)
 	{
