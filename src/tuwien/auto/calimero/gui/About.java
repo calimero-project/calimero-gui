@@ -66,32 +66,34 @@ public class About
 {
 	private static final String title = "About Calimero GUI";
 
-	private static final String catchPhrase = "Calimero 2 - A Java library for KNX access";
+	private static final String catchPhrase = "Graphical User Interface for KNX Access";
 
-	private static final String about = "Graphical user interface for Calimero 2, " +
-			"using the Calimero 2 tools and core library for KNX access. The library design " +
-			"supports the Java 2 Platform, and Java ME CDC technology with the Foundation Profile.";
+	private static final String about = "KNX Process Communication * Group && Network Monitoring * "
+			+ "KNXnet/IP Discovery * Device Scan * Device Information\n"
+			+ "Supports KNXnet/IP, KNX IP, FT1.2 (BCU2), USB, KNX USB RF.";
 
-	private static final String universityLink = "http://www.tuwien.ac.at";
+	private static final String repositoryLink = "https://calimero-project.github.io";
 	private static final String asgLink = "https://www.auto.tuwien.ac.at";
 	private static final String asgKnxLink = "https://www.auto.tuwien.ac.at/a-lab/knx_eib.html";
 
-	private static final String developer = "Automation Systems Group,\n<A>" + asgKnxLink + "</A>"
-			+ "\nVienna University of Technology, <A>" + universityLink + "</A>";
+	private static final String developer = "Automation Systems Group, "
+			+ "Vienna University of Technology\n<A>" + asgKnxLink + "</A>";
+
+	private static final String repository = "Source code repository: <A>" + repositoryLink
+			+ "</A>";
 
 	private static final String license = "The Calimero library, tools, documentation, "
-		+ "and this GUI are licensed under the GPL, with the Classpath Exception.";
+			+ "and this GUI are licensed under the GPL, with the Classpath Exception.";
 	private static final String copyright = "Copyright (c) 2006, 2015.";
 
 	private static final String swtLink = "http://www.eclipse.org/swt/";
-	private static final String swtInfo = "This GUI uses the "
-			+ "Standard Widget Toolkit (SWT).\n<A>" + swtLink + "</A>";
+	private static final String swtInfo = "This GUI uses the <A href=\"" + swtLink
+			+ "\">Standard Widget Toolkit (SWT)</A>.";
 
 	private static final Font headerFont;
 
 	static {
 		final FontData fd = Main.display.getSystemFont().getFontData()[0];
-		fd.setHeight(fd.getHeight() + 4);
 		fd.setStyle(SWT.BOLD);
 		headerFont = new Font(Main.display, fd);
 	}
@@ -99,19 +101,19 @@ public class About
 	About(final Shell parent)
 	{
 		final Shell shell = new Shell(parent, SWT.DIALOG_TRIM | SWT.RESIZE);
-		shell.setMinimumSize(300, 200);
+		shell.setMinimumSize(350, 340);
 		shell.setLayout(new GridLayout());
 		shell.setText(title);
 
-		final Label header = new Label(shell, SWT.NONE | SWT.WRAP);
+		final Label header = new Label(shell, SWT.NONE | SWT.CENTER);
 		header.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
 		header.setFont(headerFont);
 		header.setText(catchPhrase);
 
-		final Label top = new Label(shell, SWT.NONE | SWT.WRAP);
+		final Label top = new Label(shell, SWT.NONE | SWT.WRAP | SWT.CENTER);
 		top.setFont(Main.font);
 		top.setText(about);
-		top.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
+		top.setLayoutData(new GridData(SWT.CENTER, SWT.NONE, true, false));
 
 		final Composite c = new Composite(shell, SWT.NONE | SWT.TOP);
 		c.setLayout(new GridLayout(2, false));
@@ -121,20 +123,19 @@ public class About
 
 		final Link link = new Link(c, SWT.NONE);
 		link.setFont(Main.font);
-		link.setText("Author: B. Malinowsky, "
-			+ "<A href=\"mailto:malinowsky@auto.tuwien.ac.at\">"
-			+ "malinowsky@auto.tuwien.ac.at</A>\n\n" + developer + "\n\n"
-			+ license + " " + copyright + "\n\n" + swtInfo);
+		link.setText("Author: B. Malinowsky, <A href=\"mailto:malinowsky@auto.tuwien.ac.at\">"
+				+ "malinowsky@auto.tuwien.ac.at</A>\n\n" + developer + "\n\n" + repository + "\n\n"
+				+ license + " " + copyright);
 		link.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
 		link.setBackground(white);
-		link.addSelectionListener(new SelectionAdapter()
-		{
+		link.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(final SelectionEvent e)
 			{
 				openLinkInBrowser(e.text);
 			}
 		});
+
 		final Label asg = new Label(c, SWT.NONE);
 		asg.setLayoutData(new GridData(SWT.END, SWT.TOP, false, false));
 		final InputStream is = getClass().getResourceAsStream("/asg-small.png");
@@ -152,6 +153,20 @@ public class About
 		}
 		asg.setToolTipText(asgLink);
 
+		final Link swtUsage = new Link(c, SWT.NONE);
+		swtUsage.setFont(Main.font);
+		swtUsage.setText(swtInfo);
+		swtUsage.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
+		swtUsage.setBackground(white);
+		swtUsage.setToolTipText(swtLink);
+		swtUsage.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(final SelectionEvent e)
+			{
+				openLinkInBrowser(e.text);
+			}
+		});
+
 		final Label bar = new Label(shell, SWT.HORIZONTAL | SWT.SEPARATOR);
 		bar.setLayoutData(new GridData(GridData.FILL, SWT.NONE, false, false));
 
@@ -162,8 +177,8 @@ public class About
 		scroll.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
 		final Label lib = new Label(scroll, SWT.NONE);
-		lib.setText("Calimero 2 tools - Java package tuwien.auto.calimero.tools\n"
-			+ Settings.getLibraryHeader(false) + "\n\n" + Settings.getBundleListing());
+		lib.setFont(Main.font);
+		lib.setText(Settings.getLibraryHeader(false) + "\n" + Settings.getBundleListing());
 		lib.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		Point size = lib.computeSize(SWT.DEFAULT, SWT.DEFAULT);
 		lib.setSize(size);
@@ -178,8 +193,7 @@ public class About
 		close.setFont(Main.font);
 		close.setText("Close");
 		close.setFocus();
-		close.addSelectionListener(new SelectionAdapter()
-		{
+		close.addSelectionListener(new SelectionAdapter() {
 			/**
 			 * @param e
 			 */
