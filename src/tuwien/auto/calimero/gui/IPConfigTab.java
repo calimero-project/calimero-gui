@@ -45,6 +45,7 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
 import tuwien.auto.calimero.KNXIllegalArgumentException;
+import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.tools.IPConfig;
 
 /**
@@ -52,12 +53,15 @@ import tuwien.auto.calimero.tools.IPConfig;
  */
 class IPConfigTab extends BaseTabLayout
 {
-	IPConfigTab(final CTabFolder tf, final String name, final String localhost, final String host,
-		final String port, final boolean useNAT, final String knxAddr)
+	private final ConnectArguments connect;
+
+	IPConfigTab(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, "KNXnet/IP configuration for " + name, "Query configuration from "
-			+ (knxAddr.isEmpty() ? "" : knxAddr + " over ") + host + " port " + port
-			+ (useNAT ? ", using NAT" : ""));
+		super(tf, "KNXnet/IP configuration for " + args.name, "Query configuration from "
+				+ (args.knxAddress == null ? "" : args.knxAddress + " over ") + args.remote
+				+ " port " + args.port + (args.useNat() ? ", using NAT" : ""));
+		connect = args;
+
 		final TableColumn pid = new TableColumn(list, SWT.LEFT);
 		pid.setText("Property ID");
 		pid.setWidth(100);
@@ -69,48 +73,52 @@ class IPConfigTab extends BaseTabLayout
 		value.setWidth(200);
 		enableColumnAdjusting();
 
-		readConfig(localhost, host, port, useNAT, knxAddr);
+		readConfig();
 	}
 
-	private void readConfig(final String localhost, final String host, final String port,
-		final boolean useNAT, final String knxAddr)
+	private void readConfig()
 	{
 		list.removeAll();
 		log.removeAll();
 		final List<String> args = new ArrayList<String>();
-		if (!host.isEmpty()) {
-			if (!localhost.isEmpty()) {
+		if (connect.useKnxNetIP()) {
+			if (!connect.local.isEmpty()) {
 				args.add("--localhost");
-				args.add(localhost);
+				args.add(connect.local);
 			}
-			args.add(host);
-			if (knxAddr.isEmpty())
+			args.add(connect.remote);
+			if (connect.knxAddress.isEmpty())
 				args.add("-l");
-			if (useNAT)
-				args.add("-nat");
-			if (!port.isEmpty()) {
+			if (connect.useNat())
+				args.add("--nat");
+			if (connect.useRouting())
+				args.add("--routing");
+			if (!connect.port.isEmpty()) {
 				args.add("-p");
-				args.add(port);
+				args.add(connect.port);
 			}
 		}
-		else if (!port.isEmpty()) {
+		else if (connect.useUsb()) {
+			args.add("-u");
+			args.add(connect.port);
+		}
+		else if (connect.useFT12()) {
 			args.add("-s");
-			args.add(port);
+			args.add(connect.port);
 		}
 
-		if (!knxAddr.isEmpty()) {
+		if (!connect.knxAddress.isEmpty()) {
 			args.add("-r");
-			args.add(knxAddr);
+			args.add(connect.knxAddress);
 		}
 
 		try {
-			final IPConfig config = new IPConfig(args.toArray(new String[0]))
-			{
+			final IPConfig config = new IPConfig(args.toArray(new String[0])) {
 				@Override
 				protected void onConfigurationReceived(final List<String[]> config)
 				{
-					Main.asyncExec(new Runnable()
-					{
+					Main.asyncExec(new Runnable() {
+						@Override
 						public void run()
 						{
 							if (list.isDisposed())
@@ -123,8 +131,9 @@ class IPConfigTab extends BaseTabLayout
 							list.setRedraw(true);
 
 							setHeaderInfo("Configuration received from "
-									+ (knxAddr.isEmpty() ? "" : knxAddr + " over ") + host
-									+ " port " + port + (useNAT ? ", using NAT" : ""));
+									+ (connect.knxAddress.isEmpty() ? "" : connect.knxAddress
+											+ " over ") + connect.remote + " port " + connect.port
+									+ (connect.useNat() ? ", using NAT" : ""));
 						}
 					});
 				}

@@ -54,7 +54,6 @@ import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -69,11 +68,9 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.List;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Sash;
@@ -156,13 +153,7 @@ class BaseTabLayout
 		top.setLayoutData(gridData);
 
 		tab.setControl(workArea);
-		tab.addDisposeListener(new DisposeListener()
-		{
-			public void widgetDisposed(final DisposeEvent e)
-			{
-				onDispose(e);
-			}
-		});
+		tab.addDisposeListener(this::onDispose);
 		tf.setSelection(tab);
 
 		if (info != null) {
@@ -180,14 +171,10 @@ class BaseTabLayout
 		sashData.left = new FormAttachment(0);
 		sashData.right = new FormAttachment(100);
 		sash.setLayoutData(sashData);
-		sash.addListener(SWT.Selection, new Listener()
-		{
-			public void handleEvent(final Event e)
-			{
-				sashData.top = new FormAttachment(Math.round(e.y * 100.0f
-					/ splitted.getBounds().height));
+		sash.addListener(SWT.Selection, e -> {
+			final int numerator = Math.round(e.y * 100.0f / splitted.getBounds().height);
+			sashData.top = new FormAttachment(numerator);
 				splitted.layout();
-			}
 		});
 
 		list = new Table(splitted, SWT.BORDER | SWT.FULL_SELECTION | SWT.V_SCROLL);
@@ -200,8 +187,7 @@ class BaseTabLayout
 		list.setLinesVisible(false);
 		list.setHeaderVisible(true);
 		list.setFont(Main.font);
-		list.addSelectionListener(new SelectionAdapter()
-		{
+		list.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetDefaultSelected(final SelectionEvent e)
 			{
@@ -239,6 +225,7 @@ class BaseTabLayout
 	protected void initFilterMenu()
 	{
 		list.addMenuDetectListener(new MenuDetectListener() {
+			@Override
 			public void menuDetected(final MenuDetectEvent e)
 			{
 				final long now = e.time & 0xFFFFFFFFL;
@@ -266,6 +253,7 @@ class BaseTabLayout
 				mi2.setData("pattern", content);
 
 				final SelectionAdapter selection = new SelectionAdapter() {
+					@Override
 					public void widgetSelected(final SelectionEvent e)
 					{
 						final Integer col = (Integer) mi1.getData("column");
@@ -403,13 +391,7 @@ class BaseTabLayout
 		// time. We create a runnable for every new item, and even though addListItems
 		// finished adding all items to the list, remaining runnables that piled up get executed.
 		// Maybe replace with a timed execution every x ms.
-		Main.asyncExec(new Runnable()
-		{
-			public void run()
-			{
-				addListItems();
-			}
-		});
+		Main.asyncExec(this::addListItems);
 	}
 
 	// this method must be invoked from the GUI thread only
@@ -462,8 +444,7 @@ class BaseTabLayout
 	 */
 	protected void enableColumnAdjusting()
 	{
-		list.addControlListener(new ControlAdapter()
-		{
+		list.addControlListener(new ControlAdapter() {
 			@Override
 			public void controlResized(final ControlEvent e)
 			{
@@ -488,8 +469,7 @@ class BaseTabLayout
 			}
 		});
 		for (final TableColumn c : list.getColumns()) {
-			c.addControlListener(new ControlAdapter()
-			{
+			c.addControlListener(new ControlAdapter() {
 				@Override
 				public void controlResized(final ControlEvent e)
 				{
@@ -522,6 +502,7 @@ class BaseTabLayout
 
 	/**
 	 * Returns the tab folder control used for this tab.
+	 *
 	 * @return tab folder control
 	 */
 	protected CTabFolder getTabFolder()
@@ -539,8 +520,7 @@ class BaseTabLayout
 		final Button resetFilter = new Button(top, SWT.NONE);
 		resetFilter.setFont(Main.font);
 		resetFilter.setText("Reset filter");
-		resetFilter.addSelectionListener(new SelectionAdapter()
-		{
+		resetFilter.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(final SelectionEvent e)
 			{
@@ -552,8 +532,7 @@ class BaseTabLayout
 		final Button export = new Button(top, SWT.NONE);
 		export.setFont(Main.font);
 		export.setText("Export data...");
-		export.addSelectionListener(new SelectionAdapter()
-		{
+		export.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(final SelectionEvent e)
 			{

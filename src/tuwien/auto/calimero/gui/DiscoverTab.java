@@ -51,8 +51,6 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
@@ -74,35 +72,21 @@ class DiscoverTab extends BaseTabLayout
 
 		list.setHeaderVisible(false);
 		listItemMargin = 10;
-		list.addListener(SWT.MeasureItem, new Listener()
-		{
-			public void handleEvent(final Event event)
-			{
-				final TableItem item = (TableItem) event.item;
-				final String text = item.getText(event.index);
-				final Point size = event.gc.textExtent(text);
-				event.width = size.x + 2 * listItemMargin;
-				event.height = Math.max(event.height, size.y + listItemMargin);
-			}
+		list.addListener(SWT.MeasureItem, event -> {
+			final TableItem item = (TableItem) event.item;
+			final String text = item.getText(event.index);
+			final Point size = event.gc.textExtent(text);
+			event.width = size.x + 2 * listItemMargin;
+			event.height = Math.max(event.height, size.y + listItemMargin);
 		});
-		list.addListener(SWT.EraseItem, new Listener()
-		{
-			public void handleEvent(final Event event)
-			{
-				event.detail &= ~SWT.FOREGROUND;
-			}
-		});
-		list.addListener(SWT.PaintItem, new Listener()
-		{
-			public void handleEvent(final Event event)
-			{
-				final TableItem item = (TableItem) event.item;
-				final String text = item.getText(event.index);
-				event.gc.drawText(text, event.x + listItemMargin, event.y, true);
-			}
+		list.addListener(SWT.EraseItem, event -> event.detail &= ~SWT.FOREGROUND);
+		list.addListener(SWT.PaintItem, event -> {
+			final TableItem item = (TableItem) event.item;
+			final String text = item.getText(event.index);
+			event.gc.drawText(text, event.x + listItemMargin, event.y, true);
 		});
 		setListBanner("\nFound endpoints of devices (KNXnet/IP routers only) will be "
-			+ "listed here.\nSelect an endpoint to open the connection dialog.");
+				+ "listed here.\nSelect an endpoint to open the connection dialog.");
 		enableColumnAdjusting();
 	}
 
@@ -114,8 +98,7 @@ class DiscoverTab extends BaseTabLayout
 		final Button start = new Button(top, SWT.PUSH);
 		start.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		start.setText("Discover KNXnet/IP devices");
-		start.addSelectionListener(new SelectionAdapter()
-		{
+		start.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(final SelectionEvent e)
 			{
@@ -139,8 +122,7 @@ class DiscoverTab extends BaseTabLayout
 		list.removeAll();
 		log.removeAll();
 		try {
-			final Runnable r = new Discover(args.toArray(new String[0]))
-			{
+			final Runnable r = new Discover(args.toArray(new String[0])) {
 				@Override
 				protected void onEndpointReceived(final Result<SearchResponse> result)
 				{
@@ -163,8 +145,8 @@ class DiscoverTab extends BaseTabLayout
 
 					// only add the new item if it is different from any already shown in the list
 					final String setMcast = mcast;
-					Main.syncExec(new Runnable()
-					{
+					Main.syncExec(new Runnable() {
+						@Override
 						public void run()
 						{
 							final List<TableItem> items = new ArrayList<TableItem>();

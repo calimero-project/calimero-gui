@@ -81,8 +81,7 @@ public class Main
 
 		final ToolItem showLog = new ToolItem(header, SWT.NONE);
 		showLog.setText("Show log");
-		showLog.addSelectionListener(new SelectionAdapter()
-		{
+		showLog.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(final SelectionEvent e)
 			{
@@ -92,8 +91,7 @@ public class Main
 
 		final ToolItem about = new ToolItem(header, SWT.NONE);
 		about.setText("About");
-		about.addSelectionListener(new SelectionAdapter()
-		{
+		about.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(final SelectionEvent e)
 			{
@@ -136,8 +134,8 @@ public class Main
 		hostItem.setControl(localHost);
 		hostItem.setWidth(size.x + 100);
 
-		new Label(shell, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(
-			SWT.FILL, SWT.NONE, true, false));
+		new Label(shell, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL,
+				SWT.NONE, true, false));
 
 		tf = new CTabFolder(shell, SWT.NONE | SWT.CAP_ROUND | SWT.BORDER);
 		tf.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
@@ -145,11 +143,10 @@ public class Main
 		tf.setSimple(false);
 		tf.setMRUVisible(true);
 		tf.setFont(font);
-		tf.setSelectionBackground(new Color[] { display.getSystemColor(SWT.COLOR_WHITE),
-			display.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND), }, new int[] { 75 },
-			true);
-		connect.addSelectionListener(new SelectionAdapter()
-		{
+		tf.setSelectionBackground(
+				new Color[] { display.getSystemColor(SWT.COLOR_WHITE),
+					display.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND), }, new int[] { 75 }, true);
+		connect.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(final SelectionEvent e)
 			{
@@ -165,7 +162,7 @@ public class Main
 			if (!display.readAndDispatch())
 				display.sleep();
 	}
-	
+
 	/**
 	 * The main entry routine of the GUI.
 	 * <p>

@@ -58,6 +58,76 @@ import tuwien.auto.calimero.knxnetip.KNXnetIPConnection;
  */
 class ConnectDialog
 {
+	public static final class ConnectArguments
+	{
+		public enum Protocol {
+			Tunneling, Routing, FT12, USB
+		}
+
+		String name;
+		String knxAddress;
+
+		final Protocol protocol;
+		final String local;
+		final String remote;
+		final String port;
+
+		private final boolean nat;
+
+		static ConnectArguments newKnxNetIP(final boolean routing, final String localHost,
+			final String remoteHost, final String port, final boolean nat, final String knxAddress)
+		{
+			return new ConnectArguments(routing ? Protocol.Routing : Protocol.Tunneling, localHost,
+					remoteHost, port, nat, knxAddress);
+		}
+
+		static ConnectArguments newUsb(final String port, final String knxAddress)
+		{
+			return new ConnectArguments(Protocol.USB, null, null, port, false, knxAddress);
+		}
+
+		static ConnectArguments newFT12(final String port, final String knxAddress)
+		{
+			return new ConnectArguments(Protocol.FT12, null, null, port, false, knxAddress);
+		}
+
+		private ConnectArguments(final Protocol p, final String local, final String remote,
+			final String port, final boolean nat, final String knxAddress)
+		{
+			protocol = p;
+			this.local = local;
+			this.remote = remote;
+			this.port = port;
+			this.nat = nat;
+			this.knxAddress = knxAddress;
+		}
+
+		public boolean useKnxNetIP()
+		{
+			return protocol == Protocol.Tunneling || protocol == Protocol.Routing;
+		}
+
+		public boolean useRouting()
+		{
+			return protocol == Protocol.Routing;
+		}
+
+		public boolean useFT12()
+		{
+			return protocol == Protocol.FT12;
+		}
+
+		public boolean useUsb()
+		{
+			return protocol == Protocol.USB;
+		}
+
+		public boolean useNat()
+		{
+			return nat;
+		}
+	}
+
 	ConnectDialog(final CTabFolder tf, final String name, final String host, final String port,
 		final String mcast, final boolean useNAT)
 	{
@@ -71,8 +141,8 @@ class ConnectDialog
 		final Label nameLabel = new Label(shell, SWT.NONE);
 		nameLabel.setFont(Main.font);
 		nameLabel.setText(confirm ? "Name or ID: " + name
-			: "Specify connection parameters.\nFor serial connections, "
-				+ "leave the host empty.");
+				: "Specify connection parameters.\nFor serial connections, "
+						+ "leave the host empty.");
 
 		final Composite c = new Composite(shell, SWT.NONE);
 		c.setLayout(new GridLayout(2, false));
@@ -89,6 +159,22 @@ class ConnectDialog
 		portData.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
 		portData.setText(port);
 
+		final Button usb = new Button(c, SWT.CHECK);
+		usb.setText("Use KNX USB interface");
+		usb.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		usb.setToolTipText("Fill the port field, specify either the USB vendor name "
+				+ "or use vendorId:productId");
+		usb.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(final SelectionEvent e)
+			{
+				final boolean enabled = !usb.getSelection();
+				hostData.setEnabled(enabled);
+			}
+		});
+		// spacer to the right of USB checkbox
+		new Label(c, SWT.NONE);
+
 		final Button nat = new Button(c, SWT.CHECK);
 		nat.setText("Use NAT aware connection");
 		nat.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -98,9 +184,19 @@ class ConnectDialog
 			nat.setToolTipText("Some KNXnet/IP devices do not support this mode of connection");
 			nat.setSelection(useNAT);
 		}
-
 		// spacer to the right of NAT checkbox
 		new Label(c, SWT.NONE);
+
+		usb.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(final SelectionEvent e)
+			{
+				final boolean enabled = !usb.getSelection();
+				localhostData.setEnabled(enabled);
+				hostData.setEnabled(enabled);
+				nat.setEnabled(enabled);
+			}
+		});
 
 		final Label configKNXAddress = new Label(c, SWT.NONE);
 		configKNXAddress.setText("KNX device address (optional): ");
@@ -121,8 +217,7 @@ class ConnectDialog
 		if (serial)
 			routing.setEnabled(false);
 		else {
-			routing.addSelectionListener(new SelectionAdapter()
-			{
+			routing.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(final SelectionEvent e)
 				{
@@ -140,7 +235,7 @@ class ConnectDialog
 
 		final Button scan = new Button(mode, SWT.RADIO);
 		scan.setText("Scan for KNX devices");
-		scan.setToolTipText("Requires a KNX area.line or KNX device address (hex)");
+		scan.setToolTipText("Requires a KNX area.line or KNX device address");
 
 		final Button devinfo = new Button(mode, SWT.RADIO);
 		devinfo.setText("Read KNX device information");
@@ -157,8 +252,7 @@ class ConnectDialog
 		final Button connect = new Button(buttons, SWT.NONE);
 		connect.setText("Connect");
 		connect.setLayoutData(new RowData());
-		connect.addSelectionListener(new SelectionAdapter()
-		{
+		connect.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(final SelectionEvent e)
 			{
@@ -171,20 +265,30 @@ class ConnectDialog
 				// if no port is supplied for KNXnet/IP, we use default port
 				if (p.isEmpty())
 					p = Integer.toString(KNXnetIPConnection.DEFAULT_PORT);
-
 				final boolean natChecked = serial ? false : nat.getSelection();
+
+				ConnectArguments args;
+				if (usb.getSelection())
+					args = ConnectArguments.newUsb(p, knxAddr.getText());
+				else if (!h.isEmpty()) {
+					final boolean useRouting = routing.getSelection();
+					args = ConnectArguments.newKnxNetIP(useRouting, local, h, p, natChecked,
+							knxAddr.getText());
+				}
+				else
+					args = ConnectArguments.newFT12(p, knxAddr.getText());
+				args.name = n;
+
 				if (monitor.getSelection())
-					new MonitorTab(tf, n, local, h, p, natChecked);
+					new MonitorTab(tf, args);
 				else if (config.getSelection())
-					new IPConfigTab(tf, n, local, h, p, natChecked, knxAddr.getText());
+					new IPConfigTab(tf, args);
 				else if (scan.getSelection())
-					new ScanDevicesTab(tf, n, local, h, p, natChecked, knxAddr.getText());
+					new ScanDevicesTab(tf, args);
 				else if (devinfo.getSelection())
-					new DeviceInfoTab(tf, n, local, h, p, natChecked, knxAddr.getText());
-				else if (tunnel.getSelection())
-					new TunnelTab(tf, n, local, h, p, natChecked, false);
-				else if (routing.getSelection())
-					new TunnelTab(tf, n, local, h, p, natChecked, true);
+					new DeviceInfoTab(tf, args);
+				else
+					new TunnelTab(tf, args);
 				shell.dispose();
 			}
 		});
@@ -192,8 +296,7 @@ class ConnectDialog
 		final Button cancel = new Button(buttons, SWT.NONE);
 		cancel.setLayoutData(new RowData());
 		cancel.setText("Cancel");
-		cancel.addSelectionListener(new SelectionAdapter()
-		{
+		cancel.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(final SelectionEvent e)
 			{

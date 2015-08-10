@@ -47,6 +47,7 @@ import tuwien.auto.calimero.DataUnitBuilder;
 import tuwien.auto.calimero.FrameEvent;
 import tuwien.auto.calimero.KNXException;
 import tuwien.auto.calimero.cemi.CEMIBusMon;
+import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.link.MonitorFrameEvent;
 import tuwien.auto.calimero.link.medium.RawFrame;
 import tuwien.auto.calimero.link.medium.RawFrameBase;
@@ -60,13 +61,15 @@ class MonitorTab extends BaseTabLayout
 	private NetworkMonitor m;
 	private long eventCounter;
 	private long eventCounterFiltered = 1;
+	private final ConnectArguments connect;
 
-	MonitorTab(final CTabFolder tf, final String name, final String localhost, final String host,
-		final String port, final boolean useNAT)
+	MonitorTab(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, "Monitor for " + name, "Open monitor"
-			+ (host.isEmpty() ? "" : " on host " + host) + " on port " + port
-			+ (useNAT ? ", using NAT" : ""));
+		super(tf, "Monitor for " + args.name, "Open monitor"
+				+ (args.remote == null ? "" : " on host " + args.remote) + " on port " + args.port
+				+ (args.useNat() ? ", using NAT" : ""));
+		connect = args;
+
 		final TableColumn cnt = new TableColumn(list, SWT.RIGHT);
 		cnt.setText("#");
 		cnt.setWidth(30);
@@ -92,27 +95,30 @@ class MonitorTab extends BaseTabLayout
 
 		initFilterMenu();
 
-		startMonitor(localhost, host, port, useNAT);
+		startMonitor();
 	}
 
-	private void startMonitor(final String localhost, final String host, final String port,
-		final boolean useNAT)
+	private void startMonitor()
 	{
 		final java.util.List<String> args = new ArrayList<String>();
-		if (!host.isEmpty()) {
-			if (!localhost.isEmpty()) {
+		if (connect.useKnxNetIP()) {
+			if (!connect.local.isEmpty()) {
 				args.add("--localhost");
-				args.add(localhost);
+				args.add(connect.local);
 			}
-			args.add(host);
-			if (useNAT)
+			args.add(connect.remote);
+			if (connect.useNat())
 				args.add("--nat");
-			if (!port.isEmpty())
+			if (!connect.port.isEmpty())
 				args.add("-p");
 		}
-		else
+		else if (connect.useUsb()) {
+			args.add("-u");
+		}
+		else if (connect.useFT12()) {
 			args.add("-s");
-		args.add(port);
+		}
+		args.add(connect.port);
 
 		list.removeAll();
 		log.removeAll();
@@ -129,8 +135,8 @@ class MonitorTab extends BaseTabLayout
 			{
 				super.start();
 				Main.asyncExec(() -> setHeaderInfo("Monitoring"
-						+ (host.isEmpty() ? "" : " on host " + host) + " on port " + port
-						+ (useNAT ? ", using NAT" : "")));
+						+ (connect.remote == null ? "" : " on host " + connect.remote)
+						+ " on port " + connect.port + (connect.useNat() ? ", using NAT" : "")));
 			}
 
 			@Override
@@ -152,8 +158,8 @@ class MonitorTab extends BaseTabLayout
 				item.add(Long.toString(((CEMIBusMon) e.getFrame()).getTimestamp()));
 				final String s = e.getFrame().toString();
 				// status / sequence
-				final String status = "status ";
-				final String rawFrame = "raw frame ";
+				final String status = "seq ";
+				final String rawFrame = ": ";
 				item.add(s.substring(s.indexOf(status), s.indexOf(rawFrame)));
 				// raw frame
 				item.add(s.substring(s.indexOf(rawFrame) + rawFrame.length()));
