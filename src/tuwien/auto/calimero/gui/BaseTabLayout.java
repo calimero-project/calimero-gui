@@ -78,6 +78,8 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
+import tuwien.auto.calimero.log.LogService.LogLevel;
+
 /**
  * @author B. Malinowsky
  */
@@ -100,12 +102,17 @@ class BaseTabLayout
 	static {
 		System.setProperty("org.slf4j.simpleLogger.logFile", "System.out");
 		System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "trace");
+		System.setProperty("org.slf4j.simpleLogger.showLogName", "true");
 		final PrintStream oldSystemOut = System.out;
 		final PrintStream redirector = new StreamRedirector(oldSystemOut);
 		System.setOut(redirector);
 	}
 
 	private static Map<BaseTabLayout, java.util.List<String>> logBuffer = Collections
+			.synchronizedMap(new WeakHashMap<>());
+	private static Map<BaseTabLayout, LogLevel> logLevel = Collections
+			.synchronizedMap(new WeakHashMap<>());
+	private static Map<BaseTabLayout, String> logNamespace = Collections
 			.synchronizedMap(new WeakHashMap<>());
 
 	final CTabItem tab;
@@ -174,7 +181,7 @@ class BaseTabLayout
 		sash.addListener(SWT.Selection, e -> {
 			final int numerator = Math.round(e.y * 100.0f / splitted.getBounds().height);
 			sashData.top = new FormAttachment(numerator);
-				splitted.layout();
+			splitted.layout();
 		});
 
 		list = new Table(splitted, SWT.BORDER | SWT.FULL_SELECTION | SWT.V_SCROLL);
@@ -346,6 +353,17 @@ class BaseTabLayout
 	protected void onListItemSelected(final SelectionEvent e)
 	{}
 
+	protected final void setLogLevel(final LogLevel level)
+	{
+		logLevel.put(this, level);
+	}
+
+	// the namespace is converted to a regex, dots are escaped
+	protected final void setLogNamespace(final String namespace)
+	{
+		logNamespace.put(this, namespace.replaceAll("\\.", "\\\\\\."));
+	}
+
 	/**
 	 * Adds a log strings of the log buffer asynchronously to the log list.
 	 */
@@ -355,12 +373,36 @@ class BaseTabLayout
 			if (log.isDisposed())
 				return;
 			final java.util.List<String> buf = logBuffer.get(this);
+			final LogLevel level = logLevel.computeIfAbsent(this, k -> LogLevel.INFO);
+			final String ns = logNamespace.computeIfAbsent(this, k -> "");
 			if (buf != null) {
-				buf.forEach(log::add);
-				buf.clear();
+				synchronized (buf) {
+					buf.stream().filter(s -> matches(s, level, ns)).forEach(log::add);
+					buf.clear();
+				}
 				log.setTopIndex(log.getItemCount() - 1);
 			}
 		});
+	}
+
+	private static boolean matches(final String logMessage, final LogLevel level,
+		final String namespace)
+	{
+		boolean match = false;
+		switch (level) {
+		case TRACE:
+			match |= logMessage.contains(LogLevel.TRACE.name());
+		case DEBUG:
+			match |= logMessage.contains(LogLevel.DEBUG.name());
+		case INFO:
+			match |= logMessage.contains(LogLevel.INFO.name());
+		case WARN:
+			match |= logMessage.contains(LogLevel.WARN.name());
+		case ERROR:
+			match |= logMessage.contains(LogLevel.ERROR.name());
+		default:
+		}
+		return match && logMessage.matches(".*" + namespace + ".*");
 	}
 
 	/**
@@ -386,7 +428,7 @@ class BaseTabLayout
 	protected void asyncAddListItem(final String[] itemText, final String[] keys,
 		final String[] data)
 	{
-		itemBuffer.add(new String[][] {itemText, keys, data});
+		itemBuffer.add(new String[][] { itemText, keys, data });
 		// TODO Runnables might be executed with delay, because SWT enforces a minimum inter-arrival
 		// time. We create a runnable for every new item, and even though addListItems
 		// finished adding all items to the list, remaining runnables that piled up get executed.

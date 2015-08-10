@@ -36,22 +36,32 @@
 
 package tuwien.auto.calimero.gui;
 
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
-import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Sash;
+import org.eclipse.swt.widgets.Scale;
+
+import tuwien.auto.calimero.log.LogService.LogLevel;
 
 /**
  * @author B. Malinowsky
  */
 class LogTab extends BaseTabLayout
 {
+	private static final String[] levels = new String[] { "Error", "Warn", "Info", "Debug", "Trace" };
+
+	private Scale scale;
+	private Label loglevel;
+
 	LogTab(final CTabFolder tf)
 	{
 		super(tf, "Logging", "Shows all current log output");
-//		LogManager.getManager().addWriter("", logWriter);
 	}
 
 	/* (non-Javadoc)
@@ -65,14 +75,50 @@ class LogTab extends BaseTabLayout
 		((FormData) sash.getLayoutData()).top = new FormAttachment(0);
 		sash.setEnabled(false);
 	}
-	
-	/* (non-Javadoc)
-	 * @see tuwien.auto.calimero.gui.BaseTabLayout#onDispose(
-	 * org.eclipse.swt.events.DisposeEvent)
-	 */
+
 	@Override
-	protected void onDispose(final DisposeEvent e)
+	protected void initWorkAreaTop()
 	{
-//		LogManager.getManager().removeWriter("", logWriter);
+		super.initWorkAreaTop();
+
+		((GridLayout) top.getLayout()).numColumns = 3;
+		((GridLayout) top.getLayout()).makeColumnsEqualWidth = true;
+
+		loglevel = new Label(top, SWT.NONE);
+
+		final Composite scaleArea = new Composite(top, SWT.NONE);
+		final GridLayout layout = new GridLayout(3, false);
+		layout.marginHeight = 0;
+		layout.marginWidth = 0;
+		scaleArea.setLayout(layout);
+		scaleArea.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
+
+		final Label logMin = new Label(scaleArea, SWT.NONE);
+		logMin.setText(levels[0]);
+
+		scale = new Scale(scaleArea, SWT.HORIZONTAL);
+		scale.setLayoutData(new GridData(SWT.FILL, SWT.DEFAULT, true, false));
+		// trace, debug, info, warn, error
+		scale.setMinimum(LogLevel.ERROR.ordinal());
+		scale.setMaximum(LogLevel.TRACE.ordinal());
+		scale.setIncrement(1);
+		scale.setPageIncrement(4);
+		scale.addListener(SWT.Selection, event -> adjustLogLevel(scale.getSelection()));
+
+		final Label logMax = new Label(scaleArea, SWT.NONE);
+		logMax.setText(levels[4]);
+
+		scale.setSelection(LogLevel.DEBUG.ordinal());
+		adjustLogLevel(LogLevel.DEBUG.ordinal());
+		scaleArea.layout(true);
+	}
+
+	private void adjustLogLevel(final int level)
+	{
+		final String name = levels[level];
+		loglevel.setText("Verbosity: " + name);
+		scale.setToolTipText(name);
+		setLogLevel(LogLevel.values()[level]);
+		top.layout();
 	}
 }

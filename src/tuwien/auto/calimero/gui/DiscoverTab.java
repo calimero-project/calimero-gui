@@ -88,6 +88,7 @@ class DiscoverTab extends BaseTabLayout
 		setListBanner("\nFound endpoints of devices (KNXnet/IP routers only) will be "
 				+ "listed here.\nSelect an endpoint to open the connection dialog.");
 		enableColumnAdjusting();
+		setLogNamespace("calimero.knxnetip.Discoverer");
 	}
 
 	@Override
