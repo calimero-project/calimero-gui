@@ -45,7 +45,7 @@ Resolve/Compile/Install
 
 	mvn clean install -DskipTests -Dgpg.skip=true
 
-On OSX, (takes care of the Cocoa thread restrictions) 
+On OSX (takes care of the Cocoa thread restrictions) 
 
 	mvn exec:exec
 
@@ -64,14 +64,16 @@ Use your specific version in the following commands.
 Either, relying on the Java MANIFEST (check the MANIFEST for exact dependency names and versions)
 
 	java -jar calimero-gui-2.3-SNAPSHOT.jar 
+	
+If all dependencies are resolved, you can also directly start the GUI by opening it in Nautilus, Windows File Explorer, etc.
 
-or, assuming all dependencies (of any compliant version) are in the current working directory
+Or, assuming all dependencies (of any compliant version) are in the current working directory
 
 	java -cp "./*" tuwien.auto.calimero.gui.Main
 
-or, as example of using the JRE `-classpath` option qualifying all dependencies
+Or, as example of using the JRE `-classpath` option to qualify all dependencies
 
 	java -cp "calimero-gui-2.3-SNAPSHOT.jar:calimero-core-2.3-SNAPSHOT.jar\
-	:calimero-tools-2.3-SNAPSHOT.jar:org.eclipse.swt.gtk.linux.x86_64-4.3.jar:slf4j-api-1.7.7.jar\
-	:slf4j-simple-1.7.7.jar" tuwien.auto.calimero.gui.Main
+	:calimero-tools-2.3-SNAPSHOT.jar:org.eclipse.swt.gtk.linux.x86_64-4.3.jar\
+	:slf4j-api-1.7.7.jar:slf4j-simple-1.7.7.jar" tuwien.auto.calimero.gui.Main
 
