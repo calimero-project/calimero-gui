@@ -70,7 +70,7 @@ public class About
 
 	private static final String about = "KNX Process Communication * Group && Network Monitoring * "
 			+ "KNXnet/IP Discovery * Device Scan * Device Information\n"
-			+ "Supports KNXnet/IP, KNX IP, FT1.2 (BCU2), USB, KNX USB RF.";
+			+ "Supports KNXnet/IP, KNX IP, FT1.2 (BCU2), USB, KNX RF USB.";
 
 	private static final String repositoryLink = "https://calimero-project.github.io";
 	private static final String asgLink = "https://www.auto.tuwien.ac.at";
