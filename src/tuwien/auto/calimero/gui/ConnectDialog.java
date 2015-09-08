@@ -241,6 +241,10 @@ class ConnectDialog
 		devinfo.setText("Read KNX device information");
 		devinfo.setToolTipText("Requires a KNX device address");
 
+		final Button properties = new Button(mode, SWT.RADIO);
+		properties.setText("KNX property viewer");
+		properties.setToolTipText("Uses Local Device Management or Remote Property Services");
+
 		final Composite buttons = new Composite(shell, SWT.NONE);
 		buttons.setLayoutData(new GridData(SWT.RIGHT, SWT.BOTTOM, false, true));
 		final RowLayout row = new RowLayout(SWT.HORIZONTAL);
@@ -287,6 +291,8 @@ class ConnectDialog
 					new ScanDevicesTab(tf, args);
 				else if (devinfo.getSelection())
 					new DeviceInfoTab(tf, args);
+				else if (properties.getSelection())
+					new PropertyEditorTab(tf, args);
 				else
 					new TunnelTab(tf, args);
 				shell.dispose();
