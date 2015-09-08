@@ -74,8 +74,8 @@ import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.process.ProcessEvent;
 import tuwien.auto.calimero.tools.ProcComm;
 import tuwien.auto.calimero.xml.KNXMLException;
-import tuwien.auto.calimero.xml.XMLFactory;
-import tuwien.auto.calimero.xml.XMLReader;
+import tuwien.auto.calimero.xml.XmlInputFactory;
+import tuwien.auto.calimero.xml.XmlReader;
 
 /**
  * @author B. Malinowsky
@@ -397,10 +397,8 @@ class TunnelTab extends BaseTabLayout
 		if (systemID == null)
 			return;
 		model = new DatapointMap<>();
-		try {
-			final XMLReader r = XMLFactory.getInstance().createXMLReader(systemID);
+		try (final XmlReader r = XmlInputFactory.newInstance().createXMLReader(systemID)) {
 			model.load(r);
-			r.close();
 			asyncAddLog("datapoints loaded from " + systemID);
 		}
 		catch (final KNXMLException e) {
