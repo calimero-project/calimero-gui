@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2015 B. Malinowsky
+    Copyright (c) 2006, 2016 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -71,8 +71,8 @@ class ConnectDialog
 		final Label nameLabel = new Label(shell, SWT.NONE);
 		nameLabel.setFont(Main.font);
 		nameLabel.setText(confirm ? "Name or ID: " + name
-			: "Specify connection parameters.\nFor serial connections, "
-				+ "leave the host empty.");
+				: "Specify connection parameters.\nFor serial connections, "
+						+ "leave the host empty.");
 
 		final Composite c = new Composite(shell, SWT.NONE);
 		c.setLayout(new GridLayout(2, false));
@@ -98,7 +98,6 @@ class ConnectDialog
 			nat.setToolTipText("Some KNXnet/IP devices do not support this mode of connection");
 			nat.setSelection(useNAT);
 		}
-
 		// spacer to the right of NAT checkbox
 		new Label(c, SWT.NONE);
 
@@ -121,8 +120,7 @@ class ConnectDialog
 		if (serial)
 			routing.setEnabled(false);
 		else {
-			routing.addSelectionListener(new SelectionAdapter()
-			{
+			routing.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(final SelectionEvent e)
 				{
@@ -146,6 +144,10 @@ class ConnectDialog
 		devinfo.setText("Read KNX device information");
 		devinfo.setToolTipText("Requires a KNX device address");
 
+		final Button properties = new Button(mode, SWT.RADIO);
+		properties.setText("KNX property viewer");
+		properties.setToolTipText("Uses Local Device Management or Remote Property Services");
+
 		final Composite buttons = new Composite(shell, SWT.NONE);
 		buttons.setLayoutData(new GridData(SWT.RIGHT, SWT.BOTTOM, false, true));
 		final RowLayout row = new RowLayout(SWT.HORIZONTAL);
@@ -157,8 +159,7 @@ class ConnectDialog
 		final Button connect = new Button(buttons, SWT.NONE);
 		connect.setText("Connect");
 		connect.setLayoutData(new RowData());
-		connect.addSelectionListener(new SelectionAdapter()
-		{
+		connect.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(final SelectionEvent e)
 			{
@@ -185,6 +186,8 @@ class ConnectDialog
 					new TunnelTab(tf, n, local, h, p, natChecked, false);
 				else if (routing.getSelection())
 					new TunnelTab(tf, n, local, h, p, natChecked, true);
+				else if (properties.getSelection())
+					new PropertyEditorTab(tf, n, local, h, p, natChecked, tunnel.getSelection(), knxAddr.getText());
 				shell.dispose();
 			}
 		});
@@ -192,8 +195,7 @@ class ConnectDialog
 		final Button cancel = new Button(buttons, SWT.NONE);
 		cancel.setLayoutData(new RowData());
 		cancel.setText("Cancel");
-		cancel.addSelectionListener(new SelectionAdapter()
-		{
+		cancel.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(final SelectionEvent e)
 			{
