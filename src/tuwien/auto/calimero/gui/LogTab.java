@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006-2012 B. Malinowsky
+    Copyright (c) 2006, 2015 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -102,7 +102,7 @@ class LogTab extends BaseTabLayout
 		scale.setMinimum(LogLevel.ERROR.ordinal());
 		scale.setMaximum(LogLevel.TRACE.ordinal());
 		scale.setIncrement(1);
-		scale.setPageIncrement(4);
+		scale.setPageIncrement(1);
 		scale.addListener(SWT.Selection, event -> adjustLogLevel(scale.getSelection()));
 
 		final Label logMax = new Label(scaleArea, SWT.NONE);
