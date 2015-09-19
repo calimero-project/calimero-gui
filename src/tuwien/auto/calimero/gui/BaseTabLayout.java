@@ -391,7 +391,7 @@ class BaseTabLayout
 		boolean match = false;
 		switch (level) {
 		case TRACE:
-			match |= logMessage.contains(LogLevel.TRACE.name());
+			match = true; break; // |= logMessage.contains(LogLevel.TRACE.name());
 		case DEBUG:
 			match |= logMessage.contains(LogLevel.DEBUG.name());
 		case INFO:
@@ -402,7 +402,7 @@ class BaseTabLayout
 			match |= logMessage.contains(LogLevel.ERROR.name());
 		default:
 		}
-		return match && logMessage.matches(".*" + namespace + ".*");
+		return match && logMessage.matches(".*" + namespace + "(?s).*");
 	}
 
 	/**
