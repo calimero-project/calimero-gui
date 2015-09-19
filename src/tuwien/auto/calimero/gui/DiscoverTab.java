@@ -36,12 +36,18 @@
 
 package tuwien.auto.calimero.gui;
 
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+
+import javax.usb.UsbDevice;
+import javax.usb.UsbDeviceDescriptor;
+import javax.usb.UsbDisconnectedException;
+import javax.usb.UsbException;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -54,8 +60,10 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
+import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 import tuwien.auto.calimero.knxnetip.Discoverer.Result;
 import tuwien.auto.calimero.knxnetip.servicetype.SearchResponse;
+import tuwien.auto.calimero.serial.usb.UsbConnection;
 import tuwien.auto.calimero.tools.Discover;
 
 /**
@@ -85,10 +93,10 @@ class DiscoverTab extends BaseTabLayout
 			final String text = item.getText(event.index);
 			event.gc.drawText(text, event.x + listItemMargin, event.y, true);
 		});
-		setListBanner("\nFound endpoints of devices (KNXnet/IP routers only) will be "
-				+ "listed here.\nSelect an endpoint to open the connection dialog.");
+		setListBanner("\nFound device endpoints (KNXnet/IP routers and USB interfaces only) "
+				+ "will be listed here.\nSelect an endpoint to open the connection dialog.");
 		enableColumnAdjusting();
-		setLogNamespace("calimero.knxnetip.Discoverer");
+		setLogNamespace("calimero");
 	}
 
 	@Override
@@ -98,7 +106,7 @@ class DiscoverTab extends BaseTabLayout
 		((GridLayout) top.getLayout()).numColumns = 2;
 		final Button start = new Button(top, SWT.PUSH);
 		start.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
-		start.setText("Discover KNXnet/IP devices");
+		start.setText("Discover devices");
 		start.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(final SelectionEvent e)
@@ -120,14 +128,15 @@ class DiscoverTab extends BaseTabLayout
 		args.add("-s");
 		if (nat.getSelection())
 			args.add("--nat");
+		asyncAddLog("Using command line: " + String.join(" ", args));
 		list.removeAll();
 		log.removeAll();
 		try {
+			final String sep = "\n";
 			final Runnable r = new Discover(args.toArray(new String[0])) {
 				@Override
 				protected void onEndpointReceived(final Result<SearchResponse> result)
 				{
-					final String sep = "\n";
 					final StringBuilder buf = new StringBuilder();
 					buf.append("Control endpoint ");
 					final SearchResponse r = result.getResponse();
@@ -157,9 +166,9 @@ class DiscoverTab extends BaseTabLayout
 								if (item.getText().equals(buf.toString()))
 									return;
 							}
-							addListItem(new String[] { buf.toString() }, new String[] { "name",
-								"host", "port", "mcast" },
-									new String[] { r.getDevice().getName(),
+							addListItem(new String[] { buf.toString() },
+									new String[] { "protocol", "name", "host", "port", "mcast" },
+									new Object[] { Protocol.Tunneling, r.getDevice().getName(),
 										r.getControlEndpoint().getAddress().getHostAddress(),
 										Integer.toString(r.getControlEndpoint().getPort()),
 										setMcast });
@@ -176,6 +185,81 @@ class DiscoverTab extends BaseTabLayout
 				}
 			};
 			new Thread(r).start();
+
+			final Runnable usb = new Runnable() {
+				@Override
+				public void run()
+				{
+					try {
+						asyncAddLog("search for USB KNX interfaces");
+						final List<UsbDevice> knxDevices = UsbConnection.getKnxDevices();
+
+						final List<UsbDevice> vserialKnxDevices = UsbConnection
+								.getVirtualSerialKnxDevices();
+
+						Main.syncExec(new Runnable() {
+							@Override
+							public void run()
+							{
+								for (final UsbDevice d : knxDevices) {
+									try {
+										final String ind = "    ";
+										final StringBuilder sb = new StringBuilder();
+										sb.append("USB interface ").append(d).append(sep);
+										sb.append(ind).append(d.getProductString()).append(sep);
+										sb.append(ind).append(d.getManufacturerString());
+
+										final UsbDeviceDescriptor dd = d.getUsbDeviceDescriptor();
+										final int vendor = dd.idVendor() & 0xffff;
+										final int prod = dd.idProduct() & 0xffff;
+										final String vp = String.format("%04x:%04x", vendor, prod);
+										addListItem(new String[] { sb.toString() },
+												new String[] { "protocol", "name", "port", },
+												new Object[] { Protocol.USB, d.getProductString(),
+													vp });
+									}
+									catch (final UsbException | UnsupportedEncodingException
+											| UsbDisconnectedException e) {
+										asyncAddLog("error: " + e.getMessage());
+									}
+								}
+								for (final UsbDevice d : vserialKnxDevices) {
+									try {
+										final String ind = "    ";
+										final StringBuilder sb = new StringBuilder();
+										sb.append("TP-UART interface ").append(d).append(sep);
+										final String product = nullTerminate(d.getProductString());
+										final String mf = nullTerminate(d.getManufacturerString());
+										sb.append(ind).append(product).append(sep);
+										sb.append(ind).append(mf);
+										final String dev = "/dev/";
+
+										addListItem(new String[] { sb.toString() },
+												new String[] { "protocol", "name", "port", },
+												new Object[] { Protocol.Tpuart,
+													d.getProductString(), dev });
+									}
+									catch (final UsbException | UnsupportedEncodingException
+											| UsbDisconnectedException e) {
+										asyncAddLog("error: " + e.getMessage());
+									}
+								}
+							}
+						});
+					}
+					catch (final SecurityException | UsbDisconnectedException | UsbException e) {
+						asyncAddLog("error: " + e.getMessage());
+					}
+				};
+
+				// sometimes usb4java returns strings which exceed past the null terminator
+				private String nullTerminate(final String s)
+				{
+					final int end = s.indexOf((char) 0);
+					return end > -1 ? s.substring(0, end) : s;
+				}
+			};
+			new Thread(usb).start();
 		}
 		catch (final Exception e) {
 			log.add("error: " + e.getMessage());
