@@ -54,7 +54,8 @@ import tuwien.auto.calimero.log.LogService.LogLevel;
  */
 class LogTab extends BaseTabLayout
 {
-	private static final String[] levels = new String[] { "Error", "Warn", "Info", "Debug", "Trace" };
+	private static final String[] levels = new String[] { "Error", "Warn", "Info", "Debug",
+		"Trace" };
 
 	private Scale scale;
 	private Label loglevel;

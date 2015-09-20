@@ -139,8 +139,9 @@ class BaseTabLayout
 	private String filenameSuffix;
 	private String prevFilename;
 
-	private final java.util.List<String[][]> itemBuffer = Collections
-			.synchronizedList(new ArrayList<String[][]>());
+	// Type params of array are <String[] String[], Object[]>
+	private final java.util.List<Object[][]> itemBuffer = Collections
+			.synchronizedList(new ArrayList<>());
 
 	BaseTabLayout(final CTabFolder tf, final String tabTitle, final String info)
 	{
@@ -402,7 +403,8 @@ class BaseTabLayout
 			match |= logMessage.contains(LogLevel.ERROR.name());
 		default:
 		}
-		return match && logMessage.matches(".*" + namespace + "(?s).*");
+		final boolean tabLocal = logMessage.startsWith("> ");
+		return tabLocal || match && logMessage.matches(".*" + namespace + "(?s).*");
 	}
 
 	/**
@@ -412,7 +414,7 @@ class BaseTabLayout
 	{
 		final java.util.List<String> buf = logBuffer.get(this);
 		if (buf != null) {
-			buf.add(s);
+			buf.add("> " + s);
 			asyncAddLog();
 		}
 	}
@@ -456,10 +458,10 @@ class BaseTabLayout
 		list.setRedraw(false);
 		int added = 0;
 		while (itemBuffer.size() > 0 && added < 500) {
-			final String[][] e = itemBuffer.remove(0);
-			final String[] itemText = e[0];
-			final String[] keys = e[1];
-			final String[] data = e[2];
+			final Object[][] e = itemBuffer.remove(0);
+			final String[] itemText = (String[]) e[0];
+			final String[] keys = (String[]) e[1];
+			final Object[] data = e[2];
 			// add item
 			final TableItem item = new TableItem(list, SWT.NONE);
 			item.setText(itemText);
@@ -475,9 +477,9 @@ class BaseTabLayout
 	}
 
 	// this method must be invoked from the GUI thread only
-	void addListItem(final String[] itemText, final String[] keys, final String[] data)
+	void addListItem(final String[] itemText, final String[] keys, final Object[] data)
 	{
-		itemBuffer.add(new String[][] { itemText, keys, data });
+		itemBuffer.add(new Object[][] { itemText, keys, data });
 		addListItems();
 	}
 
