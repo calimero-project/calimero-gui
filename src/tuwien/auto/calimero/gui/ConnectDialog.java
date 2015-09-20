@@ -36,6 +36,9 @@
 
 package tuwien.auto.calimero.gui;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -47,10 +50,13 @@ import org.eclipse.swt.layout.RowData;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
+import tuwien.auto.calimero.exception.KNXIllegalStateException;
+import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 import tuwien.auto.calimero.knxnetip.KNXnetIPConnection;
 
 /**
@@ -58,8 +64,103 @@ import tuwien.auto.calimero.knxnetip.KNXnetIPConnection;
  */
 class ConnectDialog
 {
-	ConnectDialog(final CTabFolder tf, final String name, final String host, final String port,
-		final String mcast, final boolean useNAT)
+	public static final class ConnectArguments
+	{
+		public enum Protocol {
+			Unknown, Tunneling, Routing, FT12, /*USB,*/ Tpuart
+		}
+
+		String name;
+		String knxAddress;
+
+		final Protocol protocol;
+		final String remote;
+		final String port;
+
+		private final String local;
+		private final boolean nat;
+		private final String localKnxAddress;
+
+		static ConnectArguments newKnxNetIP(final boolean routing, final String localHost,
+			final String remoteHost, final String port, final boolean nat, final String knxAddress)
+		{
+			return new ConnectArguments(routing ? Protocol.Routing : Protocol.Tunneling, localHost,
+					remoteHost, port, nat, "", knxAddress);
+		}
+
+		static ConnectArguments newTpuart(final String port, final String localKnxAddress,
+			final String remoteKnxAddress)
+		{
+			return new ConnectArguments(Protocol.Tpuart, null, null, port, false, localKnxAddress,
+					remoteKnxAddress);
+		}
+
+		static ConnectArguments newFT12(final String port, final String knxAddress)
+		{
+			return new ConnectArguments(Protocol.FT12, null, null, port, false, "", knxAddress);
+		}
+
+		private ConnectArguments(final Protocol p, final String local, final String remote,
+			final String port, final boolean nat, final String localKnxAddress,
+			final String remoteKnxAddress)
+		{
+			protocol = p;
+			this.local = local;
+			this.remote = remote;
+			this.port = port;
+			this.nat = nat;
+			this.localKnxAddress = localKnxAddress;
+			this.knxAddress = remoteKnxAddress;
+		}
+
+		public boolean useNat()
+		{
+			return nat;
+		}
+
+		public List<String> getArgs(final boolean useRemoteAddressOption)
+		{
+			final List<String> args = new ArrayList<String>();
+			switch (protocol) {
+			case Routing:
+				args.add("-routing");
+				// fall-through
+			case Tunneling:
+				if (!local.isEmpty()) {
+					args.add("-localhost");
+					args.add(local);
+				}
+				args.add(remote);
+				if (useNat())
+					args.add("-nat");
+				if (!port.isEmpty())
+					args.add("-p");
+				break;
+			case FT12:
+				args.add("-s");
+				break;
+			case Tpuart:
+				args.add("-tpuart");
+				if (!localKnxAddress.isEmpty()) {
+					args.add("-k");
+					args.add(localKnxAddress);
+				}
+				break;
+			default:
+				throw new KNXIllegalStateException();
+			}
+			args.add(port);
+			if (!knxAddress.isEmpty()) {
+				if (useRemoteAddressOption)
+					args.add("-r");
+				args.add(knxAddress);
+			}
+			return args;
+		}
+	}
+
+	ConnectDialog(final CTabFolder tf, final Protocol protocol, final String name,
+		final String host, final String port, final String mcast, final boolean useNAT)
 	{
 		final Shell shell = new Shell(Main.shell, SWT.DIALOG_TRIM | SWT.RESIZE);
 		shell.setLayout(new GridLayout());
@@ -89,6 +190,16 @@ class ConnectDialog
 		portData.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
 		portData.setText(port);
 
+		final Button tpuart = new Button(c, SWT.CHECK);
+		tpuart.setText("Use TP-UART");
+		tpuart.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		tpuart.setToolTipText("Specify the serial port of the TP-UART controller");
+		// local KNX address to the right of TP-UART checkbox
+		final Text localKnxAddress = new Text(c, SWT.BORDER);
+		localKnxAddress.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
+		localKnxAddress.setText("");
+		localKnxAddress.setToolTipText("Specify the KNX address of the local endpoint");
+
 		final Button nat = new Button(c, SWT.CHECK);
 		nat.setText("Use NAT aware connection");
 		nat.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -99,7 +210,19 @@ class ConnectDialog
 			nat.setSelection(useNAT);
 		}
 		// spacer to the right of NAT checkbox
-		new Label(c, SWT.NONE);
+		final Button routing = new Button(c, SWT.CHECK);
+		routing.setText("Use routing");
+		routing.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		routing.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(final SelectionEvent e)
+			{
+				if (routing.getSelection() && mcast != null)
+					hostData.setText(mcast);
+				if (!routing.getSelection())
+					hostData.setText(host);
+			}
+		});
 
 		final Label configKNXAddress = new Label(c, SWT.NONE);
 		configKNXAddress.setText("KNX device address (optional): ");
@@ -113,26 +236,11 @@ class ConnectDialog
 		mode.setLayout(col);
 
 		final Button tunnel = new Button(mode, SWT.RADIO);
-		tunnel.setText("Process communication/monitor (Tunneling)");
+		tunnel.setText("Process communication / group monitor");
 		tunnel.setSelection(true);
-		final Button routing = new Button(mode, SWT.RADIO);
-		routing.setText("Process communication/monitor (Routing)");
-		if (serial)
-			routing.setEnabled(false);
-		else {
-			routing.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(final SelectionEvent e)
-				{
-					if (routing.getSelection() && mcast != null)
-						hostData.setText(mcast);
-					if (!routing.getSelection())
-						hostData.setText(host);
-				}
-			});
-		}
+
 		final Button monitor = new Button(mode, SWT.RADIO);
-		monitor.setText("Network monitor (Tunneling)");
+		monitor.setText("Network monitor");
 		final Button config = new Button(mode, SWT.RADIO);
 		config.setText("Configure KNXnet/IP");
 
@@ -147,6 +255,28 @@ class ConnectDialog
 		final Button properties = new Button(mode, SWT.RADIO);
 		properties.setText("KNX property viewer");
 		properties.setToolTipText("Uses Local Device Management or Remote Property Services");
+
+		tpuart.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(final SelectionEvent e)
+			{
+				final boolean enabled = !tpuart.getSelection();
+				localhostData.setEnabled(enabled);
+				hostData.setEnabled(enabled);
+				nat.setEnabled(enabled);
+				routing.setEnabled(enabled);
+			}
+		});
+
+		if (protocol == Protocol.Tpuart) {
+			tpuart.setSelection(true);
+			// programmatically setting a selection does not invoke selection listeners :(
+			tpuart.notifyListeners(SWT.Selection, new Event());
+		}
+		else if (protocol == Protocol.Tunneling) {
+			tpuart.setEnabled(false);
+			localKnxAddress.setEnabled(false);
+		}
 
 		final Composite buttons = new Composite(shell, SWT.NONE);
 		buttons.setLayoutData(new GridData(SWT.RIGHT, SWT.BOTTOM, false, true));
@@ -172,22 +302,33 @@ class ConnectDialog
 				// if no port is supplied for KNXnet/IP, we use default port
 				if (p.isEmpty())
 					p = Integer.toString(KNXnetIPConnection.DEFAULT_PORT);
-
 				final boolean natChecked = serial ? false : nat.getSelection();
+
+				ConnectArguments args;
+				if (tpuart.getSelection())
+					args = ConnectArguments.newTpuart(p, localKnxAddress.getText(),
+							knxAddr.getText());
+				else if (!h.isEmpty()) {
+					final boolean useRouting = routing.getSelection();
+					args = ConnectArguments.newKnxNetIP(useRouting, local, h, p, natChecked,
+							knxAddr.getText());
+				}
+				else
+					args = ConnectArguments.newFT12(p, knxAddr.getText());
+				args.name = n;
+
 				if (monitor.getSelection())
-					new MonitorTab(tf, n, local, h, p, natChecked);
+					new MonitorTab(tf, args);
 				else if (config.getSelection())
-					new IPConfigTab(tf, n, local, h, p, natChecked, knxAddr.getText());
+					new IPConfigTab(tf, args);
 				else if (scan.getSelection())
-					new ScanDevicesTab(tf, n, local, h, p, natChecked, knxAddr.getText());
+					new ScanDevicesTab(tf, args);
 				else if (devinfo.getSelection())
-					new DeviceInfoTab(tf, n, local, h, p, natChecked, knxAddr.getText());
-				else if (tunnel.getSelection())
-					new TunnelTab(tf, n, local, h, p, natChecked, false);
-				else if (routing.getSelection())
-					new TunnelTab(tf, n, local, h, p, natChecked, true);
+					new DeviceInfoTab(tf, args);
 				else if (properties.getSelection())
-					new PropertyEditorTab(tf, n, local, h, p, natChecked, tunnel.getSelection(), knxAddr.getText());
+					new PropertyEditorTab(tf, args);
+				else
+					new TunnelTab(tf, args);
 				shell.dispose();
 			}
 		});

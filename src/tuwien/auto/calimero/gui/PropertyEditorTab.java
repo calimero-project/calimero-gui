@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2015 B. Malinowsky
+    Copyright (c) 2015, 2016 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -82,6 +82,7 @@ import tuwien.auto.calimero.dptxlator.DPTXlator;
 import tuwien.auto.calimero.dptxlator.PropertyTypes;
 import tuwien.auto.calimero.dptxlator.TranslatorTypes;
 import tuwien.auto.calimero.exception.KNXException;
+import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.log.LogManager;
 import tuwien.auto.calimero.mgmt.Description;
 import tuwien.auto.calimero.mgmt.PropertyClient;
@@ -117,6 +118,7 @@ class PropertyEditorTab extends BaseTabLayout
 	private TableEditor editor;
 	private Combo bounds;
 
+	private final ConnectArguments connect;
 	private Thread toolThread;
 	private final List<String[]> commands = Collections.synchronizedList(new ArrayList<String[]>());
 
@@ -124,12 +126,12 @@ class PropertyEditorTab extends BaseTabLayout
 		loadDefinitions();
 	}
 
-	PropertyEditorTab(final CTabFolder tf, final String connName, final String localhost, final String remote,
-			final String port, final boolean useNat, final boolean routing, final String knxAddress)
+	PropertyEditorTab(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, ("Connection to " + connName),
-				"Connecting" + (remote == null ? "" : " to " + remote) + " on port "
-						+ port + (useNat ? ", using NAT" : ""));
+		super(tf, (args.protocol + " connection to " + args.name),
+				"Connecting" + (args.remote == null ? "" : " to " + args.remote) + " on port "
+						+ args.port + (args.useNat() ? ", using NAT" : ""));
+		connect = args;
 		LogManager.getManager().addWriter("tools", logWriter);
 
 		final int numberWidth = 12;
@@ -169,7 +171,7 @@ class PropertyEditorTab extends BaseTabLayout
 		list.addListener(SWT.MeasureItem, paintListener);
 		list.addListener(SWT.PaintItem, paintListener);
 
-		runProperties(localhost, remote, port, useNat, routing, knxAddress, Arrays.asList("scan", "all"), true);
+		runProperties(Arrays.asList("scan", "all"), true);
 	}
 
 	private void addTableEditor(final Table table)
@@ -433,40 +435,16 @@ class PropertyEditorTab extends BaseTabLayout
 		}
 	}
 
-	private void runProperties(final String localhost, final String remote, final String port, final boolean useNat,
-		final boolean useRouting, final String knxAddress, final List<String> cmd, final boolean init)
+	private void runProperties(final List<String> cmd, final boolean init)
 	{
 		// setup tool argument array
 		final List<String> args = new ArrayList<String>();
 		args.add("-verbose");
-		// if no conditions fits, the tool returns with error
-		if (!remote.isEmpty()) {
-			if (!localhost.isEmpty()) {
-				args.add("-localhost");
-				args.add(localhost);
-			}
-			args.add(remote);
-			if (useNat)
-				args.add("-nat");
-			if (useRouting)
-				args.add("-routing");
-			if (!port.isEmpty()) {
-				args.add("-p");
-				args.add(port);
-			}
-		}
-		else {
-			args.add("-s");
-			args.add(port);
-		}
-		if (!knxAddress.isEmpty()) {
-			args.add("-r");
-			args.add(knxAddress);
-		}
+		args.addAll(connect.getArgs(true));
 		args.addAll(cmd);
+		asyncAddLog("Using command line: " + String.join(" ", args));
 
 		toolThread = new Thread() {
-
 			@Override
 			public void run()
 			{
@@ -516,8 +494,8 @@ class PropertyEditorTab extends BaseTabLayout
 										for (final Control c : editArea.getChildren())
 											c.setEnabled(true);
 										setHeaderInfo("Loaded properties using connection"
-												+ (remote == null ? "" : " to " + remote) + " on port " + port
-												+ (useNat ? ", using NAT" : ""));
+												+ (connect.remote == null ? "" : " to " + connect.remote) + " on port "
+												+ connect.port + (connect.useNat() ? ", using NAT" : ""));
 									}
 								});
 							}

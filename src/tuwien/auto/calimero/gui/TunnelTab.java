@@ -71,6 +71,7 @@ import tuwien.auto.calimero.dptxlator.TranslatorTypes.MainType;
 import tuwien.auto.calimero.exception.KNXException;
 import tuwien.auto.calimero.exception.KNXFormatException;
 import tuwien.auto.calimero.exception.KNXIllegalArgumentException;
+import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.log.LogManager;
 import tuwien.auto.calimero.process.ProcessEvent;
 import tuwien.auto.calimero.tools.ProcComm;
@@ -164,14 +165,14 @@ class TunnelTab extends BaseTabLayout
 
 	private long eventCounter;
 	private long eventCounterFiltered = 1;
+	private final ConnectArguments connect;
 
-
-	TunnelTab(final CTabFolder tf, final String name, final String localhost, final String host,
-		final String port, final boolean useNAT, final boolean routing)
+	TunnelTab(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, (routing ? "Routing to " : "Tunnel to ") + name, "Connecting"
-				+ (host.isEmpty() ? "" : " to " + host) + " on port " + port
-				+ (useNAT ? ", using NAT" : ""));
+		super(tf, (args.protocol + " connection to " + args.name), "Connecting"
+				+ (args.remote == null ? "" : " to " + args.remote) + " on port " + args.port
+				+ (args.useNat() ? ", using NAT" : ""));
+		connect = args;
 
 		list.setLinesVisible(true);
 		final TableColumn cnt = new TableColumn(list, SWT.RIGHT);
@@ -201,8 +202,7 @@ class TunnelTab extends BaseTabLayout
 		enableColumnAdjusting();
 
 		initFilterMenu();
-
-		openTunnel(localhost, host, port, useNAT, routing);
+		openGroupMonitor();
 	}
 
 	@Override
@@ -229,13 +229,13 @@ class TunnelTab extends BaseTabLayout
 
 		final RowLayout row = new RowLayout(SWT.HORIZONTAL);
 		row.spacing = 10;
-		row.fill = true;
+//		row.fill = true;
+		row.center = true;
 		editArea.setLayout(row);
 
 		final Button load = new Button(editArea, SWT.NONE);
 		load.setText("Load datapoints ...");
-		load.addSelectionListener(new SelectionAdapter()
-		{
+		load.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(final org.eclipse.swt.events.SelectionEvent e)
 			{
@@ -247,8 +247,7 @@ class TunnelTab extends BaseTabLayout
 
 		final Button read = new Button(editArea, SWT.NONE);
 		read.setText("Read");
-		read.addSelectionListener(new SelectionAdapter()
-		{
+		read.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(final SelectionEvent e)
 			{
@@ -271,8 +270,7 @@ class TunnelTab extends BaseTabLayout
 		setFieldSize(value, 15);
 		final Label unit = new Label(editArea, SWT.NONE);
 
-		write.addSelectionListener(new SelectionAdapter()
-		{
+		write.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(final SelectionEvent e)
 			{
@@ -288,8 +286,7 @@ class TunnelTab extends BaseTabLayout
 				}
 			}
 		});
-		points.addSelectionListener(new SelectionAdapter()
-		{
+		points.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(final SelectionEvent e)
 			{
@@ -335,63 +332,39 @@ class TunnelTab extends BaseTabLayout
 		final GC gc = new GC(field);
 		final FontMetrics fm = gc.getFontMetrics();
 		final int width = columns * fm.getAverageCharWidth();
-		final int height = fm.getHeight();
 		gc.dispose();
-		field.setLayoutData(new RowData(field.computeSize(width, height)));
+		field.setLayoutData(new RowData(field.computeSize(width, 0).x, SWT.DEFAULT));
 	}
 
-	private void openTunnel(final String localhost, final String host, final String port,
-		final boolean useNAT, final boolean routing)
+	private void openGroupMonitor()
 	{
 		// setup tool argument array
 		final java.util.List<String> args = new ArrayList<String>();
 		args.add("-verbose");
-		// if no conditions fits, the tool returns with error
-		if (!host.isEmpty()) {
-			// setup for KNXnet/IP
-			if (!localhost.isEmpty()) {
-				args.add("-localhost");
-				args.add(localhost);
-			}
-			args.add(host);
-			if (useNAT)
-				args.add("-nat");
-			if (routing)
-				args.add("-routing");
-			if (!port.isEmpty()) {
-				args.add("-p");
-				args.add(port);
-			}
-		}
-		else if (!port.isEmpty()) {
-			// setup for serial connection
-			args.add("-s");
-			args.add(port);
-		}
+		args.addAll(connect.getArgs(true));
 		args.add("monitor");
-
-		list.removeAll();
-		log.removeAll();
+		asyncAddLog("Using command line: " + String.join(" ", args));
 
 		// thread for connecting, it quits as soon communicator is running
-		new Thread()
-		{
+		new Thread() {
 			@Override
 			public void run()
 			{
 				try {
 					pc = new ProcCommWrapper(args.toArray(new String[args.size()]));
 					pc.start(null);
-					Main.asyncExec(new Runnable()
-					{
+					Main.asyncExec(new Runnable() {
+						@Override
 						public void run()
 						{
 							if (editArea.isDisposed())
 								return;
 							for (final Control c : editArea.getChildren())
 								c.setEnabled(true);
-							setHeaderInfo("Connected" + (host.isEmpty() ? "" : " to " + host)
-									+ " on port " + port + (useNAT ? ", using NAT" : ""));
+							setHeaderInfo("Connected"
+									+ (connect.remote == null ? "" : " to " + connect.remote)
+									+ " on port " + connect.port
+									+ (connect.useNat() ? ", using NAT" : ""));
 						}
 					});
 				}

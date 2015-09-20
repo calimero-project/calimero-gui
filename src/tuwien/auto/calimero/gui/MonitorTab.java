@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2015 B. Malinowsky
+    Copyright (c) 2006, 2016 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -47,6 +47,7 @@ import tuwien.auto.calimero.DataUnitBuilder;
 import tuwien.auto.calimero.FrameEvent;
 import tuwien.auto.calimero.cemi.CEMIBusMon;
 import tuwien.auto.calimero.exception.KNXException;
+import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.link.MonitorFrameEvent;
 import tuwien.auto.calimero.link.medium.RawFrame;
 import tuwien.auto.calimero.link.medium.RawFrameBase;
@@ -61,13 +62,15 @@ class MonitorTab extends BaseTabLayout
 	private NetworkMonitor m;
 	private long eventCounter;
 	private long eventCounterFiltered = 1;
+	private final ConnectArguments connect;
 
-	MonitorTab(final CTabFolder tf, final String name, final String localhost, final String host,
-		final String port, final boolean useNAT)
+	MonitorTab(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, "Monitor for " + name, "Open monitor"
-			+ (host.isEmpty() ? "" : " on host " + host) + " on port " + port
-			+ (useNAT ? ", using NAT" : ""));
+		super(tf, "Monitor for " + args.name, "Open monitor"
+				+ (args.remote == null ? "" : " on host " + args.remote) + " on port " + args.port
+				+ (args.useNat() ? ", using NAT" : ""));
+		connect = args;
+
 		final TableColumn cnt = new TableColumn(list, SWT.RIGHT);
 		cnt.setText("#");
 		cnt.setWidth(30);
@@ -93,30 +96,15 @@ class MonitorTab extends BaseTabLayout
 
 		initFilterMenu();
 
-		startMonitor(localhost, host, port, useNAT);
+		startMonitor();
 	}
 
-	private void startMonitor(final String localhost, final String host, final String port,
-		final boolean useNAT)
+	private void startMonitor()
 	{
 		final java.util.List<String> args = new ArrayList<String>();
-		if (!host.isEmpty()) {
-			if (!localhost.isEmpty()) {
-				args.add("-localhost");
-				args.add(localhost);
-			}
-			args.add(host);
-			if (useNAT)
-				args.add("-nat");
-			if (!port.isEmpty())
-				args.add("-p");
-		}
-		else
-			args.add("-s");
-		args.add(port);
-
-		list.removeAll();
-		log.removeAll();
+		args.add("-verbose");
+		args.addAll(connect.getArgs(true));
+		asyncAddLog("Using command line: " + String.join(" ", args));
 
 		final class Monitor extends NetworkMonitor
 		{
@@ -134,16 +122,12 @@ class MonitorTab extends BaseTabLayout
 				{
 					public void run()
 					{
-						setHeaderInfo("Monitoring" + (host.isEmpty() ? "" : " on host " + host)
-								+ " on port " + port + (useNAT ? ", using NAT" : ""));
+						setHeaderInfo("Monitoring" + (connect.remote.isEmpty() ? "" : " on host " + connect.remote)
+								+ " on port " + connect.port + (connect.useNat() ? ", using NAT" : ""));
 					}
 				});
 			}
 
-			/* (non-Javadoc)
-			 * @see tuwien.auto.calimero.tools.NetworkMonitor#onCompletion(
-			 * java.lang.Exception, boolean)
-			 */
 			@Override
 			protected void onCompletion(final Exception thrown, final boolean canceled)
 			{
@@ -153,10 +137,6 @@ class MonitorTab extends BaseTabLayout
 				LogManager.getManager().removeWriter("tools", logWriter);
 			}
 
-			/* (non-Javadoc)
-			 * @see tuwien.auto.calimero.tools.NetworkMonitor#onIndication
-			 * (tuwien.auto.calimero.FrameEvent)
-			 */
 			@Override
 			public void onIndication(final FrameEvent e)
 			{
@@ -208,10 +188,6 @@ class MonitorTab extends BaseTabLayout
 		addResetAndExport("_monitor.csv");
 	}
 
-	/* (non-Javadoc)
-	 * @see tuwien.auto.calimero.gui.BaseTabLayout#onDispose(
-	 * org.eclipse.swt.events.DisposeEvent)
-	 */
 	@Override
 	protected void onDispose(final DisposeEvent e)
 	{

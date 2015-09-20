@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2015 B. Malinowsky
+    Copyright (c) 2015, 2016 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -48,6 +48,7 @@ import org.eclipse.swt.widgets.TableItem;
 
 import tuwien.auto.calimero.IndividualAddress;
 import tuwien.auto.calimero.exception.KNXIllegalArgumentException;
+import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.log.LogManager;
 import tuwien.auto.calimero.log.LogService;
 import tuwien.auto.calimero.tools.ScanDevices;
@@ -57,12 +58,14 @@ import tuwien.auto.calimero.tools.ScanDevices;
  */
 class ScanDevicesTab extends BaseTabLayout
 {
-	ScanDevicesTab(final CTabFolder tf, final String name, final String localhost, final String host,
-		final String port, final boolean useNAT, final String knxAddr)
+	private final ConnectArguments connect;
+
+	ScanDevicesTab(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, "Scan devices of subnet " + (knxAddr.isEmpty() ? "" : knxAddr),
-				"Scanning ... Using connection " + host + " port " + port
-						+ (useNAT ? ", using NAT" : ""));
+		super(tf, "Scan devices of subnet " + args.knxAddress, "Scanning ... Using connection "
+				+ args.remote + " port " + args.port + (args.useNat() ? ", using NAT" : ""));
+		connect = args;
+
 		final TableColumn cnt = new TableColumn(list, SWT.RIGHT);
 		cnt.setText("#");
 		cnt.setWidth(30);
@@ -73,56 +76,39 @@ class ScanDevicesTab extends BaseTabLayout
 		list.addSelectionListener(new SelectionListener() {
 			public void widgetSelected(final SelectionEvent e) {}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e)
 			{
 				final TableItem row = list.getSelection()[0];
 				final String device = row.getText(1);
 				asyncAddLog("Read device information of KNX device " + device);
-				new DeviceInfoTab(tf, name, localhost, host, port, useNAT, device);
+				connect.knxAddress = device;
+				new DeviceInfoTab(tf, connect);
 			}
 		});
 
-		scanDevices(localhost, host, port, useNAT, knxAddr);
+		scanDevices();
 	}
 
-	private void scanDevices(final String localhost, final String host, final String port,
-		final boolean useNAT, final String knxAddr)
+	private void scanDevices()
 	{
-		list.removeAll();
-		log.removeAll();
 		final List<String> args = new ArrayList<String>();
-		if (!host.isEmpty()) {
-			if (!localhost.isEmpty()) {
-				args.add("-localhost");
-				args.add(localhost);
-			}
-			args.add(host);
-			if (useNAT)
-				args.add("-nat");
-			if (!port.isEmpty()) {
-				args.add("-p");
-				args.add(port);
-			}
-		}
-		else if (!port.isEmpty()) {
-			args.add("-s");
-			args.add(port);
-		}
-
-		args.add(knxAddr);
+		args.add("-verbose");
+		args.addAll(connect.getArgs(false));
+		asyncAddLog("Using command line: " + String.join(" ", args));
 
 		final LogService logService = LogManager.getManager().getLogService("tools");
 		logService.removeWriter(logWriter);
 		logService.addWriter(logWriter);
 		try {
-			final ScanDevices config = new ScanDevices(args.toArray(new String[0]))
-			{
+			final ScanDevices config = new ScanDevices(args.toArray(new String[0])) {
 				@Override
 				protected void onCompletion(final Exception thrown, final boolean canceled,
 					final IndividualAddress[] devices)
 				{
-					Main.asyncExec(new Runnable()
-					{
+					logService.removeWriter(logWriter);
+					Main.asyncExec(new Runnable() {
+						@Override
 						public void run()
 						{
 							if (list.isDisposed())
@@ -143,8 +129,8 @@ class ScanDevicesTab extends BaseTabLayout
 								i.setText("Error: " + thrown.getMessage());
 							}
 
-							setHeaderInfo("Scan devices " + status + ", connection "
-									+ host + " port " + port + (useNAT ? ", using NAT" : ""));
+							setHeaderInfo("Scan devices " + status + ", connection " + connect.remote + " port "
+									+ connect.port + (connect.useNat() ? ", using NAT" : ""));
 						}
 					});
 				}

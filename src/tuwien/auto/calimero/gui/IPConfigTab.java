@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006-2013 B. Malinowsky
+    Copyright (c) 2006, 2016 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -45,8 +45,7 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
 import tuwien.auto.calimero.exception.KNXIllegalArgumentException;
-import tuwien.auto.calimero.log.LogManager;
-import tuwien.auto.calimero.log.LogService;
+import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.tools.IPConfig;
 
 /**
@@ -54,12 +53,15 @@ import tuwien.auto.calimero.tools.IPConfig;
  */
 class IPConfigTab extends BaseTabLayout
 {
-	IPConfigTab(final CTabFolder tf, final String name, final String localhost, final String host,
-		final String port, final boolean useNAT, final String knxAddr)
+	private final ConnectArguments connect;
+
+	IPConfigTab(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, "KNXnet/IP configuration for " + name, "Query configuration from "
-			+ (knxAddr.isEmpty() ? "" : knxAddr + " over ") + host + " port " + port
-			+ (useNAT ? ", using NAT" : ""));
+		super(tf, "KNXnet/IP configuration for " + args.name, "Query configuration from "
+				+ (args.knxAddress == null ? "" : args.knxAddress + " over ") + args.remote
+				+ " port " + args.port + (args.useNat() ? ", using NAT" : ""));
+		connect = args;
+
 		final TableColumn pid = new TableColumn(list, SWT.LEFT);
 		pid.setText("Property ID");
 		pid.setWidth(100);
@@ -70,52 +72,23 @@ class IPConfigTab extends BaseTabLayout
 		value.setText("Value");
 		value.setWidth(200);
 		enableColumnAdjusting();
-		
-		readConfig(localhost, host, port, useNAT, knxAddr);
+
+		readConfig();
 	}
 
-	private void readConfig(final String localhost, final String host, final String port,
-		final boolean useNAT, final String knxAddr)
+	private void readConfig()
 	{
-		list.removeAll();
-		log.removeAll();
 		final List<String> args = new ArrayList<String>();
-		if (!host.isEmpty()) {
-			if (!localhost.isEmpty()) {
-				args.add("-localhost");
-				args.add(localhost);
-			}
-			args.add(host);
-			if (knxAddr.isEmpty())
-				args.add("-l");
-			if (useNAT)
-				args.add("-nat");
-			if (!port.isEmpty()) {
-				args.add("-p");
-				args.add(port);
-			}
-		}
-		else if (!port.isEmpty()) {
-			args.add("-s");
-			args.add(port);
-		}
+		args.addAll(connect.getArgs(true));
+		asyncAddLog("Using command line: " + String.join(" ", args));
 
-		if (!knxAddr.isEmpty()) {
-			args.add("-r");
-			args.add(knxAddr);
-		}
-		
-		final LogService logService = LogManager.getManager().getLogService("tools");
-		logService.removeWriter(logWriter);
-		logService.addWriter(logWriter);
 		try {
-			final IPConfig config = new IPConfig(args.toArray(new String[0]))
-			{
+			final IPConfig config = new IPConfig(args.toArray(new String[0])) {
 				@Override
 				protected void onConfigurationReceived(final List config)
 				{
-					Main.asyncExec(new Runnable()
-					{
+					Main.asyncExec(new Runnable() {
+						@Override
 						public void run()
 						{
 							if (list.isDisposed())
@@ -126,10 +99,11 @@ class IPConfigTab extends BaseTabLayout
 								i.setText(s);
 							}
 							list.setRedraw(true);
-							
+
 							setHeaderInfo("Configuration received from "
-									+ (knxAddr.isEmpty() ? "" : knxAddr + " over ") + host
-									+ " port " + port + (useNAT ? ", using NAT" : ""));
+									+ (connect.knxAddress.isEmpty() ? "" : connect.knxAddress
+											+ " over ") + connect.remote + " port " + connect.port
+									+ (connect.useNat() ? ", using NAT" : ""));
 						}
 					});
 				}

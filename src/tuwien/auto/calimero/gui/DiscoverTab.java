@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2015 B. Malinowsky
+    Copyright (c) 2006, 2016 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -56,6 +56,7 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
+import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 import tuwien.auto.calimero.knxnetip.Discoverer;
 import tuwien.auto.calimero.knxnetip.servicetype.SearchResponse;
 import tuwien.auto.calimero.log.LogManager;
@@ -218,7 +219,8 @@ class DiscoverTab extends BaseTabLayout
 	protected void onListItemSelected(final SelectionEvent e)
 	{
 		final TableItem i = (TableItem) e.item;
-		new ConnectDialog(getTabFolder(), (String) i.getData("name"), (String) i.getData("host"),
-				(String) i.getData("port"), (String) i.getData("mcast"), nat.getSelection());
+		new ConnectDialog(getTabFolder(), (Protocol) i.getData("protocol"),
+				(String) i.getData("name"), (String) i.getData("host"), (String) i.getData("port"),
+				(String) i.getData("mcast"), nat.getSelection());
 	}
 }

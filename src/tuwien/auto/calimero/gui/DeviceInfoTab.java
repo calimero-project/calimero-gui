@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2015 B. Malinowsky
+    Copyright (c) 2015, 2016 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -47,6 +47,7 @@ import org.eclipse.swt.widgets.TableItem;
 
 import tuwien.auto.calimero.IndividualAddress;
 import tuwien.auto.calimero.exception.KNXIllegalArgumentException;
+import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.log.LogManager;
 import tuwien.auto.calimero.log.LogService;
 import tuwien.auto.calimero.tools.DeviceInfo;
@@ -56,12 +57,14 @@ import tuwien.auto.calimero.tools.DeviceInfo;
  */
 class DeviceInfoTab extends BaseTabLayout
 {
-	DeviceInfoTab(final CTabFolder tf, final String name, final String localhost, final String host,
-		final String port, final boolean useNAT, final String knxAddr)
+	private final ConnectArguments connect;
+
+	DeviceInfoTab(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, "Device information of " + (knxAddr.isEmpty() ? "" : knxAddr),
-				"Read information using connection " + host + " port " + port
-			+ (useNAT ? ", using NAT" : ""));
+		super(tf, "Device information of " + args.knxAddress, "Read information using connection "
+				+ args.remote + " port " + args.port + (args.useNat() ? ", using NAT" : ""));
+		connect = args;
+
 		final TableColumn pid = new TableColumn(list, SWT.LEFT);
 		pid.setText("Setting");
 		pid.setWidth(100);
@@ -70,46 +73,27 @@ class DeviceInfoTab extends BaseTabLayout
 		pidName.setWidth(200);
 		enableColumnAdjusting();
 
-		readDeviceInfo(localhost, host, port, useNAT, knxAddr);
+		readDeviceInfo();
 	}
 
-	private void readDeviceInfo(final String localhost, final String host, final String port,
-		final boolean useNAT, final String knxAddr)
+	private void readDeviceInfo()
 	{
 		list.removeAll();
 		log.removeAll();
 		final List<String> args = new ArrayList<String>();
-		if (!host.isEmpty()) {
-			if (!localhost.isEmpty()) {
-				args.add("-localhost");
-				args.add(localhost);
-			}
-			args.add(host);
-			if (useNAT)
-				args.add("-nat");
-			if (!port.isEmpty()) {
-				args.add("-p");
-				args.add(port);
-			}
-		}
-		else if (!port.isEmpty()) {
-			args.add("-s");
-			args.add(port);
-		}
-
-		args.add(knxAddr);
+		args.addAll(connect.getArgs(false));
+		asyncAddLog("Using command line: " + String.join(" ", args));
 
 		final LogService logService = LogManager.getManager().getLogService("tools");
 		logService.removeWriter(logWriter);
 		logService.addWriter(logWriter);
 		try {
-			final DeviceInfo config = new DeviceInfo(args.toArray(new String[0]))
-			{
+			final DeviceInfo config = new DeviceInfo(args.toArray(new String[0])) {
 				@Override
 				protected void onDeviceInformation(final IndividualAddress device, final String info)
 				{
-					Main.asyncExec(new Runnable()
-					{
+					Main.asyncExec(new Runnable() {
+						@Override
 						public void run()
 						{
 							if (list.isDisposed())
@@ -123,17 +107,17 @@ class DeviceInfoTab extends BaseTabLayout
 								if (div == -1)
 									div = s.lastIndexOf(' ');
 								if (div == -1)
-									i.setText(new String[]{s});
+									i.setText(new String[] { s });
 								else {
 									final String param = s.substring(0, div);
 									final String value = s.substring(div + 1).trim();
-									i.setText(new String[]{param, value});
+									i.setText(new String[] { param, value });
 								}
 							}
 							list.setRedraw(true);
 
-							setHeaderInfo("Device information received from " + device + " over "
-									+ host + " port " + port + (useNAT ? ", using NAT" : ""));
+							setHeaderInfo("Device information received from " + device + " over " + connect.remote
+									+ " port " + connect.port + (connect.useNat() ? ", using NAT" : ""));
 						}
 					});
 				}
