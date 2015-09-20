@@ -57,6 +57,8 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 
+import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
+
 /**
  * @author B. Malinowsky
  */
@@ -150,7 +152,7 @@ public class Main
 			@Override
 			public void widgetSelected(final SelectionEvent e)
 			{
-				new ConnectDialog(tf, null, "", "", null, false);
+				new ConnectDialog(tf, Protocol.Unknown, null, "", "", null, false);
 			}
 		});
 

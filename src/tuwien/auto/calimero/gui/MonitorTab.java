@@ -101,27 +101,9 @@ class MonitorTab extends BaseTabLayout
 	private void startMonitor()
 	{
 		final java.util.List<String> args = new ArrayList<String>();
-		if (connect.useKnxNetIP()) {
-			if (!connect.local.isEmpty()) {
-				args.add("--localhost");
-				args.add(connect.local);
-			}
-			args.add(connect.remote);
-			if (connect.useNat())
-				args.add("--nat");
-			if (!connect.port.isEmpty())
-				args.add("-p");
-		}
-		else if (connect.useUsb()) {
-			args.add("-u");
-		}
-		else if (connect.useFT12()) {
-			args.add("-s");
-		}
-		args.add(connect.port);
-
-		list.removeAll();
-		log.removeAll();
+		args.add("--verbose");
+		args.addAll(connect.getArgs(true));
+		asyncAddLog("Using command line: " + String.join(" ", args));
 
 		final class Monitor extends NetworkMonitor
 		{

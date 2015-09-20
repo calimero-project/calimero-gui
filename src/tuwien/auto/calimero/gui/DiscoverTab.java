@@ -270,7 +270,8 @@ class DiscoverTab extends BaseTabLayout
 	protected void onListItemSelected(final SelectionEvent e)
 	{
 		final TableItem i = (TableItem) e.item;
-		new ConnectDialog(getTabFolder(), (String) i.getData("name"), (String) i.getData("host"),
-				(String) i.getData("port"), (String) i.getData("mcast"), nat.getSelection());
+		new ConnectDialog(getTabFolder(), (Protocol) i.getData("protocol"),
+				(String) i.getData("name"), (String) i.getData("host"), (String) i.getData("port"),
+				(String) i.getData("mcast"), nat.getSelection());
 	}
 }

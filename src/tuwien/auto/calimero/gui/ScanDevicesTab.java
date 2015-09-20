@@ -92,33 +92,10 @@ class ScanDevicesTab extends BaseTabLayout
 
 	private void scanDevices()
 	{
-		list.removeAll();
-		log.removeAll();
 		final List<String> args = new ArrayList<String>();
-		if (connect.useKnxNetIP()) {
-			if (!connect.local.isEmpty()) {
-				args.add("--localhost");
-				args.add(connect.local);
-			}
-			args.add(connect.remote);
-			if (connect.useNat())
-				args.add("--nat");
-			if (connect.useRouting())
-				args.add("--routing");
-			if (!connect.port.isEmpty()) {
-				args.add("-p");
-				args.add(connect.port);
-			}
-		}
-		else if (connect.useUsb()) {
-			args.add("-u");
-			args.add(connect.port);
-		}
-		else if (connect.useFT12()) {
-			args.add("-s");
-			args.add(connect.port);
-		}
-		args.add(connect.knxAddress);
+		args.add("--verbose");
+		args.addAll(connect.getArgs(false));
+		asyncAddLog("Using command line: " + String.join(" ", args));
 
 		try {
 			final ScanDevices config = new ScanDevices(args.toArray(new String[0])) {

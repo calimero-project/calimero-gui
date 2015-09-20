@@ -330,34 +330,9 @@ class TunnelTab extends BaseTabLayout
 		// setup tool argument array
 		final java.util.List<String> args = new ArrayList<String>();
 		args.add("--verbose");
-		// if no conditions fits, the tool returns with error
-		if (connect.useKnxNetIP()) {
-			if (!connect.local.isEmpty()) {
-				args.add("--localhost");
-				args.add(connect.local);
-			}
-			args.add(connect.remote);
-			if (connect.useNat())
-				args.add("--nat");
-			if (connect.useRouting())
-				args.add("--routing");
-			if (!connect.port.isEmpty()) {
-				args.add("-p");
-				args.add(connect.port);
-			}
-		}
-		else if (connect.useUsb()) {
-			args.add("-u");
-			args.add(connect.port);
-		}
-		else if (connect.useFT12()) {
-			args.add("-s");
-			args.add(connect.port);
-		}
+		args.addAll(connect.getArgs(true));
 		args.add("monitor");
-
-		list.removeAll();
-		log.removeAll();
+		asyncAddLog("Using command line: " + String.join(" ", args));
 
 		// thread for connecting, it quits as soon communicator is running
 		new Thread() {

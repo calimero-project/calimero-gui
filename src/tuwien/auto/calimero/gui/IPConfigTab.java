@@ -78,39 +78,9 @@ class IPConfigTab extends BaseTabLayout
 
 	private void readConfig()
 	{
-		list.removeAll();
-		log.removeAll();
 		final List<String> args = new ArrayList<String>();
-		if (connect.useKnxNetIP()) {
-			if (!connect.local.isEmpty()) {
-				args.add("--localhost");
-				args.add(connect.local);
-			}
-			args.add(connect.remote);
-			if (connect.knxAddress.isEmpty())
-				args.add("-l");
-			if (connect.useNat())
-				args.add("--nat");
-			if (connect.useRouting())
-				args.add("--routing");
-			if (!connect.port.isEmpty()) {
-				args.add("-p");
-				args.add(connect.port);
-			}
-		}
-		else if (connect.useUsb()) {
-			args.add("-u");
-			args.add(connect.port);
-		}
-		else if (connect.useFT12()) {
-			args.add("-s");
-			args.add(connect.port);
-		}
-
-		if (!connect.knxAddress.isEmpty()) {
-			args.add("-r");
-			args.add(connect.knxAddress);
-		}
+		args.addAll(connect.getArgs(true));
+		asyncAddLog("Using command line: " + String.join(" ", args));
 
 		try {
 			final IPConfig config = new IPConfig(args.toArray(new String[0])) {
