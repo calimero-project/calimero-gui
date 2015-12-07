@@ -100,35 +100,33 @@ class ScanDevicesTab extends BaseTabLayout
 		try {
 			final ScanDevices config = new ScanDevices(args.toArray(new String[0])) {
 				@Override
+				protected void onDeviceFound(final IndividualAddress device)
+				{
+					Main.asyncExec(() -> {
+						if (list.isDisposed())
+							return;
+						list.setToolTipText("Select an address to read the KNX device information");
+						final TableItem i = new TableItem(list, SWT.NONE);
+						i.setText(new String[] { "" + list.getItemCount(), device.toString() });
+					});
+				}
+
+				@Override
 				protected void onCompletion(final Exception thrown, final boolean canceled,
 					final IndividualAddress[] devices)
 				{
-					Main.asyncExec(new Runnable() {
-						@Override
-						public void run()
-						{
-							if (list.isDisposed())
-								return;
-							list.setRedraw(false);
-							list.setToolTipText("Select an address to read the "
-									+ "KNX device information");
-							long eventCounter = 0;
-							for (final IndividualAddress d : devices) {
-								final TableItem i = new TableItem(list, SWT.NONE);
-								i.setText(new String[] { "" + ++eventCounter, d.toString() });
-							}
-							list.setRedraw(true);
+					Main.asyncExec(() -> {
+						if (list.isDisposed())
+							return;
 
-							final String status = canceled ? "canceled" : "complete";
-							if (thrown != null) {
-								final TableItem i = new TableItem(list, SWT.NONE);
-								i.setText("Error: " + thrown.getMessage());
-							}
-
-							setHeaderInfo("Scan devices " + status + ", connection "
-									+ connect.remote + " port " + connect.port
-									+ (connect.useNat() ? ", using NAT" : ""));
+						final String status = canceled ? "canceled" : "complete";
+						if (thrown != null) {
+							final TableItem i = new TableItem(list, SWT.NONE);
+							i.setText("Error: " + thrown.getMessage());
 						}
+
+						setHeaderInfo("Scan devices " + status + ", connection " + connect.remote + " port "
+								+ connect.port + (connect.useNat() ? ", using NAT" : ""));
 					});
 				}
 			};
