@@ -128,7 +128,7 @@ class DiscoverTab extends BaseTabLayout
 		args.add("-s");
 		if (nat.getSelection())
 			args.add("--nat");
-		asyncAddLog("Using command line: " + String.join(" ", args));
+		asyncAddLog("KNXnet/IP discovery - using command line: " + String.join(" ", args));
 		list.removeAll();
 		log.removeAll();
 		try {
@@ -181,7 +181,7 @@ class DiscoverTab extends BaseTabLayout
 				{
 					if (thrown != null)
 						asyncAddLog("error: " + thrown.getMessage());
-					asyncAddLog("search finished");
+					asyncAddLog("KNXnet/IP discovery finished");
 				}
 			};
 			new Thread(r).start();
@@ -191,11 +191,14 @@ class DiscoverTab extends BaseTabLayout
 				public void run()
 				{
 					try {
-						asyncAddLog("search for USB KNX interfaces");
+						asyncAddLog("Search for KNX USB interfaces");
 						final List<UsbDevice> knxDevices = UsbConnection.getKnxDevices();
-
 						final List<UsbDevice> vserialKnxDevices = UsbConnection
 								.getVirtualSerialKnxDevices();
+
+						asyncAddLog("Found " + knxDevices.size() + " KNX USB interfaces");
+						asyncAddLog("Found " + vserialKnxDevices.size()
+								+ " USB serial KNX interfaces");
 
 						Main.syncExec(new Runnable() {
 							@Override
@@ -236,8 +239,7 @@ class DiscoverTab extends BaseTabLayout
 
 										addListItem(new String[] { sb.toString() },
 												new String[] { "protocol", "name", "port", },
-												new Object[] { Protocol.Tpuart,
-													d.getProductString(), dev });
+												new Object[] { Protocol.Tpuart, product, dev });
 									}
 									catch (final UsbException | UnsupportedEncodingException
 											| UsbDisconnectedException e) {
