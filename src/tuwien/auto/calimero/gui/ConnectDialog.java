@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2015 B. Malinowsky
+    Copyright (c) 2006, 2016 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -148,11 +148,11 @@ class ConnectDialog
 				args.add("-s");
 				break;
 			case Tpuart:
-				args.add("--tpuart");
 				if (!localKnxAddress.isEmpty()) {
 					args.add("-k");
 					args.add(localKnxAddress);
 				}
+				args.add("--tpuart");
 				break;
 			default:
 				throw new KNXIllegalStateException();
