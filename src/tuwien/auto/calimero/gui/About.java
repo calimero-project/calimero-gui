@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2015 B. Malinowsky
+    Copyright (c) 2006, 2016 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -84,7 +84,7 @@ public class About
 
 	private static final String license = "The Calimero library, tools, documentation, "
 			+ "and this GUI are licensed under the GPL, with the Classpath Exception.";
-	private static final String copyright = "Copyright (c) 2006, 2015.";
+	private static final String copyright = "Copyright (c) 2006, 2016.";
 
 	private static final String swtLink = "http://www.eclipse.org/swt/";
 	private static final String swtInfo = "This GUI uses the <A href=\"" + swtLink

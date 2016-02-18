@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2015 B. Malinowsky
+    Copyright (c) 2006, 2016 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -74,7 +74,7 @@ public class Main
 	Main()
 	{
 		shell.setSize(300, 200);
-		shell.setText("Calimero 2 - The Open Source Java library for KNX access");
+		shell.setText("Calimero - Open Source KNX Access with Java");
 		shell.setLayout(new GridLayout());
 
 		final ToolBar header = new ToolBar(shell, SWT.FLAT | SWT.WRAP);
