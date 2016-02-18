@@ -140,11 +140,11 @@ class ConnectDialog
 				args.add("-s");
 				break;
 			case Tpuart:
-				args.add("-tpuart");
 				if (!localKnxAddress.isEmpty()) {
 					args.add("-k");
 					args.add(localKnxAddress);
 				}
+				args.add("--tpuart");
 				break;
 			default:
 				throw new KNXIllegalStateException();
