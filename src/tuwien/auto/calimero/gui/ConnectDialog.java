@@ -246,7 +246,7 @@ class ConnectDialog
 
 		final Button scan = new Button(mode, SWT.RADIO);
 		scan.setText("Scan for KNX devices");
-		scan.setToolTipText("Requires a KNX area.line or KNX device address (hex)");
+		scan.setToolTipText("Requires a KNX area.line or KNX device address");
 
 		final Button devinfo = new Button(mode, SWT.RADIO);
 		devinfo.setText("Read KNX device information");
