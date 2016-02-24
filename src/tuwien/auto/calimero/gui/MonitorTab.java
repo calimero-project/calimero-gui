@@ -148,8 +148,8 @@ class MonitorTab extends BaseTabLayout
 				item.add(Long.toString(((CEMIBusMon) e.getFrame()).getTimestamp()));
 				final String s = e.getFrame().toString();
 				// status / sequence
-				final String status = "status ";
-				final String rawFrame = "raw frame ";
+				final String status = "seq ";
+				final String rawFrame = ": ";
 				item.add(s.substring(s.indexOf(status), s.indexOf(rawFrame)));
 				// raw frame
 				item.add(s.substring(s.indexOf(rawFrame) + rawFrame.length()));
