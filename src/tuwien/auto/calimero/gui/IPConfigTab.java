@@ -94,15 +94,17 @@ class IPConfigTab extends BaseTabLayout
 							if (list.isDisposed())
 								return;
 							list.setRedraw(false);
-							for (final String[] s : (List<String[]>) config) {
+							@SuppressWarnings("unchecked")
+							final List<String[]> c = config;
+							for (final String[] s : c) {
 								final TableItem i = new TableItem(list, SWT.NONE);
 								i.setText(s);
 							}
 							list.setRedraw(true);
 
 							setHeaderInfo("Configuration received from "
-									+ (connect.knxAddress.isEmpty() ? "" : connect.knxAddress
-											+ " over ") + connect.remote + " port " + connect.port
+									+ (connect.knxAddress.isEmpty() ? "" : connect.knxAddress + " over ")
+									+ connect.remote + " port " + connect.port
 									+ (connect.useNat() ? ", using NAT" : ""));
 						}
 					});

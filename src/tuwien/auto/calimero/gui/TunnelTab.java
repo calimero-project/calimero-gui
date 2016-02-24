@@ -394,7 +394,9 @@ class TunnelTab extends BaseTabLayout
 					+ ", line " + e.getLineNumber() + ", item " + e.getBadItem());
 		}
 		points.removeAll();
-		for (final Datapoint dp : (Collection<Datapoint>) model.getDatapoints())
+		@SuppressWarnings("unchecked")
+		final Collection<Datapoint> datapoints = model.getDatapoints();
+		for (final Datapoint dp : datapoints)
 			points.add(dp.getMainAddress().toString());
 	}
 }

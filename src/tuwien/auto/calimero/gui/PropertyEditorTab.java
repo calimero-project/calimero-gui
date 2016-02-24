@@ -454,7 +454,10 @@ class PropertyEditorTab extends BaseTabLayout
 						{
 							if (init) {
 								pc.addDefinitions(definitions);
-								map.putAll(pc.getDefinitions());
+								@SuppressWarnings("unchecked")
+								final Map<PropertyKey, tuwien.auto.calimero.mgmt.PropertyClient.Property> defs = pc
+										.getDefinitions();
+								map.putAll(defs);
 
 								super.runCommand(cmd);
 
