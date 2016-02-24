@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2015 B. Malinowsky
+    Copyright (c) 2006, 2016 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -153,7 +153,7 @@ class TunnelTab extends BaseTabLayout
 		{
 			super.onCompletion(thrown, canceled);
 			// we might lose the last log output from ProcComm (i.e., not dispatched yet)
-			LogManager.getManager().removeWriter("tools", logWriter);
+			LogManager.getManager().removeWriter(null, logWriter);
 		}
 	}
 
