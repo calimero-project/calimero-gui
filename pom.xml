@@ -28,7 +28,8 @@
 	</developers>
 
 	<properties>
-		<swt.version>4.3</swt.version>
+		<swt.groupId>org.eclipse.swt</swt.groupId>
+		<swt.version>4.6M5</swt.version>
 	</properties>
 
 	<profiles>
@@ -40,7 +41,6 @@
 				</os>
 			</activation>
 			<properties>
-				<swt.groupId>org.eclipse.swt.org.eclipse.swt.cocoa.macosx.${os.arch}.${swt.version}.swt</swt.groupId>
 				<swt.artifactId>org.eclipse.swt.cocoa.macosx.${os.arch}</swt.artifactId>
 			</properties>
 			<build>
@@ -80,8 +80,6 @@
 				</os>
 			</activation>
 			<properties>
-				<!-- some platforms use os.arch amd64, but we need x86_64 -->
-				<swt.groupId>org.eclipse.swt.org.eclipse.swt.gtk.linux.x86_64.${swt.version}.swt</swt.groupId>
 				<swt.artifactId>org.eclipse.swt.gtk.linux.x86_64</swt.artifactId>
 			</properties>
 		</profile>
@@ -95,7 +93,6 @@
 				</os>
 			</activation>
 			<properties>
-				<swt.groupId>org.eclipse.swt.org.eclipse.swt.gtk.linux.${os.arch}.${swt.version}.swt</swt.groupId>
 				<swt.artifactId>org.eclipse.swt.gtk.linux.${os.arch}</swt.artifactId>
 			</properties>
 		</profile>
@@ -107,7 +104,6 @@
 				</os>
 			</activation>
 			<properties>
-				<swt.groupId>org.eclipse.swt.org.eclipse.swt.win32.win32.${os.arch}.${swt.version}.swt</swt.groupId>
 				<swt.artifactId>org.eclipse.swt.win32.win32.${os.arch}</swt.artifactId>
 			</properties>
 		</profile>
@@ -201,4 +197,14 @@
 			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
+	<repositories>
+		<repository>
+			<id>maven-eclipse-repo</id>
+			<url>http://maven-eclipse.github.io/maven</url>
+		</repository>
+		<repository>
+			<id>maven-eclipse-repo-dev</id>
+			<url>http://maven-eclipse.github.io/dev-releases/maven</url>
+		</repository>
+	</repositories>
 </project>
