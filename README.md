@@ -56,14 +56,14 @@ On Linux/Windows
 
 ### Using Java
 
-The graphical user interface has the following _mandatory_ dependencies: calimero-core, calimero-tools, SWT
+The graphical user interface has the following _mandatory_ dependencies: calimero-core, calimero-tools, calimero-rxtx, SWT
 
-The graphical user interface has the following _optional_ dependencies: calimero-rxtx, serial-native
+The graphical user interface has the following _optional_ dependencies: serial-native
 
 Use your specific version in the following commands.
 Either, relying on the Java MANIFEST (check the MANIFEST for exact dependency names and versions)
 
-	java -jar calimero-gui-2.3-SNAPSHOT.jar
+	java -jar calimero-gui-2.3-beta.jar
 
 If all dependencies are resolved, you can also directly start the GUI by opening it in Nautilus, Windows File Explorer, etc.
 
@@ -73,6 +73,6 @@ Or, assuming all dependencies (of any compliant version) are in the current work
 
 Or, as example of using the JRE `-classpath` option to qualify all dependencies (be aware of the terminal line-breaks!)
 
-	java -cp "calimero-gui-2.3-SNAPSHOT.jar:calimero-core-2.3-SNAPSHOT.jar\
-	:calimero-tools-2.3-SNAPSHOT.jar:org.eclipse.swt.gtk.linux.x86_64-4.3.jar" \
+	java -cp "calimero-gui-2.3-beta.jar:calimero-core-2.3-beta.jar\
+	:calimero-tools-2.3-beta.jar:org.eclipse.swt.gtk.linux.x86_64-4.3.jar" \
 	tuwien.auto.calimero.gui.Main
