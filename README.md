@@ -19,12 +19,13 @@ Supported Features
 ------------------
 
 * KNXnet/IP discovery and self description
-* KNX process communication, read or write a KNX datapoint 
+* KNX process communication, read or write a KNX datapoint
 * Group monitor for KNX datapoints, decode datapoint values, filter/export KNX messages to file
 * Network monitor (busmonitor raw frames on the network, completely passive), filter/export KNX messages to file
 * Show device information of a device in a KNX network
 * Read the IP configuration of a KNXnet/IP server (Local Device Management) or KNX device (Remote Property Services) using KNX properties
-* Scan KNX devices in a KNx subnet area/line, or check whether a specific KNX individual address is currently assigned to a KNX device
+* Scan KNX devices in a KNX subnet area/line, or check whether a specific KNX individual address is currently assigned to a KNX device
+* KNX properties viewer for KNX devices that implement an Interface Object Server (IOS)
 
 Supported Access Protocols
 --------------------------
@@ -35,6 +36,7 @@ Supported Access Protocols
 * KNX RF USB
 * KNX USB
 * KNX FT1.2 Protocol (serial connections)
+* TP-UART (serial connections)
 
 Execution
 ---------
@@ -45,7 +47,7 @@ Resolve/Compile/Install
 
 	mvn clean install -DskipTests -Dgpg.skip=true
 
-On OSX (takes care of the Cocoa thread restrictions) 
+On OS X (takes care of the Cocoa thread restrictions)
 
 	mvn exec:exec
 
@@ -56,15 +58,15 @@ On Linux/Windows
 
 ### Using Java
 
-The graphical user interface has the following _mandatory_ dependencies: calimero-core, calimero-tools, SWT, slf4j-api
+The graphical user interface has the following _mandatory_ dependencies: calimero-core, calimero-tools, calimero-rxtx, SWT, slf4j-api
 
-The graphical user interface has the following _optional_ dependencies: calimero-rxtx, serial-native, slf4j-simple (although optional, strongly recommended to view log output in the GUI)
+The graphical user interface has the following _optional_ dependencies: serial-native, slf4j-simple (although optional, strongly recommended to view log output in the GUI)
 
 Use your specific version in the following commands.
 Either, relying on the Java MANIFEST (check the MANIFEST for exact dependency names and versions)
 
 	java -jar calimero-gui-2.3-SNAPSHOT.jar 
-	
+
 If all dependencies are resolved, you can also directly start the GUI by opening it in Nautilus, Windows File Explorer, etc.
 
 Or, assuming all dependencies (of any compliant version) are in the current working directory
