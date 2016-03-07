@@ -25,6 +25,7 @@ Supported Features
 * Show device information of a device in a KNX network
 * Read the IP configuration of a KNXnet/IP server (Local Device Management) or KNX device (Remote Property Services) using KNX properties
 * Scan KNX devices in a KNX subnet area/line, or check whether a specific KNX individual address is currently assigned to a KNX device
+* KNX properties viewer for KNX devices that implement an Interface Object Server (IOS)
 
 Supported Access Protocols
 --------------------------
@@ -45,7 +46,7 @@ Resolve/Compile/Install
 
 	mvn clean install -DskipTests -Dgpg.skip=true
 
-On OSX (takes care of the Cocoa thread restrictions)
+On OS X (takes care of the Cocoa thread restrictions)
 
 	mvn exec:exec
 
