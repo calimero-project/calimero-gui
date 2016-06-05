@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2015 B. Malinowsky
+    Copyright (c) 2006, 2016 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -40,8 +40,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.usb.UsbDevice;
@@ -53,6 +51,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -138,42 +137,28 @@ class DiscoverTab extends BaseTabLayout
 				protected void onEndpointReceived(final Result<SearchResponse> result)
 				{
 					final StringBuilder buf = new StringBuilder();
-					buf.append("Control endpoint ");
+					buf.append("Using local interface ").append(result.getNetworkInterface().getName()).append(" (");
+					buf.append(result.getAddress()).append(")").append(sep);
+
+					Main.syncExec(() -> {
+						final GC gc = new GC(list);
+						final double width = gc.stringExtent("--------------------").x / 20.0;
+						final Point extent = gc.stringExtent(buf.toString());
+						final int chars = (int) (extent.x / width);
+						final String line = String.format("%" + chars + "s", "-").replace(' ', '-');
+						gc.dispose();
+						buf.append(line).append(sep);
+					});
 					final SearchResponse r = result.getResponse();
-					buf.append(r.getControlEndpoint().toString()).append(sep);
-					buf.append(r.getDevice().toString()).append(sep);
-					buf.append("Supported service families:").append(sep).append("    ");
-					buf.append(r.getServiceFamilies().toString());
+					buf.append("\"").append(r.getDevice().getName()).append("\"");
+					buf.append(" at ").append(r.getControlEndpoint()).append(sep);
+					buf.append("    ").append(r.getDevice().toString().replaceAll("\".*\"", "")).append(sep);
 					for (int i = buf.indexOf(", "); i != -1; i = buf.indexOf(", "))
 						buf.replace(i, i + 2, sep + "    ");
-					String mcast = null;
-					try {
-						mcast = InetAddress.getByAddress(r.getDevice().getMulticastAddress())
-								.getHostAddress();
-					}
-					catch (final UnknownHostException e) {}
+					buf.append("    Supported services: ");
+					buf.append(r.getServiceFamilies().toString());
 
-					// only add the new item if it is different from any already shown in the list
-					final String setMcast = mcast;
-					Main.syncExec(new Runnable() {
-						@Override
-						public void run()
-						{
-							final List<TableItem> items = new ArrayList<TableItem>();
-							items.addAll(Arrays.asList(list.getItems()));
-							for (final Iterator<TableItem> i = items.iterator(); i.hasNext();) {
-								final TableItem item = i.next();
-								if (item.getText().equals(buf.toString()))
-									return;
-							}
-							addListItem(new String[] { buf.toString() },
-									new String[] { "protocol", "name", "host", "port", "mcast" },
-									new Object[] { Protocol.Tunneling, r.getDevice().getName(),
-										r.getControlEndpoint().getAddress().getHostAddress(),
-										Integer.toString(r.getControlEndpoint().getPort()),
-										setMcast });
-						}
-					});
+					Main.syncExec(() -> addKnxnetipEndpoint(result, buf.toString()));
 				}
 
 				@Override
@@ -275,5 +260,25 @@ class DiscoverTab extends BaseTabLayout
 		new ConnectDialog(getTabFolder(), (Protocol) i.getData("protocol"),
 				(String) i.getData("name"), (String) i.getData("host"), (String) i.getData("port"),
 				(String) i.getData("mcast"), nat.getSelection());
+	}
+
+	private void addKnxnetipEndpoint(final Result<SearchResponse> result, final String newItem)
+	{
+		// only add the new item if it is different from any already shown in the list
+		for (final TableItem item : list.getItems()) {
+			if (item.getText().equals(newItem))
+				return;
+		}
+		final SearchResponse r = result.getResponse();
+		String mcast = null;
+		try {
+			mcast = InetAddress.getByAddress(r.getDevice().getMulticastAddress()).getHostAddress();
+		}
+		catch (final UnknownHostException e) {}
+
+		addListItem(new String[] { newItem }, new String[] { "protocol", "localEP", "name", "host", "port", "mcast" },
+				new Object[] { Protocol.Tunneling, result.getAddress().getHostAddress(), r.getDevice().getName(),
+					r.getControlEndpoint().getAddress().getHostAddress(),
+					Integer.toString(r.getControlEndpoint().getPort()), mcast });
 	}
 }
