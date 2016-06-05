@@ -36,8 +36,12 @@
 
 package tuwien.auto.calimero.gui;
 
+import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Collections;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -49,11 +53,11 @@ import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 
@@ -68,7 +72,7 @@ public class Main
 	static Shell shell;
 	static Font font;
 
-	private static Text localHost;
+	private static Combo localInterfaces;
 	private final CTabFolder tf;
 
 	Main()
@@ -113,7 +117,7 @@ public class Main
 
 		final Label localHostLabel = new Label(comp, SWT.NONE);
 		localHostLabel.setFont(header.getFont());
-		localHostLabel.setText("Local host:");
+		localHostLabel.setText("Local network interface:");
 		final GridData gridData = new GridData();
 		gridData.verticalAlignment = SWT.CENTER;
 		gridData.grabExcessVerticalSpace = true;
@@ -126,14 +130,27 @@ public class Main
 		Point size = comp.computeSize(SWT.DEFAULT, SWT.DEFAULT);
 		labelItem.setWidth(size.x);
 
-		localHost = new Text(header, SWT.BORDER);
+		localInterfaces = new Combo(header, SWT.BORDER);
 		try {
-			localHost.setText(InetAddress.getLocalHost().getHostAddress());
+			localInterfaces.setText(InetAddress.getLocalHost().getHostAddress());
+			Collections.list(NetworkInterface.getNetworkInterfaces()).forEach(ni -> Collections
+					.list(ni.getInetAddresses()).stream().filter(ip -> ip instanceof Inet4Address).forEach(ip -> {
+						localInterfaces.add(ip.getHostAddress());
+						localInterfaces.setData(ip.getHostAddress(), ni.getName() + ": " + ip.getHostAddress());
+					}));
 		}
-		catch (final UnknownHostException e) {}
-		size = localHost.computeSize(SWT.DEFAULT, SWT.DEFAULT);
+		catch (UnknownHostException | SocketException e) {}
+		localInterfaces.setToolTipText((String) localInterfaces.getData(localInterfaces.getText()));
+		localInterfaces.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(final SelectionEvent e)
+			{
+				localInterfaces.setToolTipText((String) localInterfaces.getData(localInterfaces.getText()));
+			}
+		});
+		size = localInterfaces.computeSize(SWT.DEFAULT, SWT.DEFAULT);
 		final ToolItem hostItem = new ToolItem(header, SWT.SEPARATOR);
-		hostItem.setControl(localHost);
+		hostItem.setControl(localInterfaces);
 		hostItem.setWidth(size.x + 100);
 
 		new Label(shell, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL,
@@ -190,7 +207,7 @@ public class Main
 
 	static String getLocalHost()
 	{
-		return localHost.getText();
+		return localInterfaces.getText();
 	}
 
 	static void asyncExec(final Runnable task)
