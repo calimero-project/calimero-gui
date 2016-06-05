@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2015 B. Malinowsky
+    Copyright (c) 2015, 2016 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -300,7 +300,7 @@ class PropertyEditorTab extends BaseTabLayout
 	{
 		super.initWorkAreaTop();
 		// TODO export name should contain KNX device address/name
-		addResetAndExport("_properties.csv");
+		addResetAndExport(false, "_properties.csv");
 	}
 
 	@Override
