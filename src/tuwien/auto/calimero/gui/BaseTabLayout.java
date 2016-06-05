@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2015 B. Malinowsky
+    Copyright (c) 2006, 2016 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -40,8 +40,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -87,7 +90,7 @@ class BaseTabLayout
 {
 	private static class StreamRedirector extends PrintStream
 	{
-		public StreamRedirector(final OutputStream out)
+		StreamRedirector(final OutputStream out)
 		{
 			super(out, true);
 		}
@@ -110,10 +113,8 @@ class BaseTabLayout
 
 	private static Map<BaseTabLayout, java.util.List<String>> logBuffer = Collections
 			.synchronizedMap(new WeakHashMap<>());
-	private static Map<BaseTabLayout, LogLevel> logLevel = Collections
-			.synchronizedMap(new WeakHashMap<>());
-	private static Map<BaseTabLayout, String> logNamespace = Collections
-			.synchronizedMap(new WeakHashMap<>());
+	private static Map<BaseTabLayout, LogLevel> logLevel = Collections.synchronizedMap(new WeakHashMap<>());
+	private static Map<BaseTabLayout, String> logNamespace = Collections.synchronizedMap(new WeakHashMap<>());
 
 	final CTabItem tab;
 	final Composite workArea;
@@ -131,25 +132,21 @@ class BaseTabLayout
 	private long timeLastMenu;
 
 	// filters for list output, column-based
-	final Map<Integer, String> includeFilter = Collections
-			.synchronizedMap(new HashMap<Integer, String>());
-	final Map<Integer, ArrayList<String>> excludeFilter = Collections
-			.synchronizedMap(new HashMap<Integer, ArrayList<String>>());
+	final Map<Integer, String> includeFilter = Collections.synchronizedMap(new HashMap<>());
+	final Map<Integer, ArrayList<String>> excludeFilter = Collections.synchronizedMap(new HashMap<>());
 
 	private String filenameSuffix;
 	private String prevFilename;
 
 	// Type params of array are <String[] String[], Object[]>
-	private final java.util.List<Object[][]> itemBuffer = Collections
-			.synchronizedList(new ArrayList<>());
+	private final java.util.List<Object[][]> itemBuffer = Collections.synchronizedList(new ArrayList<>());
 
 	BaseTabLayout(final CTabFolder tf, final String tabTitle, final String info)
 	{
 		this(tf, tabTitle, info, true);
 	}
 
-	BaseTabLayout(final CTabFolder tf, final String tabTitle, final String info,
-		final boolean showClose)
+	BaseTabLayout(final CTabFolder tf, final String tabTitle, final String info, final boolean showClose)
 	{
 		this.tf = tf;
 		tab = new CTabItem(tf, showClose ? SWT.CLOSE : SWT.NONE);
@@ -386,13 +383,13 @@ class BaseTabLayout
 		});
 	}
 
-	private static boolean matches(final String logMessage, final LogLevel level,
-		final String namespace)
+	private static boolean matches(final String logMessage, final LogLevel level, final String namespace)
 	{
 		boolean match = false;
 		switch (level) {
 		case TRACE:
-			match = true; break; // |= logMessage.contains(LogLevel.TRACE.name());
+			match = true;
+			break;
 		case DEBUG:
 			match |= logMessage.contains(LogLevel.DEBUG.name());
 		case INFO:
@@ -420,15 +417,25 @@ class BaseTabLayout
 	}
 
 	/**
+	 * Adds a log string asynchronously to the log list.
+	 */
+	protected void asyncAddLog(final Throwable t)
+	{
+		final StringWriter w = new StringWriter();
+		t.printStackTrace(new PrintWriter(w));
+		final String[] s = w.toString().split("\\R");
+		Arrays.stream(s).forEach(this::asyncAddLog);
+	}
+
+	/**
 	 * Adds a list item asynchronously to the list.
 	 *
 	 * @param itemText list item text of each column
 	 * @param keys key entry of the item for each column, might be <code>null</code>
-	 * @param data data entry of the item for each column, might be <code>null</code> if
-	 *        <code>keys</code> is <code>null</code>
+	 * @param data data entry of the item for each column, might be <code>null</code> if <code>keys</code> is
+	 *        <code>null</code>
 	 */
-	protected void asyncAddListItem(final String[] itemText, final String[] keys,
-		final String[] data)
+	protected void asyncAddListItem(final String[] itemText, final String[] keys, final String[] data)
 	{
 		itemBuffer.add(new String[][] { itemText, keys, data });
 		// TODO Runnables might be executed with delay, because SWT enforces a minimum inter-arrival
@@ -556,23 +563,30 @@ class BaseTabLayout
 
 	protected void addResetAndExport(final String exportNameSuffix)
 	{
+		addResetAndExport(true, exportNameSuffix);
+	}
+
+	protected void addResetAndExport(final boolean resetFilterButton, final String exportNameSuffix)
+	{
 		filenameSuffix = exportNameSuffix;
 
 		((GridLayout) top.getLayout()).numColumns = 4;
 		final Label spacer = new Label(top, SWT.NONE);
 		spacer.setLayoutData(new GridData(SWT.NONE, SWT.CENTER, true, false));
-		final Button resetFilter = new Button(top, SWT.NONE);
-		resetFilter.setFont(Main.font);
-		resetFilter.setText("Reset filter");
-		resetFilter.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(final SelectionEvent e)
-			{
-				includeFilter.clear();
-				excludeFilter.clear();
-				asyncAddLog("reset output filter (all subsequent events will be shown)");
-			}
-		});
+		if (resetFilterButton) {
+			final Button resetFilter = new Button(top, SWT.NONE);
+			resetFilter.setFont(Main.font);
+			resetFilter.setText("Reset filter");
+			resetFilter.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(final SelectionEvent e)
+				{
+					includeFilter.clear();
+					excludeFilter.clear();
+					asyncAddLog("reset output filter (all subsequent events will be shown)");
+				}
+			});
+		}
 		final Button export = new Button(top, SWT.NONE);
 		export.setFont(Main.font);
 		export.setText("Export data...");
@@ -590,8 +604,7 @@ class BaseTabLayout
 					filename = prevFilename;
 				else {
 					// ISO 8601 would be yyyyMMddTHHmmss, but its not really readable.
-					final String timestamp = new SimpleDateFormat("yyyy-MM-dd--HH-mm-ss")
-							.format(new Date());
+					final String timestamp = new SimpleDateFormat("yyyy-MM-dd--HH-mm-ss").format(new Date());
 					filename = timestamp + filenameSuffix;
 				}
 				dlg.setFileName(filename);
