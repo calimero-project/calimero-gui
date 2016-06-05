@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2015 B. Malinowsky
+    Copyright (c) 2015, 2016 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -37,7 +37,6 @@
 package tuwien.auto.calimero.gui;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
@@ -69,6 +68,9 @@ class DeviceInfoTab extends BaseTabLayout
 		final TableColumn pidName = new TableColumn(list, SWT.LEFT);
 		pidName.setText("Value");
 		pidName.setWidth(200);
+		final TableColumn raw = new TableColumn(list, SWT.LEFT);
+		raw.setText("Unformatted");
+		raw.setWidth(80);
 		enableColumnAdjusting();
 
 		readDeviceInfo();
@@ -85,37 +87,31 @@ class DeviceInfoTab extends BaseTabLayout
 		try {
 			final DeviceInfo config = new DeviceInfo(args.toArray(new String[0])) {
 				@Override
-				protected void onDeviceInformation(final IndividualAddress device, final String info)
+				protected void onDeviceInformation(final IndividualAddress device, final Result result)
 				{
-					Main.asyncExec(new Runnable() {
-						@Override
-						public void run()
-						{
-							if (list.isDisposed())
-								return;
-							list.setRedraw(false);
-							final List<String> items = Arrays.asList(info.split("\n"));
-							for (final String s : items) {
-								final TableItem i = new TableItem(list, SWT.NONE);
-								// try to divide string in setting and value
-								int div = s.lastIndexOf(':');
-								if (div == -1)
-									div = s.lastIndexOf(' ');
-								if (div == -1)
-									i.setText(new String[] { s });
-								else {
-									final String param = s.substring(0, div);
-									final String value = s.substring(div + 1).trim();
-									i.setText(new String[] { param, value });
-								}
-							}
-							list.setRedraw(true);
-
-							setHeaderInfo("Device information received from " + device + " over "
-									+ connect.remote + " port " + connect.port
-									+ (connect.useNat() ? ", using NAT" : ""));
-						}
+					Main.asyncExec(() -> {
+						if (list.isDisposed())
+							return;
+						list.setRedraw(false);
+						addItems(result, CommonParameter.values());
+						addItems(result, KnxipParameter.values());
+						list.setRedraw(true);
+						setHeaderInfo("Device information received from " + device + " over " + connect.remote
+								+ " port " + connect.port + (connect.useNat() ? ", using NAT" : ""));
 					});
+				}
+
+				private void addItems(final Result result, final Parameter[] params)
+				{
+					for (final Parameter p : params) {
+						final String s = result.formatted(p);
+						if (s != null) {
+							final TableItem i = new TableItem(list, SWT.NONE);
+							final String param = p.name().replaceAll("([A-Z])", " $1").replace("I P", "IP").trim();
+							final String raw = result.raw(p).map((v) -> v.toString()).orElse("n/a");
+							i.setText(new String[] { param, result.formatted(p), raw });
+						}
+					}
 				}
 			};
 			new Thread(config).start();
