@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2015 B. Malinowsky
+    Copyright (c) 2015, 2016 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -112,19 +112,18 @@ class ScanDevicesTab extends BaseTabLayout
 				}
 
 				@Override
-				protected void onCompletion(final Exception thrown, final boolean canceled,
-					final IndividualAddress[] devices)
+				protected void onCompletion(final Exception thrown, final boolean canceled)
 				{
 					Main.asyncExec(() -> {
 						if (list.isDisposed())
 							return;
 
-						final String status = canceled ? "canceled" : "complete";
 						if (thrown != null) {
 							final TableItem i = new TableItem(list, SWT.NONE);
 							i.setText("Error: " + thrown.getMessage());
 						}
 
+						final String status = canceled ? "canceled" : "complete";
 						setHeaderInfo("Scan devices " + status + ", connection " + connect.remote + " port "
 								+ connect.port + (connect.useNat() ? ", using NAT" : ""));
 					});
