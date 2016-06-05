@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2015 B. Malinowsky
+    Copyright (c) 2006, 2016 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -38,10 +38,13 @@ package tuwien.auto.calimero.gui;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Sash;
@@ -54,21 +57,17 @@ import tuwien.auto.calimero.log.LogService.LogLevel;
  */
 class LogTab extends BaseTabLayout
 {
-	private static final String[] levels = new String[] { "Error", "Warn", "Info", "Debug",
-		"Trace" };
+	private static final String[] levels = new String[] { "Error", "Warn", "Info", "Debug", "Trace" };
 
-	private Scale scale;
+	private Button clear;
 	private Label loglevel;
+	private Scale scale;
 
 	LogTab(final CTabFolder tf)
 	{
-		super(tf, "Logging", "Shows all current log output");
+		super(tf, "Logging", "Shows log output of all open tabs");
 	}
 
-	/* (non-Javadoc)
-	 * @see tuwien.auto.calimero.gui.BaseTabLayout#initTableBottom(
-	 * org.eclipse.swt.widgets.Composite, org.eclipse.swt.widgets.Sash)
-	 */
 	@Override
 	protected void initTableBottom(final Composite parent, final Sash sash)
 	{
@@ -82,17 +81,26 @@ class LogTab extends BaseTabLayout
 	{
 		super.initWorkAreaTop();
 
-		((GridLayout) top.getLayout()).numColumns = 3;
-		((GridLayout) top.getLayout()).makeColumnsEqualWidth = true;
+		((GridLayout) top.getLayout()).numColumns = 4;
+		((GridLayout) top.getLayout()).makeColumnsEqualWidth = false;
+		((GridLayout) top.getLayout()).horizontalSpacing = 10 * ((GridLayout) top.getLayout()).horizontalSpacing;
 
+		clear = new Button(top, SWT.NONE);
+		clear.setText("Clear log");
+		clear.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(final SelectionEvent e)
+			{
+				log.removeAll();
+			}
+		});
 		loglevel = new Label(top, SWT.NONE);
 
 		final Composite scaleArea = new Composite(top, SWT.NONE);
 		final GridLayout layout = new GridLayout(3, false);
-		layout.marginHeight = 0;
 		layout.marginWidth = 0;
 		scaleArea.setLayout(layout);
-		scaleArea.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
+		scaleArea.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
 		final Label logMin = new Label(scaleArea, SWT.NONE);
 		logMin.setText(levels[0]);
@@ -107,7 +115,7 @@ class LogTab extends BaseTabLayout
 		scale.addListener(SWT.Selection, event -> adjustLogLevel(scale.getSelection()));
 
 		final Label logMax = new Label(scaleArea, SWT.NONE);
-		logMax.setText(levels[4]);
+		logMax.setText(levels[levels.length - 1]);
 
 		scale.setSelection(LogLevel.DEBUG.ordinal());
 		adjustLogLevel(LogLevel.DEBUG.ordinal());
