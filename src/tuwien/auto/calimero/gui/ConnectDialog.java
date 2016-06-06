@@ -36,6 +36,8 @@
 
 package tuwien.auto.calimero.gui;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -128,8 +130,6 @@ class ConnectDialog
 			final List<String> args = new ArrayList<String>();
 			switch (protocol) {
 			case Routing:
-				args.add("--routing");
-				// fall-through
 			case Tunneling:
 				if (!local.isEmpty()) {
 					args.add("--localhost");
@@ -348,8 +348,7 @@ class ConnectDialog
 					args = ConnectArguments.newTpuart(p, localKnxAddress.getText(),
 							knxAddr.getText());
 				else if (!h.isEmpty()) {
-					final boolean useRouting = routing.getSelection();
-					args = ConnectArguments.newKnxNetIP(useRouting, local, h, p, natChecked,
+					args = ConnectArguments.newKnxNetIP(useRouting(), local, h, p, natChecked,
 							knxAddr.getText());
 				}
 				else
@@ -369,6 +368,15 @@ class ConnectDialog
 				else
 					new TunnelTab(tf, args);
 				shell.dispose();
+			}
+
+			private boolean useRouting()
+			{
+				try {
+					return InetAddress.getByName(hostData.getText()).isMulticastAddress();
+				}
+				catch (final UnknownHostException e) {}
+				return false;
 			}
 		});
 
