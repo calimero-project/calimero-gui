@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2015 B. Malinowsky
+    Copyright (c) 2006, 2016 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -39,6 +39,7 @@ package tuwien.auto.calimero.gui;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Map;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -67,6 +68,7 @@ import tuwien.auto.calimero.KNXFormatException;
 import tuwien.auto.calimero.KNXIllegalArgumentException;
 import tuwien.auto.calimero.datapoint.Datapoint;
 import tuwien.auto.calimero.datapoint.DatapointMap;
+import tuwien.auto.calimero.datapoint.StateDP;
 import tuwien.auto.calimero.dptxlator.DPT;
 import tuwien.auto.calimero.dptxlator.TranslatorTypes;
 import tuwien.auto.calimero.dptxlator.TranslatorTypes.MainType;
@@ -125,23 +127,19 @@ class TunnelTab extends BaseTabLayout
 				final byte[] asdu = e.getASDU();
 				String value = "[empty]";
 				if (asdu.length > 0)
-					value = dp != null ? asString(asdu, dp.getMainNumber(), dp.getDPT()) : "n/a";
+					value = dp != null && dp.getDPT() != null ? asString(asdu, dp.getMainNumber(), dp.getDPT()) : "n/a";
 
-				final String now = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance()
-						.getTime());
-				final String[] item = new String[] { "" + ++eventCounter,
-					"" + eventCounterFiltered, now, e.getSourceAddr().toString(),
-					e.getDestination().toString(), svc, DataUnitBuilder.toHex(asdu, " "), value };
+				final String now = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
+				final String[] item = new String[] { "" + ++eventCounter, "" + eventCounterFiltered, now,
+					e.getSourceAddr().toString(), e.getDestination().toString(), svc, DataUnitBuilder.toHex(asdu, " "),
+					value };
 				if (applyFilter(item))
 					return;
 				// increment filtered counter after filter
 				++eventCounterFiltered;
 				asyncAddListItem(item, null, null);
 			}
-			catch (final KNXException e1) {
-				asyncAddLog("error: " + e1.getMessage());
-			}
-			catch (final KNXIllegalArgumentException e1) {
+			catch (KNXException | KNXIllegalArgumentException e1) {
 				asyncAddLog("error: " + e1.getMessage());
 			}
 		}
@@ -158,9 +156,9 @@ class TunnelTab extends BaseTabLayout
 
 	TunnelTab(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, (args.protocol + " connection to " + args.name), "Connecting"
-				+ (args.remote == null ? "" : " to " + args.remote) + " on port " + args.port
-				+ (args.useNat() ? ", using NAT" : ""));
+		super(tf, (args.protocol + " connection to " + args.name),
+				"Connecting" + (args.remote == null ? "" : " to " + args.remote) + " on port " + args.port
+						+ (args.useNat() ? ", using NAT" : ""));
 		connect = args;
 
 		list.setLinesVisible(true);
@@ -201,10 +199,6 @@ class TunnelTab extends BaseTabLayout
 		addResetAndExport("_tunnel.csv");
 	}
 
-	/* (non-Javadoc)
-	 * @see tuwien.auto.calimero.gui.BaseTabLayout#initTableBottom(
-	 * org.eclipse.swt.widgets.Composite)
-	 */
 	@Override
 	protected void initTableBottom(final Composite parent, final Sash sash)
 	{
@@ -218,7 +212,7 @@ class TunnelTab extends BaseTabLayout
 
 		final RowLayout row = new RowLayout(SWT.HORIZONTAL);
 		row.spacing = 10;
-		row.fill = true;
+		row.center = true;
 		editArea.setLayout(row);
 
 		final Button load = new Button(editArea, SWT.NONE);
@@ -235,28 +229,82 @@ class TunnelTab extends BaseTabLayout
 
 		final Button read = new Button(editArea, SWT.NONE);
 		read.setText("Read");
-		read.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(final SelectionEvent e)
-			{
-				try {
-					final Datapoint dp = model.get(new GroupAddress(points.getText()));
-					if (dp != null)
-						pc.read(dp);
-					else
-						asyncAddLog("datapoint " + points.getText() + " not loaded");
-				}
-				catch (final KNXFormatException e1) {
-					asyncAddLog(e1.getMessage());
-				}
-			}
-		});
-
 		final Button write = new Button(editArea, SWT.NONE);
 		write.setText("Write");
 		final Combo value = new Combo(editArea, SWT.DROP_DOWN);
 		setFieldSize(value, 15);
 		final Label unit = new Label(editArea, SWT.NONE);
+
+		// list of all supported DPTs by main number
+		final Combo dpt = new Combo(editArea, SWT.DROP_DOWN | SWT.SIMPLE | SWT.READ_ONLY);
+		dpt.add("");
+		final Map<Integer, MainType> allMainTypes = TranslatorTypes.getAllMainTypes();
+		allMainTypes.forEach((i, main) -> {
+			dpt.add(main.getDescription());
+			dpt.setData(main.getDescription(), new Object[] { main, null });
+			try {
+				main.getSubTypes().forEach((id, sub) -> {
+					final boolean noUnit = sub.getUnit().isEmpty();
+					final String s = "    " + id + " - " + sub.getDescription()
+							+ (noUnit ? "" : " [" + sub.getUnit() + "]");
+					dpt.add(s);
+					dpt.setData(s, new Object[] { main, sub });
+				});
+			}
+			catch (final KNXException e) {}
+		});
+		dpt.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(final SelectionEvent e)
+			{
+				final Object[] data = (Object[]) dpt.getData(dpt.getText());
+				if (data[1] != null) {
+					value.removeAll();
+					final DPT sub = (DPT) data[1];
+					value.add(sub.getLowerValue());
+					value.add(sub.getUpperValue());
+					unit.setText(sub.getUnit());
+					unit.pack(true);
+				}
+			}
+		});
+
+		read.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(final SelectionEvent e)
+			{
+				try {
+					final GroupAddress main = new GroupAddress(points.getText());
+					final String selected = dpt.getText();
+					if (!model.contains(main)) {
+						final StateDP dp = new StateDP(main, "-");
+						model.add(dp);
+						points.add(main.toString());
+						if (!selected.isEmpty()) {
+							final Object[] data = (Object[]) dpt.getData(selected);
+							final MainType mt = (MainType) data[0];
+							final DPT dpt = (DPT) data[1];
+							dp.setDPT(mt.getMainNumber(), dpt != null ? dpt.getID()
+									: mt.getSubTypes().entrySet().iterator().next().getValue().getID());
+						}
+					}
+					else if (!selected.isEmpty()) {
+						final Datapoint dp = model.get(main);
+						final int current = dp.getMainNumber();
+						final Object[] data = (Object[]) dpt.getData(selected);
+						final MainType mt = (MainType) data[0];
+						final DPT dpt = (DPT) data[1];
+						if (mt.getMainNumber() != current || (dpt != null && !dpt.getID().equals(dp.getDPT())))
+							dp.setDPT(mt.getMainNumber(), dpt != null ? dpt.getID()
+									: mt.getSubTypes().entrySet().iterator().next().getValue().getID());
+					}
+					pc.read(model.get(main));
+				}
+				catch (final KNXException e1) {
+					asyncAddLog(e1.getMessage());
+				}
+			}
+		});
 
 		write.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -280,11 +328,23 @@ class TunnelTab extends BaseTabLayout
 			{
 				try {
 					value.removeAll();
+					dpt.select(0);
 					final Datapoint dp = model.get(new GroupAddress(points.getText()));
 					if (dp == null)
 						return;
 					final MainType t = TranslatorTypes.getMainType(dp.getMainNumber());
 					if (t != null) {
+						final String[] items = dpt.getItems();
+						for (int i = 0; i < items.length; i++) {
+							final String item = items[i];
+							final Object[] data = (Object[]) dpt.getData(item);
+							if (data == null)
+								continue;
+							if (data[0] == t && data[1] != null && ((DPT) data[1]).getID().equals(dp.getDPT())) {
+								dpt.select(i);
+								break;
+							}
+						}
 						if (t.getSubTypes().containsKey(dp.getDPT())) {
 							final DPT dpt = t.getSubTypes().get(dp.getDPT());
 							value.add(dpt.getLowerValue());
@@ -320,9 +380,8 @@ class TunnelTab extends BaseTabLayout
 		final GC gc = new GC(field);
 		final FontMetrics fm = gc.getFontMetrics();
 		final int width = columns * fm.getAverageCharWidth();
-		final int height = fm.getHeight();
 		gc.dispose();
-		field.setLayoutData(new RowData(field.computeSize(width, height)));
+		field.setLayoutData(new RowData(field.computeSize(width, 0).x, SWT.DEFAULT));
 	}
 
 	private void openGroupMonitor()
@@ -350,15 +409,13 @@ class TunnelTab extends BaseTabLayout
 								return;
 							for (final Control c : editArea.getChildren())
 								c.setEnabled(true);
-							setHeaderInfo("Connected"
-									+ (connect.remote == null ? "" : " to " + connect.remote)
-									+ " on port " + connect.port
-									+ (connect.useNat() ? ", using NAT" : ""));
+							setHeaderInfo("Connected" + (connect.remote == null ? "" : " to " + connect.remote)
+									+ " on port " + connect.port + (connect.useNat() ? ", using NAT" : ""));
 						}
 					});
 				}
 				catch (final Exception e) {
-					asyncAddLog(e.getMessage());
+					asyncAddLog(e);
 					if (pc != null)
 						pc.quit();
 				}
@@ -377,8 +434,8 @@ class TunnelTab extends BaseTabLayout
 			asyncAddLog("datapoints loaded from " + systemID);
 		}
 		catch (final KNXMLException e) {
-			asyncAddLog("failed to load datapoints from " + systemID + ", " + e.getMessage()
-					+ ", line " + e.getLineNumber() + ", item " + e.getBadItem());
+			asyncAddLog("failed to load datapoints from " + systemID + ", " + e.getMessage() + ", line "
+					+ e.getLineNumber() + ", item " + e.getBadItem());
 		}
 		points.removeAll();
 		for (final Datapoint dp : model.getDatapoints())
