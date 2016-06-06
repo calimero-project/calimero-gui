@@ -41,6 +41,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.usb.UsbDevice;
@@ -59,6 +60,8 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
+import org.usb4java.Device;
+import org.usb4java.LibUsb;
 
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 import tuwien.auto.calimero.knxnetip.Discoverer.Result;
@@ -180,12 +183,10 @@ class DiscoverTab extends BaseTabLayout
 					try {
 						asyncAddLog("Search for KNX USB interfaces");
 						final List<UsbDevice> knxDevices = UsbConnection.getKnxDevices();
-						final List<UsbDevice> vserialKnxDevices = UsbConnection
-								.getVirtualSerialKnxDevices();
+						final List<UsbDevice> vserialKnxDevices = UsbConnection.getVirtualSerialKnxDevices();
 
 						asyncAddLog("Found " + knxDevices.size() + " KNX USB interfaces");
-						asyncAddLog("Found " + vserialKnxDevices.size()
-								+ " USB serial KNX interfaces");
+						asyncAddLog("Found " + vserialKnxDevices.size() + " USB serial KNX interfaces");
 
 						Main.syncExec(new Runnable() {
 							@Override
@@ -196,20 +197,21 @@ class DiscoverTab extends BaseTabLayout
 										final String ind = "    ";
 										final StringBuilder sb = new StringBuilder();
 										sb.append("USB interface ").append(d).append(sep);
-										sb.append(ind).append(d.getProductString()).append(sep);
-										sb.append(ind).append(d.getManufacturerString());
 
 										final UsbDeviceDescriptor dd = d.getUsbDeviceDescriptor();
-										final int vendor = dd.idVendor() & 0xffff;
-										final int prod = dd.idProduct() & 0xffff;
-										final String vp = String.format("%04x:%04x", vendor, prod);
+										final int vendorId = dd.idVendor() & 0xffff;
+										final int productId = dd.idProduct() & 0xffff;
+
+										final String product = productName(d, vendorId, productId);
+										sb.append(ind).append(product).append(sep);
+										sb.append(ind).append(manufacturer(d, vendorId, productId));
+
+										final String vp = String.format("%04x:%04x", vendorId, productId);
 										addListItem(new String[] { sb.toString() },
 												new String[] { "protocol", "name", "port", },
-												new Object[] { Protocol.USB, d.getProductString(),
-													vp });
+												new Object[] { Protocol.USB, product, vp });
 									}
-									catch (final UsbException | UnsupportedEncodingException
-											| UsbDisconnectedException e) {
+									catch (final RuntimeException e) {
 										asyncAddLog("error: " + e.getMessage());
 									}
 								}
@@ -218,18 +220,20 @@ class DiscoverTab extends BaseTabLayout
 										final String ind = "    ";
 										final StringBuilder sb = new StringBuilder();
 										sb.append("TP-UART interface ").append(d).append(sep);
-										final String product = nullTerminate(d.getProductString());
-										final String mf = nullTerminate(d.getManufacturerString());
+										final UsbDeviceDescriptor dd = d.getUsbDeviceDescriptor();
+										final int vendorId = dd.idVendor() & 0xffff;
+										final int productId = dd.idProduct() & 0xffff;
+										final String product = productName(d, vendorId, productId);
+
 										sb.append(ind).append(product).append(sep);
-										sb.append(ind).append(mf);
+										sb.append(ind).append(manufacturer(d, vendorId, productId));
 										final String dev = "/dev/";
 
 										addListItem(new String[] { sb.toString() },
 												new String[] { "protocol", "name", "port", },
 												new Object[] { Protocol.Tpuart, product, dev });
 									}
-									catch (final UsbException | UnsupportedEncodingException
-											| UsbDisconnectedException e) {
+									catch (final RuntimeException e) {
 										asyncAddLog("error: " + e.getMessage());
 									}
 								}
@@ -244,6 +248,34 @@ class DiscoverTab extends BaseTabLayout
 						asyncAddLog("error: " + e.getMessage());
 					}
 				};
+
+				private String productName(final UsbDevice d, final int vendorId, final int productId)
+				{
+					Optional<String> product;
+					try {
+						product = Optional.ofNullable(d.getProductString());
+					}
+					catch (UnsupportedEncodingException | UsbDisconnectedException | UsbException e) {
+						final Device device = UsbConnection.findDeviceLowLevel(vendorId, productId);
+						product = UsbConnection.getProductName(device);
+						LibUsb.unrefDevice(device);
+					}
+					return "Product: " + nullTerminate(product.orElse("n/a"));
+				}
+
+				private String manufacturer(final UsbDevice d, final int vendorId, final int productId)
+				{
+					Optional<String> mf;
+					try {
+						mf = Optional.ofNullable(d.getManufacturerString());
+					}
+					catch (UnsupportedEncodingException | UsbDisconnectedException | UsbException e) {
+						final Device device = UsbConnection.findDeviceLowLevel(vendorId, productId);
+						mf = UsbConnection.getManufacturer(device);
+						LibUsb.unrefDevice(device);
+					}
+					return "Manufacturer: " + nullTerminate(mf.orElse("n/a"));
+				}
 
 				// sometimes usb4java returns strings which exceed past the null terminator
 				private String nullTerminate(final String s)
