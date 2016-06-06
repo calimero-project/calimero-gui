@@ -83,21 +83,21 @@ class DiscoverTab extends BaseTabLayout
 		new TableColumn(list, SWT.LEFT);
 
 		list.setHeaderVisible(false);
-		listItemMargin = 10;
+		listItemMargin = 5;
 		list.addListener(SWT.MeasureItem, event -> {
 			final TableItem item = (TableItem) event.item;
 			final String text = item.getText(event.index);
 			final Point size = event.gc.textExtent(text);
 			event.width = size.x + 2 * listItemMargin;
-			event.height = Math.max(event.height, size.y + listItemMargin);
+			event.height = size.y + 2 * listItemMargin;
 		});
 		list.addListener(SWT.EraseItem, event -> event.detail &= ~SWT.FOREGROUND);
 		list.addListener(SWT.PaintItem, event -> {
 			final TableItem item = (TableItem) event.item;
 			final String text = item.getText(event.index);
-			event.gc.drawText(text, event.x + listItemMargin, event.y, true);
+			event.gc.drawText(text, event.x + listItemMargin, event.y + listItemMargin, true);
 		});
-		setListBanner("\nFound device endpoints (KNXnet/IP routers and USB interfaces only) "
+		setListBanner("Found device endpoints (KNXnet/IP routers and USB interfaces only) "
 				+ "will be listed here.\nSelect an endpoint to open the connection dialog.");
 		enableColumnAdjusting();
 		setLogNamespace("calimero");
