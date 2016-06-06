@@ -41,6 +41,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.usb.UsbDevice;
 import javax.usb.UsbDeviceDescriptor;
@@ -62,6 +63,7 @@ import org.eclipse.swt.widgets.TableItem;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 import tuwien.auto.calimero.knxnetip.Discoverer.Result;
 import tuwien.auto.calimero.knxnetip.servicetype.SearchResponse;
+import tuwien.auto.calimero.serial.LibraryAdapter;
 import tuwien.auto.calimero.serial.usb.UsbConnection;
 import tuwien.auto.calimero.tools.Discover;
 
@@ -233,6 +235,10 @@ class DiscoverTab extends BaseTabLayout
 								}
 							}
 						});
+						if (!vserialKnxDevices.isEmpty()) {
+							final List<String> l = LibraryAdapter.getPortIdentifiers();
+							asyncAddLog(l.stream().collect(Collectors.joining(", ", "Available serial ports: ", "")));
+						}
 					}
 					catch (final SecurityException | UsbDisconnectedException | UsbException e) {
 						asyncAddLog("error: " + e.getMessage());
