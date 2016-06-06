@@ -167,7 +167,7 @@ class ConnectDialog
 		}
 	}
 
-	ConnectDialog(final CTabFolder tf, final Protocol protocol, final String name,
+	ConnectDialog(final CTabFolder tf, final Protocol protocol, final String localEP, final String name,
 		final String host, final String port, final String mcast, final boolean useNAT)
 	{
 		final Shell shell = new Shell(Main.shell, SWT.DIALOG_TRIM | SWT.RESIZE);
@@ -180,15 +180,15 @@ class ConnectDialog
 		final Label nameLabel = new Label(shell, SWT.NONE);
 		nameLabel.setFont(Main.font);
 		nameLabel.setText(confirm ? "Name or ID: " + name
-				: "Specify connection parameters.\nFor serial connections, "
-						+ "leave the host empty.");
+				: "Specify connection parameters.\nFor serial connections, leave the host empty.");
 
 		final Composite c = new Composite(shell, SWT.NONE);
 		c.setLayout(new GridLayout(2, false));
 		c.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
 
-		final Text localhostData = addHostInput(c, "Local host:", Main.getLocalHost(), serial);
-		final Text hostData = addHostInput(c, "IP address or host name:", host, serial);
+		final String local = localEP != null ? localEP : Main.getLocalHost();
+		final Text localhostData = addHostInput(c, "Local endpoint:", local,  serial);
+		final Text hostData = addHostInput(c, "Remote endpoint:", host, serial);
 
 		final Label portLabel = new Label(c, SWT.NONE);
 		portLabel.setLayoutData(new GridData(SWT.LEFT, SWT.NONE, false, false));
@@ -419,6 +419,7 @@ class ConnectDialog
 			data.setEnabled(false);
 		else
 			data.setText(host);
+		data.setToolTipText("IP address or host name");
 		return data;
 	}
 }

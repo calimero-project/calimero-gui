@@ -169,7 +169,7 @@ public class Main
 			@Override
 			public void widgetSelected(final SelectionEvent e)
 			{
-				new ConnectDialog(tf, Protocol.Unknown, null, "", "", null, false);
+				new ConnectDialog(tf, Protocol.Unknown, null, null, "", "", null, false);
 			}
 		});
 
