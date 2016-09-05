@@ -29,7 +29,7 @@
 
 	<properties>
 		<swt.groupId>org.eclipse.swt</swt.groupId>
-		<swt.version>4.6RC3</swt.version>
+		<swt.version>4.6</swt.version>
 	</properties>
 
 	<profiles>
@@ -178,7 +178,7 @@
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-simple</artifactId>
-			<version>1.7.18</version>
+			<version>${slf4j.version}</version>
 			<scope>runtime</scope>
 		</dependency>
 	</dependencies>
