@@ -64,7 +64,6 @@ import org.eclipse.swt.widgets.TableColumn;
 import tuwien.auto.calimero.DataUnitBuilder;
 import tuwien.auto.calimero.GroupAddress;
 import tuwien.auto.calimero.KNXException;
-import tuwien.auto.calimero.KNXFormatException;
 import tuwien.auto.calimero.KNXIllegalArgumentException;
 import tuwien.auto.calimero.datapoint.Datapoint;
 import tuwien.auto.calimero.datapoint.DatapointMap;
@@ -258,7 +257,7 @@ class TunnelTab extends BaseTabLayout
 			public void widgetSelected(final SelectionEvent e)
 			{
 				final Object[] data = (Object[]) dpt.getData(dpt.getText());
-				if (data[1] != null) {
+				if (data != null && data[1] != null) {
 					value.removeAll();
 					final DPT sub = (DPT) data[1];
 					value.add(sub.getLowerValue());
@@ -289,14 +288,7 @@ class TunnelTab extends BaseTabLayout
 						}
 					}
 					else if (!selected.isEmpty()) {
-						final Datapoint dp = model.get(main);
-						final int current = dp.getMainNumber();
-						final Object[] data = (Object[]) dpt.getData(selected);
-						final MainType mt = (MainType) data[0];
-						final DPT dpt = (DPT) data[1];
-						if (mt.getMainNumber() != current || (dpt != null && !dpt.getID().equals(dp.getDPT())))
-							dp.setDPT(mt.getMainNumber(), dpt != null ? dpt.getID()
-									: mt.getSubTypes().entrySet().iterator().next().getValue().getID());
+						updateToSelectedDpt(main, (Object[]) dpt.getData(selected));
 					}
 					pc.read(model.get(main));
 				}
@@ -312,12 +304,15 @@ class TunnelTab extends BaseTabLayout
 			{
 				try {
 					final Datapoint dp = model.get(new GroupAddress(points.getText()));
-					if (dp != null)
+					final String selected = dpt.getText();
+					if (dp != null && !selected.isEmpty()) {
+						updateToSelectedDpt(dp.getMainAddress(), (Object[]) dpt.getData(selected));
 						pc.write(dp, value.getText());
+					}
 					else
 						asyncAddLog("datapoint " + points.getText() + " not loaded");
 				}
-				catch (final KNXFormatException e1) {
+				catch (final KNXException e1) {
 					asyncAddLog(e1.getMessage());
 				}
 			}
@@ -440,5 +435,17 @@ class TunnelTab extends BaseTabLayout
 		points.removeAll();
 		for (final Datapoint dp : model.getDatapoints())
 			points.add(dp.getMainAddress().toString());
+	}
+
+	private void updateToSelectedDpt(final GroupAddress main, final Object[] data) throws KNXException
+	{
+		final Datapoint dp = model.get(main);
+		final int current = dp.getMainNumber();
+		final MainType mt = (MainType) data[0];
+		final DPT dpt = (DPT) data[1];
+		if (mt.getMainNumber() != current || (dpt != null && !dpt.getID().equals(dp.getDPT())))
+			dp.setDPT(mt.getMainNumber(),
+					dpt != null ? dpt.getID() : mt.getSubTypes().entrySet().iterator().next().getValue().getID());
+
 	}
 }
