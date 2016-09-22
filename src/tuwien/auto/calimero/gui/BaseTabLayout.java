@@ -96,6 +96,12 @@ class BaseTabLayout
 		}
 
 		@Override
+		public void println(final String s)
+		{
+			print(s);
+		}
+
+		@Override
 		public void print(final String s)
 		{
 			logBuffer.forEach((k, v) -> { v.add(s); k.asyncAddLog(); });
