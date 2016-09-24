@@ -1,0 +1,74 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.13.0'
+    }
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+}
+
+apply plugin:'java'
+apply plugin:'application'
+apply plugin:'com.github.ben-manes.versions'
+
+version = '2.4-SNAPSHOT'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+mainClassName = 'tuwien.auto.calimero.gui.SwtChecker'
+
+sourceSets {
+    main {
+        java.srcDir 'src'
+        resources.srcDir 'resources'
+    }
+}
+
+compileJava.options*.compilerArgs = [
+    '-Xlint:all',
+//    '-Werror'
+]
+
+dependencies {
+    compile "com.github.calimero:calimero-core:${version}"
+    compile "com.github.calimero:calimero-tools:${version}"
+    runtime "com.github.calimero:calimero-rxtx:${version}"
+    compile 'org.eclipse.swt:org.eclipse.swt.cocoa.macosx.x86_64:4.6'
+    compile 'org.slf4j:slf4j-api:1.7.21'
+    compile 'org.slf4j:slf4j-simple:1.7.21'
+    // bogus dependency which we check for (& download) on application startup
+    compile files('swt.jar')
+}
+
+configurations {
+    runtime.exclude group: 'org.eclipse.swt'
+}
+
+jar {
+  manifest {
+    attributes(
+      'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
+      'Main-Class': mainClassName
+    )
+  }
+}
+
+startScripts {
+    doLast {
+        // on OS X, SWT needs to run on first thread
+        unixScript.text = unixScript.text.replace('DEFAULT_JVM_OPTS=""', 
+            'DEFAULT_JVM_OPTS=""\n' +
+            'if [ "`uname`" = Darwin ] ; then\n' +
+            '    DEFAULT_JVM_OPTS="-XstartOnFirstThread"\n' +
+            'fi')
+    }
+}
