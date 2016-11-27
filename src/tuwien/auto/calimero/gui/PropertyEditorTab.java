@@ -38,12 +38,15 @@ package tuwien.auto.calimero.gui;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -72,13 +75,17 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
+import tuwien.auto.calimero.GroupAddress;
+import tuwien.auto.calimero.IndividualAddress;
 import tuwien.auto.calimero.KNXException;
+import tuwien.auto.calimero.KNXFormatException;
 import tuwien.auto.calimero.dptxlator.DPT;
 import tuwien.auto.calimero.dptxlator.DPTXlator;
 import tuwien.auto.calimero.dptxlator.PropertyTypes;
 import tuwien.auto.calimero.dptxlator.TranslatorTypes;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.mgmt.Description;
+import tuwien.auto.calimero.mgmt.PropertyAccess;
 import tuwien.auto.calimero.mgmt.PropertyClient;
 import tuwien.auto.calimero.mgmt.PropertyClient.PropertyKey;
 import tuwien.auto.calimero.tools.Property;
@@ -388,8 +395,8 @@ class PropertyEditorTab extends BaseTabLayout
 		final String[] data = new String[] { "" + d.getObjectIndex(), "" + d.getObjectType() };
 
 		final PropertyClient.Property p = getDefinition(d.getObjectType(), d.getPID());
-		final String name = p != null ? p.getPIDName() : "";
-		final String desc = p != null ? p.getName() : "";
+		final String name = p != null ? p.getPIDName() : "n/a";
+		final String desc = p != null ? p.getName() : "n/a";
 		final String rw = d.getReadLevel() + "/" + d.getWriteLevel()
 				+ (d.isWriteEnabled() ? ", w.enabled" : " (read-only)");
 
@@ -457,9 +464,9 @@ class PropertyEditorTab extends BaseTabLayout
 								});
 								for (int i = 0; i < object.size(); i++) {
 									try {
-										super.runCommand(new String[] { "get", object.get(i),
-											pid.get(i), "1",
-											"" + Math.min(15, Integer.parseInt(elems.get(i))) });
+										final int currentElems = Integer.parseInt(elems.get(i));
+										super.runCommand(new String[] { "get", object.get(i), pid.get(i), "1",
+											"" + currentElems });
 									}
 									catch (final RuntimeException e) {
 										asyncAddLog(e.toString());
@@ -513,8 +520,87 @@ class PropertyEditorTab extends BaseTabLayout
 									if (editArea.isDisposed())
 										return;
 									final TableItem item = find(idx, pid);
-									if (item != null)
-										item.setText(Columns.Values.ordinal(), value);
+									if (item != null) {
+										String formatted = value;
+										// first attempt in formatting certain values
+										// TODO refactor into generic junks
+										try {
+											if (pid == PropertyAccess.PID.ADDITIONAL_INDIVIDUAL_ADDRESSES
+													|| pid == PropertyAccess.PID.KNX_INDIVIDUAL_ADDRESS) {
+												formatted = asIndividualAddresses(value);
+											}
+											if (pid == PropertyAccess.PID.TABLE) {
+												formatted = asGroupAddresses(value);
+											}
+											else if (pid == PropertyAccess.PID.FRIENDLY_NAME)
+												formatted = asString(value);
+											else if (pid == PropertyAccess.PID.DESCRIPTION)
+												formatted = asString(value);
+											else if (pid == PropertyAccess.PID.IP_ADDRESS
+													|| pid == PropertyAccess.PID.CURRENT_IP_ADDRESS
+													|| pid == PropertyAccess.PID.CURRENT_DEFAULT_GATEWAY
+													|| pid == PropertyAccess.PID.CURRENT_SUBNET_MASK
+													|| pid == PropertyAccess.PID.DEFAULT_GATEWAY
+													|| pid == PropertyAccess.PID.ROUTING_MULTICAST_ADDRESS
+													|| pid == PropertyAccess.PID.SYSTEM_SETUP_MULTICAST_ADDRESS)
+												formatted = asIPAddress(value);
+										}
+										catch (final RuntimeException e) {
+											asyncAddLog(e);
+										}
+
+										item.setText(Columns.Values.ordinal(), formatted);
+									}
+								}
+
+								private String asString(final String value)
+								{
+									final StringBuilder sb = new StringBuilder();
+									for (final String s : strip(value))
+										sb.append((char) Integer.parseInt(s));
+									return sb.toString();
+								}
+
+								private String asIndividualAddresses(final String value)
+								{
+									return strip(value).stream().map(s -> {
+										try {
+											return new IndividualAddress(s).toString();
+										}
+										catch (final KNXFormatException e) {
+											return s;
+										}
+									}).collect(Collectors.joining(", "));
+								}
+
+								private String asGroupAddresses(final String value)
+								{
+									return strip(value).stream().map(s -> {
+										try {
+											return new GroupAddress(s).toString();
+										}
+										catch (final KNXFormatException e) {
+											return s;
+										}
+									}).collect(Collectors.joining(", "));
+								}
+
+								private String asIPAddress(final String value)
+								{
+									try {
+										final long l = Long.parseLong(value);
+										final byte[] addr = new byte[] { (byte) (l >>> 24), (byte) (l >>> 16),
+											(byte) (l >>> 8), (byte) l };
+										return InetAddress.getByAddress(addr).getHostAddress();
+									}
+									catch (final UnknownHostException e) {
+										return value;
+									}
+								}
+
+								private List<String> strip(final String value)
+								{
+									return Arrays.asList(value.replaceAll("\\[|\\s|\\]", "").split(","));
 								}
 							});
 						}
