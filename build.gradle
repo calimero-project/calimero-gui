@@ -29,6 +29,11 @@ mainClassName = 'tuwien.auto.calimero.gui.SwtChecker'
 // TODO excluding the swt which is picked up during compilation does not work for some reason
 applicationDistribution.exclude('org.eclipse.swt.*.jar')
 
+applicationDistribution.from(project.getProjectDir()) {
+    include 'LICENSE.txt' 
+//    include 'README.md'
+}
+
 // SWT is platform dependent
 def swtGroupId = 'org.eclipse.swt'
 def swtVersion = '4.6'
