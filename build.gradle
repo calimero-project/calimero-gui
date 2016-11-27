@@ -57,6 +57,11 @@ compileJava.options*.compilerArgs = [
 //    '-Werror'
 ]
 
+configurations {
+    provided
+    compile.extendsFrom provided    
+}
+
 dependencies {
     compile "com.github.calimero:calimero-core:${version}"
     compile "com.github.calimero:calimero-tools:${version}"
@@ -68,14 +73,11 @@ dependencies {
     compile files('swt.jar')
 }
 
-configurations {
-    runtime.exclude group: 'org.eclipse.swt'
-}
-
 jar {
+  dependsOn configurations.runtime
   manifest {
     attributes(
-      'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
+      'Class-Path': (configurations.runtime - configurations.provided).collect { it.getName() }.join(' '),
       'Main-Class': mainClassName
     )
   }
