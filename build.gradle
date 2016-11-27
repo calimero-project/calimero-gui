@@ -26,6 +26,20 @@ targetCompatibility = 1.8
 
 mainClassName = 'tuwien.auto.calimero.gui.SwtChecker'
 
+// TODO excluding the swt which is picked up during compilation does not work for some reason
+applicationDistribution.exclude('org.eclipse.swt.*.jar')
+
+// SWT is platform dependent
+def swtGroupId = 'org.eclipse.swt'
+def swtVersion = '4.6'
+def swtArtifact = swtGroupId
+
+def os = System.getProperty("os.name").toLowerCase()
+if (os.contains("windows")) { swtArtifact += '.win32.win32.x86_64' }
+else if (os.contains("linux")) { swtArtifact += '.gtk.linux.x86_64' }
+else if (os.contains("mac")) { swtArtifact += '.cocoa.macosx.x86_64' }
+
+
 sourceSets {
     main {
         java.srcDir 'src'
@@ -42,7 +56,7 @@ dependencies {
     compile "com.github.calimero:calimero-core:${version}"
     compile "com.github.calimero:calimero-tools:${version}"
     runtime "com.github.calimero:calimero-rxtx:${version}"
-    compile 'org.eclipse.swt:org.eclipse.swt.cocoa.macosx.x86_64:4.6'
+    provided "${swtGroupId}:${swtArtifact}:${swtVersion}"
     compile 'org.slf4j:slf4j-api:1.7.21'
     compile 'org.slf4j:slf4j-simple:1.7.21'
     // bogus dependency which we check for (& download) on application startup
@@ -70,5 +84,11 @@ startScripts {
             'if [ "`uname`" = Darwin ] ; then\n' +
             '    DEFAULT_JVM_OPTS="-XstartOnFirstThread"\n' +
             'fi')
+    }
+}
+
+run {
+    if (os.contains("mac")) { 
+        jvmArgs '-XstartOnFirstThread' 
     }
 }
