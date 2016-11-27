@@ -184,7 +184,6 @@ public class Main
 
 	/**
 	 * The main entry routine of the GUI.
-	 * <p>
 	 *
 	 * @param args none expected
 	 */
@@ -199,6 +198,10 @@ public class Main
 			fontData[0].setHeight(height);
 			font = new Font(Main.display, fontData);
 			new Main();
+		}
+		catch (final Exception e) {
+			System.setErr(BaseTabLayout.oldSystemErr);
+			e.printStackTrace();
 		}
 		finally {
 			display.dispose();
