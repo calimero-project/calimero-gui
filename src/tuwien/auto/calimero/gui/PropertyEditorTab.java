@@ -223,6 +223,7 @@ class PropertyEditorTab extends BaseTabLayout
 			if (item.getData(ObjectHeader) == null && rect.contains(pt)) {
 				final int column = Columns.Values.ordinal();
 				final Text text = new Text(table, SWT.NONE);
+				@SuppressWarnings("fallthrough")
 				final Listener textListener = new Listener() {
 					public void handleEvent(final Event e)
 					{
@@ -251,8 +252,7 @@ class PropertyEditorTab extends BaseTabLayout
 				text.selectAll();
 				text.setFocus();
 
-				updateDptBounds((String) item.getData(ObjectType),
-						item.getText(Columns.Pid.ordinal()));
+				updateDptBounds((String) item.getData(ObjectType), item.getText(Columns.Pid.ordinal()));
 				return;
 			}
 			if (!visible && rect.intersects(clientArea))

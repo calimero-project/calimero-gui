@@ -395,6 +395,7 @@ class BaseTabLayout
 		});
 	}
 
+	@SuppressWarnings("fallthrough")
 	private static boolean matches(final String logMessage, final LogLevel level, final String namespace)
 	{
 		boolean match = false;
