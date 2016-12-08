@@ -100,8 +100,7 @@ class ConnectDialog
 		static ConnectArguments newTpuart(final String port, final String localKnxAddress,
 			final String remoteKnxAddress)
 		{
-			return new ConnectArguments(Protocol.Tpuart, null, null, port, false, localKnxAddress,
-					remoteKnxAddress);
+			return new ConnectArguments(Protocol.Tpuart, null, null, port, false, localKnxAddress, remoteKnxAddress);
 		}
 
 		static ConnectArguments newFT12(final String port, final String knxAddress)
@@ -144,14 +143,14 @@ class ConnectDialog
 					args.add("-p");
 				break;
 			case USB:
-				args.add("-u");
+				args.add("--usb");
 				break;
 			case FT12:
-				args.add("-s");
+				args.add("--ft12");
 				break;
 			case Tpuart:
 				if (!localKnxAddress.isEmpty()) {
-					args.add("-k");
+					args.add("--knx-address");
 					args.add(localKnxAddress);
 				}
 				args.add("--tpuart");
@@ -186,7 +185,7 @@ class ConnectDialog
 		final Label nameLabel = new Label(shell, SWT.NONE);
 		nameLabel.setFont(Main.font);
 		nameLabel.setText(confirm ? "Name or ID: " + name
-				: "Specify connection parameters.\nFor serial connections, leave the host empty.");
+				: "Specify connection parameters.\nFor serial connections, leave the endpoints empty.");
 
 		final Composite c = new Composite(shell, SWT.NONE);
 		c.setLayout(new GridLayout(2, false));
@@ -230,7 +229,7 @@ class ConnectDialog
 		if (serial)
 			nat.setEnabled(false);
 		else {
-			nat.setToolTipText("Some KNXnet/IP devices do not support this mode of connection");
+			nat.setToolTipText("Some KNXnet/IP devices do not support this connection mode");
 			nat.setSelection(useNAT);
 		}
 		// spacer to the right of NAT checkbox
@@ -358,8 +357,7 @@ class ConnectDialog
 					args = ConnectArguments.newTpuart(p, lka, knxAddr.getText());
 				}
 				else if (!h.isEmpty()) {
-					args = ConnectArguments.newKnxNetIP(useRouting(), local, h, p, natChecked,
-							knxAddr.getText());
+					args = ConnectArguments.newKnxNetIP(useRouting(), local, h, p, natChecked, knxAddr.getText());
 				}
 				else
 					args = ConnectArguments.newFT12(p, knxAddr.getText());
