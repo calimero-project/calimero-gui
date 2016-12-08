@@ -352,9 +352,11 @@ class ConnectDialog
 				ConnectArguments args;
 				if (usb.getSelection())
 					args = ConnectArguments.newUsb(p, knxAddr.getText());
-				else if (tpuart.getSelection())
-					args = ConnectArguments.newTpuart(p, localKnxAddress.getText(),
-							knxAddr.getText());
+				else if (tpuart.getSelection()) {
+					// process communication and bus monitoring don't require local knx address
+					final String lka = tunnel.getSelection() || monitor.getSelection() ? "" : localKnxAddress.getText();
+					args = ConnectArguments.newTpuart(p, lka, knxAddr.getText());
+				}
 				else if (!h.isEmpty()) {
 					args = ConnectArguments.newKnxNetIP(useRouting(), local, h, p, natChecked,
 							knxAddr.getText());
