@@ -297,7 +297,7 @@ class DiscoverTab extends BaseTabLayout
 		final TableItem i = (TableItem) e.item;
 		new ConnectDialog(getTabFolder(), (Protocol) i.getData("protocol"), (String) i.getData("localEP"),
 				(String) i.getData("name"), (String) i.getData("host"), (String) i.getData("port"),
-				(String) i.getData("mcast"), nat.getSelection());
+				(String) i.getData("mcast"), (Integer) i.getData("medium"), nat.getSelection());
 	}
 
 	private void addKnxnetipEndpoint(final Result<SearchResponse> result, final String newItem)
@@ -314,9 +314,10 @@ class DiscoverTab extends BaseTabLayout
 		}
 		catch (final UnknownHostException e) {}
 
-		addListItem(new String[] { newItem }, new String[] { "protocol", "localEP", "name", "host", "port", "mcast" },
+		addListItem(new String[] { newItem },
+				new String[] { "protocol", "localEP", "name", "host", "port", "mcast", "medium" },
 				new Object[] { Protocol.Tunneling, result.getAddress().getHostAddress(), r.getDevice().getName(),
 					r.getControlEndpoint().getAddress().getHostAddress(),
-					Integer.toString(r.getControlEndpoint().getPort()), mcast });
+					Integer.toString(r.getControlEndpoint().getPort()), mcast, r.getDevice().getKNXMedium() });
 	}
 }

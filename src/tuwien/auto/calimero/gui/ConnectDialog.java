@@ -60,6 +60,7 @@ import org.eclipse.swt.widgets.Text;
 import tuwien.auto.calimero.KNXIllegalStateException;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 import tuwien.auto.calimero.knxnetip.KNXnetIPConnection;
+import tuwien.auto.calimero.link.medium.KNXMediumSettings;
 
 /**
  * @author B. Malinowsky
@@ -78,6 +79,7 @@ class ConnectDialog
 		final Protocol protocol;
 		final String remote;
 		final String port;
+		int knxMedium;
 
 		private final String local;
 		private final boolean nat;
@@ -158,6 +160,8 @@ class ConnectDialog
 				throw new KNXIllegalStateException();
 			}
 			args.add(port);
+			args.add("--medium");
+			args.add(KNXMediumSettings.getMediumString(knxMedium));
 			if (!knxAddress.isEmpty()) {
 				if (useRemoteAddressOption)
 					args.add("-r");
@@ -167,8 +171,10 @@ class ConnectDialog
 		}
 	}
 
+	private final int knxMedium;
+
 	ConnectDialog(final CTabFolder tf, final Protocol protocol, final String localEP, final String name,
-		final String host, final String port, final String mcast, final boolean useNAT)
+		final String host, final String port, final String mcast, final Integer medium, final boolean useNAT)
 	{
 		final Shell shell = new Shell(Main.shell, SWT.DIALOG_TRIM | SWT.RESIZE);
 		shell.setLayout(new GridLayout());
@@ -197,6 +203,8 @@ class ConnectDialog
 		final Text portData = new Text(c, SWT.BORDER);
 		portData.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
 		portData.setText(port);
+
+		knxMedium = medium == null ? KNXMediumSettings.MEDIUM_TP1 : medium;
 
 		final Button usb = new Button(c, SWT.CHECK);
 		usb.setText("Use KNX USB interface");
@@ -354,6 +362,7 @@ class ConnectDialog
 				else
 					args = ConnectArguments.newFT12(p, knxAddr.getText());
 				args.name = n;
+				args.knxMedium = knxMedium;
 
 				if (monitor.getSelection())
 					new MonitorTab(tf, args);
