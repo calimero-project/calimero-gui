@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2015 B. Malinowsky
+    Copyright (c) 2006, 2016 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -75,22 +75,25 @@ class MonitorTab extends BaseTabLayout
 		cnt.setWidth(30);
 		final TableColumn cntf = new TableColumn(list, SWT.RIGHT);
 		cntf.setText("# (Filtered)");
-		cntf.setWidth(40);
+		cntf.setWidth(45);
 		final TableColumn timestamp = new TableColumn(list, SWT.RIGHT);
 		timestamp.setText("Timestamp");
 		timestamp.setWidth(80);
 		final TableColumn status = new TableColumn(list, SWT.LEFT);
-		status.setText("Status / Sequence");
-		status.setWidth(150);
+		status.setText("Sequence / status");
+		status.setWidth(100);
 		final TableColumn raw = new TableColumn(list, SWT.LEFT);
 		raw.setText("Raw frame");
 		raw.setWidth(150);
 		final TableColumn decoded = new TableColumn(list, SWT.LEFT);
-		decoded.setText("Decoded frame");
+		decoded.setText("Decoded raw frame");
 		decoded.setWidth(200);
+		final TableColumn apci = new TableColumn(list, SWT.LEFT);
+		apci.setText("TPCI / APCI");
+		apci.setWidth(100);
 		final TableColumn asdu = new TableColumn(list, SWT.LEFT);
-		asdu.setText("TPCI / APCI");
-		asdu.setWidth(100);
+		asdu.setText("ASDU");
+		asdu.setWidth(50);
 		enableColumnAdjusting();
 
 		initFilterMenu();
@@ -142,7 +145,7 @@ class MonitorTab extends BaseTabLayout
 				// status / sequence
 				final String status = "seq ";
 				final String rawFrame = ": ";
-				item.add(s.substring(s.indexOf(status), s.indexOf(rawFrame)));
+				item.add(s.substring(s.indexOf(status) + status.length(), s.indexOf(rawFrame)));
 				// raw frame
 				item.add(s.substring(s.indexOf(rawFrame) + rawFrame.length()));
 				final RawFrame raw = ((MonitorFrameEvent) e).getRawFrame();
@@ -151,8 +154,11 @@ class MonitorTab extends BaseTabLayout
 					item.add(raw.toString());
 					if (raw instanceof RawFrameBase) {
 						final RawFrameBase f = (RawFrameBase) raw;
-						// asdu
+						// tpci, apci
 						item.add(DataUnitBuilder.decode(f.getTPDU(), f.getDestination()));
+						// asdu
+						final byte[] asdu = DataUnitBuilder.extractASDU(f.getTPDU());
+						item.add(DataUnitBuilder.toHex(asdu, " "));
 					}
 				}
 				final String[] sa = item.toArray(new String[0]);
