@@ -577,7 +577,7 @@ class PropertyEditorTab extends BaseTabLayout
 								{
 									return strip(value).stream().map(s -> {
 										try {
-											return new GroupAddress(s).toString();
+											return Main.groupAddress(new GroupAddress(s));
 										}
 										catch (final KNXFormatException e) {
 											return s;

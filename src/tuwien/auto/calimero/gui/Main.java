@@ -61,6 +61,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 
+import tuwien.auto.calimero.GroupAddress;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 
 /**
@@ -74,6 +75,8 @@ public class Main
 
 	private static Combo localInterfaces;
 	private final CTabFolder tf;
+
+	private static boolean freeStyleAddressPresentation;
 
 	Main()
 	{
@@ -153,6 +156,50 @@ public class Main
 		hostItem.setControl(localInterfaces);
 		hostItem.setWidth(size.x + 100);
 
+		new ToolItem(header, SWT.SEPARATOR);
+
+		// Let user choose group address presentation
+		// add description label, use a composite to vertically center the label
+		final Composite compAddressStyle = new Composite(header, SWT.NONE);
+		final GridLayout layout2 = new GridLayout();
+		layout2.numColumns = 1;
+		layout2.makeColumnsEqualWidth = true;
+		compAddressStyle.setLayout(layout2);
+		final Label labelAddressStyle = new Label(compAddressStyle, SWT.NONE);
+		labelAddressStyle.setFont(header.getFont());
+		labelAddressStyle.setText("Group address presentation:");
+		final GridData gridData2 = new GridData();
+		gridData2.verticalAlignment = SWT.CENTER;
+		gridData2.grabExcessVerticalSpace = true;
+		gridData2.horizontalAlignment = SWT.CENTER;
+		labelAddressStyle.setLayoutData(gridData2);
+
+		final ToolItem addrStyleItem = new ToolItem(header, SWT.SEPARATOR);
+		addrStyleItem.setControl(compAddressStyle);
+		addrStyleItem.setWidth(compAddressStyle.computeSize(SWT.DEFAULT, SWT.DEFAULT).x);
+
+		// selection of available address formats
+		final Combo addressStyles = new Combo(header, SWT.BORDER | SWT.DROP_DOWN | SWT.READ_ONLY);
+		addressStyles.setItems("3-level style", "2-level style", "Free style");
+		addressStyles.select(0);
+		addressStyles.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(final SelectionEvent e)
+			{
+				freeStyleAddressPresentation = false;
+				if (addressStyles.getSelectionIndex() == 0)
+					GroupAddress.setLevelPresentation(true);
+				else if (addressStyles.getSelectionIndex() == 1)
+					GroupAddress.setLevelPresentation(false);
+				else
+					freeStyleAddressPresentation = true;
+			}
+		});
+
+		final ToolItem addrStylesItem = new ToolItem(header, SWT.SEPARATOR);
+		addrStylesItem.setControl(addressStyles);
+		addrStylesItem.setWidth(addressStyles.computeSize(SWT.DEFAULT, SWT.DEFAULT).x);
+
 		new Label(shell, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL,
 				SWT.NONE, true, false));
 
@@ -211,6 +258,12 @@ public class Main
 	static String getLocalHost()
 	{
 		return localInterfaces.getText();
+	}
+
+	// returns the supplied group address formatted according the currently selected address presentation
+	static String groupAddress(final GroupAddress ga)
+	{
+		return Main.freeStyleAddressPresentation ? "" + ga.getRawAddress() : ga.toString();
 	}
 
 	static void asyncExec(final Runnable task)
