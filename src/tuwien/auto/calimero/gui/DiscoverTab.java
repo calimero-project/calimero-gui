@@ -203,7 +203,7 @@ class DiscoverTab extends BaseTabLayout
 										final int productId = dd.idProduct() & 0xffff;
 
 										final String product = productName(d, vendorId, productId);
-										sb.append(ind).append(product).append(sep);
+										sb.append(ind).append("Product: ").append(product).append(sep);
 										sb.append(ind).append(manufacturer(d, vendorId, productId));
 
 										final String vp = String.format("%04x:%04x", vendorId, productId);
@@ -225,7 +225,7 @@ class DiscoverTab extends BaseTabLayout
 										final int productId = dd.idProduct() & 0xffff;
 										final String product = productName(d, vendorId, productId);
 
-										sb.append(ind).append(product).append(sep);
+										sb.append(ind).append("Product: ").append(product).append(sep);
 										sb.append(ind).append(manufacturer(d, vendorId, productId));
 										final String dev = "/dev/";
 
@@ -260,7 +260,7 @@ class DiscoverTab extends BaseTabLayout
 						product = UsbConnection.getProductName(device);
 						LibUsb.unrefDevice(device);
 					}
-					return "Product: " + nullTerminate(product.orElse("n/a"));
+					return nullTerminate(product.orElse("n/a"));
 				}
 
 				private String manufacturer(final UsbDevice d, final int vendorId, final int productId)
