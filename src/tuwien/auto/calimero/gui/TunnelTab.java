@@ -461,6 +461,9 @@ class TunnelTab extends BaseTabLayout
 	private GroupAddress selectedDpAddress() throws KNXFormatException
 	{
 		final String text = points.getText();
-		return new GroupAddress(text.substring(0, text.indexOf('\t')));
+		int endIndex  = text.indexOf('\t');
+		if (endIndex == -1)
+			endIndex = text.length();
+		return new GroupAddress(text.substring(0, endIndex));
 	}
 }
