@@ -40,6 +40,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.eclipse.swt.SWT;
@@ -244,7 +245,7 @@ class TunnelTab extends BaseTabLayout
 			dpt.add(main.getDescription());
 			dpt.setData(main.getDescription(), new Object[] { main, null });
 			try {
-				main.getSubTypes().forEach((id, sub) -> {
+				new TreeMap<>(main.getSubTypes()).forEach((id, sub) -> {
 					final boolean noUnit = sub.getUnit().isEmpty();
 					final String s = "    " + id + " - " + sub.getDescription()
 							+ (noUnit ? "" : " [" + sub.getUnit() + "]");
