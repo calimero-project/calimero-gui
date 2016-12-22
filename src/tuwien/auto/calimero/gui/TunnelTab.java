@@ -133,7 +133,7 @@ class TunnelTab extends BaseTabLayout
 
 				final String now = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
 				final String[] item = new String[] { "" + ++eventCounter, "" + eventCounterFiltered, now,
-					e.getSourceAddr().toString(), Main.groupAddress(e.getDestination()), svc,
+					e.getSourceAddr().toString(), e.getDestination().toString(), svc,
 					DataUnitBuilder.toHex(asdu, " "), value };
 				if (applyFilter(item))
 					return;
@@ -443,7 +443,7 @@ class TunnelTab extends BaseTabLayout
 				(dp1, dp2) -> dp1.getMainAddress().getRawAddress() - dp2.getMainAddress().getRawAddress());
 		set.addAll(model.getDatapoints());
 		for (final Datapoint dp : set)
-			points.add(Main.groupAddress(dp.getMainAddress()) + "\t" + dp.getName());
+			points.add(dp.getMainAddress().toString() + "\t" + dp.getName());
 	}
 
 	private void updateToSelectedDpt(final GroupAddress main, final Object[] data) throws KNXException

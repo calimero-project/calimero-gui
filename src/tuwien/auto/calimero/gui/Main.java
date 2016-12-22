@@ -62,6 +62,7 @@ import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 
 import tuwien.auto.calimero.GroupAddress;
+import tuwien.auto.calimero.GroupAddress.Presentation;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 
 /**
@@ -75,8 +76,6 @@ public class Main
 
 	private static Combo localInterfaces;
 	private final CTabFolder tf;
-
-	private static boolean freeStyleAddressPresentation;
 
 	Main()
 	{
@@ -186,13 +185,12 @@ public class Main
 			@Override
 			public void widgetSelected(final SelectionEvent e)
 			{
-				freeStyleAddressPresentation = false;
 				if (addressStyles.getSelectionIndex() == 0)
-					GroupAddress.setLevelPresentation(true);
+					GroupAddress.addressStyle(Presentation.ThreeLevelStyle);
 				else if (addressStyles.getSelectionIndex() == 1)
-					GroupAddress.setLevelPresentation(false);
+					GroupAddress.addressStyle(Presentation.TwoLevelStyle);
 				else
-					freeStyleAddressPresentation = true;
+					GroupAddress.addressStyle(Presentation.FreeStyle);
 			}
 		});
 
@@ -258,12 +256,6 @@ public class Main
 	static String getLocalHost()
 	{
 		return localInterfaces.getText();
-	}
-
-	// returns the supplied group address formatted according the currently selected address presentation
-	static String groupAddress(final GroupAddress ga)
-	{
-		return Main.freeStyleAddressPresentation ? "" + ga.getRawAddress() : ga.toString();
 	}
 
 	static void asyncExec(final Runnable task)
