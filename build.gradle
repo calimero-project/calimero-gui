@@ -21,6 +21,14 @@ apply plugin:'com.github.ben-manes.versions'
 
 version = '2.4-SNAPSHOT'
 
+def date() {
+    new Date().format('yyyyMMdd')
+}
+
+def buildClassifier = 'b' + date()
+distZip.classifier = buildClassifier
+distTar.classifier = buildClassifier
+
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
