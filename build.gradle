@@ -25,7 +25,7 @@ def date() {
     new Date().format('yyyyMMdd')
 }
 
-def buildClassifier = 'b' + date()
+def buildClassifier = date()
 distZip.classifier = buildClassifier
 distTar.classifier = buildClassifier
 
