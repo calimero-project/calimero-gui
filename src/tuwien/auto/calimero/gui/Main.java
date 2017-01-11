@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2016 B. Malinowsky
+    Copyright (c) 2006, 2017 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -42,6 +42,7 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Collections;
+import java.util.Locale;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -238,9 +239,12 @@ public class Main
 		try {
 			shell = new Shell(display);
 			final FontData[] fontData = shell.getFont().getFontData();
-			int height = fontData[0].getHeight();
-			height -= 0.15 * height;
-			fontData[0].setHeight(height);
+			final String os = System.getProperty("os.name", "generic").toLowerCase(Locale.ENGLISH);
+			if (os.indexOf("windows") == -1) {
+				int height = fontData[0].getHeight();
+				height -= 0.15 * height;
+				fontData[0].setHeight(height);
+			}
 			font = new Font(Main.display, fontData);
 			new Main();
 		}
