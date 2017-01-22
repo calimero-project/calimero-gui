@@ -13,6 +13,7 @@ repositories {
     mavenLocal()
     mavenCentral()
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+    maven { url 'https://maven-eclipse.github.io/maven' } // swt libraries
 }
 
 apply plugin:'java'
@@ -44,7 +45,7 @@ applicationDistribution.from(project.getProjectDir()) {
 
 // SWT is platform dependent
 def swtGroupId = 'org.eclipse.swt'
-def swtVersion = '4.6'
+def swtVersion = '4.6.1'
 def swtArtifact = swtGroupId
 
 def os = System.getProperty("os.name").toLowerCase()
@@ -75,8 +76,8 @@ dependencies {
     compile "com.github.calimero:calimero-tools:${version}"
     runtime "com.github.calimero:calimero-rxtx:${version}"
     provided "${swtGroupId}:${swtArtifact}:${swtVersion}"
-    compile 'org.slf4j:slf4j-api:1.7.21'
-    compile 'org.slf4j:slf4j-simple:1.7.21'
+    compile 'org.slf4j:slf4j-api:1.7.22'
+    compile 'org.slf4j:slf4j-simple:1.7.22'
     // bogus dependency which we check for (& download) on application startup
     compile files('swt.jar')
 }

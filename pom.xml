@@ -29,7 +29,7 @@
 
 	<properties>
 		<swt.groupId>org.eclipse.swt</swt.groupId>
-		<swt.version>4.6</swt.version>
+		<swt.version>4.6.1</swt.version>
 	</properties>
 
 	<profiles>
