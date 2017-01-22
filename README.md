@@ -8,10 +8,10 @@ Download
 
 ~~~ sh
 # Either using git
-$ git clone https://github.com/calimero-project/calimero-gui.git
+git clone https://github.com/calimero-project/calimero-gui.git
 
 # Or using hub
-$ hub clone calimero-project/calimero-gui
+hub clone calimero-project/calimero-gui
 ~~~
 
 
@@ -41,13 +41,13 @@ Supported Access Protocols
 Execution
 ---------
 
+### Using Gradle
+
+	./gradlew run
+
 ### Using Maven
 
-Resolve/Compile/Install
-
-	mvn clean install -DskipTests -Dgpg.skip=true
-
-On OS X (takes care of the Cocoa thread restrictions)
+On MacOS (takes care of the Cocoa thread restrictions)
 
 	mvn exec:exec
 
@@ -55,27 +55,35 @@ On Linux/Windows
 
 	mvn exec:java
 
-
 ### Using Java
 
-The graphical user interface has the following _mandatory_ dependencies: calimero-core, calimero-tools, calimero-rxtx, SWT, slf4j-api
+The graphical user interface has the following 
 
-The graphical user interface has the following _optional_ dependencies: serial-native, slf4j-simple (although optional, strongly recommended to view log output in the GUI)
+* _mandatory_ dependencies: calimero-core, calimero-tools, calimero-rxtx, SWT, slf4j-api
+* _optional_ dependencies: serial-native, slf4j-simple (strongly recommended to view log output in the GUI)
 
-Use your specific version in the following commands.
-Either, relying on the Java MANIFEST (check the MANIFEST for exact dependency names and versions)
+In the following commands, use your specific library versions.
 
-	java -jar calimero-gui-2.3-SNAPSHOT.jar 
+* MacOS: add the `-XstartOnFirstThread` option for Cocoa thread restrictions
+
+Either, relying on the classpath in the MANIFEST of the `.jar` file (requires exact match of names and versions of all dependencies)
+
+	java -jar calimero-gui-2.4-SNAPSHOT.jar
 
 If all dependencies are resolved, you can also directly start the GUI by opening it in Nautilus, Windows File Explorer, etc.
 
-Or, assuming all dependencies (of any compliant version) are in the current working directory
+Or, assuming all dependencies (of any compliant version) are in the current working directory (replacing `Main` with `SwtChecker` will automatically check and download the required SWT library for your platform during startup)
 
 	java -cp "./*" tuwien.auto.calimero.gui.Main
 
-Or, as example of using the JRE `-classpath` option to qualify all dependencies
+Or, as example of using the JRE `-classpath`/`-cp` option to qualify all dependencies
 
-	java -cp "calimero-gui-2.3-SNAPSHOT.jar:calimero-core-2.3-SNAPSHOT.jar\
-	:calimero-tools-2.3-SNAPSHOT.jar:org.eclipse.swt.gtk.linux.x86_64-4.3.jar\
-	:slf4j-api-1.7.7.jar:slf4j-simple-1.7.7.jar" tuwien.auto.calimero.gui.Main
+	java -cp "calimero-gui-2.4-SNAPSHOT.jar:calimero-core-2.4-SNAPSHOT.jar\
+	:calimero-tools-2.4-SNAPSHOT.jar:org.eclipse.swt.gtk.linux.x86_64-4.6.1.jar\
+	:slf4j-api-1.7.22.jar:slf4j-simple-1.7.22.jar" tuwien.auto.calimero.gui.Main
 
+### Run As Standalone Application
+* Run `gradlew build`
+* In the `build/distributions` directory, extract either the `.zip` or `.tar` file
+* Open `<extracted folder>/bin`
+* Start `calimero-gui` (Linux/MacOS) or `calimero-gui.bat` (Windows)
