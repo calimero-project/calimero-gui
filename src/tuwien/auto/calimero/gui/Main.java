@@ -248,7 +248,7 @@ public class Main
 			font = new Font(Main.display, fontData);
 			new Main();
 		}
-		catch (final Exception e) {
+		catch (final Throwable e) {
 			System.setErr(BaseTabLayout.oldSystemErr);
 			e.printStackTrace();
 		}
