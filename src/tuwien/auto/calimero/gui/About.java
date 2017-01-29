@@ -36,8 +36,13 @@
 
 package tuwien.auto.calimero.gui;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.time.Instant;
+import java.time.ZoneId;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
@@ -45,7 +50,6 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
@@ -64,51 +68,40 @@ import tuwien.auto.calimero.Settings;
  */
 public class About
 {
-	private static final String title = "About Calimero GUI";
-
-	private static final String catchPhrase = "Graphical User Interface for KNX Access";
+	private static final String title = "Graphical User Interface for KNX Access";
 
 	private static final String about = "KNX Process Communication * Group && Network Monitoring * "
 			+ "KNXnet/IP Discovery * Device Scan * Device Information\n"
 			+ "Supports KNXnet/IP, KNX IP, FT1.2 (BCU2), USB, TP-UART, KNX RF USB.";
 
-	private static final String repositoryLink = "https://calimero-project.github.io";
+	private static final String repositoryLink = "https://github.com/calimero-project/calimero-gui";
 	private static final String asgLink = "https://www.auto.tuwien.ac.at";
-	private static final String asgKnxLink = "https://www.auto.tuwien.ac.at/a-lab/knx_eib.html";
+	private static final String asgKnxLink = "https://auto.tuwien.ac.at/index.php/alab-home";
 
 	private static final String developer = "Automation Systems Group, "
-			+ "Vienna University of Technology\n<A>" + asgKnxLink + "</A>";
+			+ "Vienna University of Technology\nA-Lab: <A>" + asgKnxLink + "</A>";
 
-	private static final String repository = "Source code repository: <A>" + repositoryLink
-			+ "</A>";
+	private static final String repository = "Software repository: <A>" + repositoryLink + "</A>";
+	private static final String ghIssuesLink = "https://github.com/calimero-project/calimero-gui/issues";
+	private static final String sfDiscussionLink = "https://sourceforge.net/p/calimero/discussion/";
+	private static final String contrib = "Issues/feature requests:\n\ton Github \u2013 <A>" + ghIssuesLink
+			+ "</A>\n\ton SourceForge \u2013 <A>" + sfDiscussionLink + "</A>";
 
-	private static final String license = "The Calimero library, tools, documentation, "
-			+ "and this GUI are licensed under the GPL, with the Classpath Exception.";
-	private static final String copyright = "Copyright (c) 2006, 2016.";
+	private static final String license = "The Calimero library, tools, GUI, and documentation "
+			+ "are licensed under\nthe GPL, with the Classpath Exception.";
+	private static final String copyright = "Copyright \u00A9 2006, 2017.";
 
 	private static final String swtLink = "http://www.eclipse.org/swt/";
 	private static final String swtInfo = "This GUI uses the <A href=\"" + swtLink
 			+ "\">Standard Widget Toolkit (SWT)</A>.";
-
-	private static final Font headerFont;
-
-	static {
-		final FontData fd = Main.display.getSystemFont().getFontData()[0];
-		fd.setStyle(SWT.BOLD);
-		headerFont = new Font(Main.display, fd);
-	}
 
 	About(final Shell parent)
 	{
 		final Shell shell = new Shell(parent, SWT.DIALOG_TRIM | SWT.RESIZE);
 		shell.setMinimumSize(350, 340);
 		shell.setLayout(new GridLayout());
+		shell.setBackgroundMode(SWT.INHERIT_FORCE);
 		shell.setText(title);
-
-		final Label header = new Label(shell, SWT.NONE | SWT.CENTER);
-		header.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
-		header.setFont(headerFont);
-		header.setText(catchPhrase);
 
 		final Label top = new Label(shell, SWT.NONE | SWT.WRAP | SWT.CENTER);
 		top.setFont(Main.font);
@@ -116,59 +109,79 @@ public class About
 		top.setLayoutData(new GridData(SWT.CENTER, SWT.NONE, true, false));
 
 		final Composite c = new Composite(shell, SWT.NONE | SWT.TOP);
-		c.setLayout(new GridLayout(2, false));
+		c.setLayout(new GridLayout());
 		c.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 		final Color white = new Color(Main.display, 255, 255, 255);
 		c.setBackground(white);
 
-		final Link link = new Link(c, SWT.NONE);
-		link.setFont(Main.font);
-		link.setText("Author: B. Malinowsky, <A href=\"mailto:malinowsky@auto.tuwien.ac.at\">"
-				+ "malinowsky@auto.tuwien.ac.at</A>\n\n" + developer + "\n\n" + repository + "\n\n"
-				+ license + " " + copyright);
-		link.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
-		link.setBackground(white);
-		link.addSelectionListener(new SelectionAdapter() {
+		final Composite split = new Composite(c, SWT.NO_BACKGROUND | SWT.NO_FOCUS);
+		final GridLayout gridLayout = new GridLayout(2, false);
+		gridLayout.marginLeft = 0;
+		gridLayout.marginWidth = 0;
+		split.setLayout(gridLayout);
+
+		final SelectionAdapter openLink = new SelectionAdapter() {
 			@Override
 			public void widgetSelected(final SelectionEvent e)
 			{
 				openLinkInBrowser(e.text);
 			}
-		});
+		};
 
-		final Label asg = new Label(c, SWT.NONE);
+		final Link link = new Link(split, SWT.NONE);
+		link.setFont(Main.font);
+		link.setText("\u00A9 Boris Malinowsky, <A href=\"mailto:malinowsky@auto.tuwien.ac.at\">"
+				+ "malinowsky@auto.tuwien.ac.at</A>\n" + developer);
+		link.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
+		link.addSelectionListener(openLink);
+
+		final Label asg = new Label(split, SWT.NONE);
 		asg.setLayoutData(new GridData(SWT.END, SWT.TOP, false, false));
-		final InputStream is = getClass().getResourceAsStream("/asg-small.png");
-		if (is != null) {
-			try {
+		try (final InputStream is = getClass().getResourceAsStream("/asg-small.png")) {
+			if (is != null) {
 				final Image img = new Image(Main.display, is);
 				asg.setImage(img);
 			}
-			finally {
-				try {
-					is.close();
-				}
-				catch (final IOException e) {}
-			}
 		}
+		catch (final IOException e) {}
 		asg.setToolTipText(asgLink);
+
+		final Link contribLinks = new Link(c, SWT.NONE);
+		contribLinks.setFont(Main.font);
+		contribLinks.setText(repository + "\n" + contrib);
+		contribLinks.addSelectionListener(openLink);
+
+		final Label licenseLabel = new Label(c, SWT.NONE);
+		licenseLabel.setFont(Main.font);
+		licenseLabel.setText(license + " " + copyright);
 
 		final Link swtUsage = new Link(c, SWT.NONE);
 		swtUsage.setFont(Main.font);
 		swtUsage.setText(swtInfo);
 		swtUsage.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
-		swtUsage.setBackground(white);
 		swtUsage.setToolTipText(swtLink);
-		swtUsage.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(final SelectionEvent e)
-			{
-				openLinkInBrowser(e.text);
-			}
-		});
+		swtUsage.addSelectionListener(openLink);
 
 		final Label bar = new Label(shell, SWT.HORIZONTAL | SWT.SEPARATOR);
 		bar.setLayoutData(new GridData(GridData.FILL, SWT.NONE, false, false));
+
+		long modified = 0;
+		try {
+			final Class<? extends About> cl = getClass();
+			final URL url = cl.getClassLoader().getResource(cl.getCanonicalName().replace('.', '/') + ".class");
+			if (url.getProtocol().equals("file"))
+				modified = new File(url.toURI()).lastModified();
+			else if (url.getProtocol().equals("jar")) {
+				final String path = url.getPath();
+				modified = new File(path.substring(5, path.indexOf("!"))).lastModified();
+			}
+		}
+		catch (URISyntaxException | RuntimeException ignore) {}
+		String compiled = "";
+		if (modified != 0)
+			compiled = ", build date " + Instant.ofEpochMilli(modified).atZone(ZoneId.systemDefault()).toLocalDate();
+
+		new Label(shell, SWT.NONE).setText("Compiled with " + Settings.getLibraryHeader(false) + compiled);
 
 		// allow scrolling for library configuration details
 		final ScrolledComposite scroll = new ScrolledComposite(shell, SWT.V_SCROLL);
@@ -176,9 +189,10 @@ public class About
 		scroll.setExpandHorizontal(true);
 		scroll.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
+		final Font mono = new Font(parent.getDisplay(), "Courier", 12, SWT.NONE);
 		final Label lib = new Label(scroll, SWT.NONE);
-		lib.setFont(Main.font);
-		lib.setText(Settings.getLibraryHeader(false) + "\n" + Settings.getBundleListing());
+		lib.setFont(mono);
+		lib.setText(Settings.getBundleListing().replace("+ ", ""));
 		lib.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		Point size = lib.computeSize(SWT.DEFAULT, SWT.DEFAULT);
 		lib.setSize(size);
