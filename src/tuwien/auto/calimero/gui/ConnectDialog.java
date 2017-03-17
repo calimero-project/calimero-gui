@@ -384,6 +384,7 @@ class ConnectDialog
 						knxAddr.setMessage("Enter address");
 						return;
 					}
+					new MemoryEditor(tf, args);
 				}
 				else
 					new TunnelTab(tf, args);
