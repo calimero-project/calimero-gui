@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2016 B. Malinowsky
+    Copyright (c) 2006, 2017 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -81,9 +81,9 @@ class ConnectDialog
 		final String port;
 		int knxMedium;
 
-		private final String local;
+		final String local;
 		private final boolean nat;
-		private final String localKnxAddress;
+		final String localKnxAddress;
 
 		static ConnectArguments newKnxNetIP(final boolean routing, final String localHost,
 			final String remoteHost, final String port, final boolean nat, final String knxAddress)
@@ -184,7 +184,7 @@ class ConnectDialog
 
 		final Label nameLabel = new Label(shell, SWT.NONE);
 		nameLabel.setFont(Main.font);
-		nameLabel.setText(confirm ? "Name or ID: " + name
+		nameLabel.setText(confirm ? "Name / ID: " + name
 				: "Specify connection parameters.\nFor serial connections, leave the endpoints empty.");
 
 		final Composite c = new Composite(shell, SWT.NONE);
@@ -276,8 +276,12 @@ class ConnectDialog
 		devinfo.setToolTipText("Requires a KNX device address");
 
 		final Button properties = new Button(mode, SWT.RADIO);
-		properties.setText("KNX property viewer");
+		properties.setText("KNX property editor");
 		properties.setToolTipText("Uses Local Device Management or Remote Property Services");
+
+		final Button memory = new Button(mode, SWT.RADIO);
+		memory.setText("KNX device memory editor");
+		memory.setToolTipText("Uses Remote Property Services");
 
 		usb.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -374,8 +378,16 @@ class ConnectDialog
 					new DeviceInfoTab(tf, args);
 				else if (properties.getSelection())
 					new PropertyEditorTab(tf, args);
+				else if (memory.getSelection()) {
+					if (args.knxAddress.isEmpty()) {
+						knxAddr.setFocus();
+						knxAddr.setMessage("Enter address");
+						return;
+					}
+				}
 				else
 					new TunnelTab(tf, args);
+
 				shell.dispose();
 			}
 
