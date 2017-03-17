@@ -388,13 +388,20 @@ class BaseTabLayout
 			final LogLevel level = logLevel.computeIfAbsent(this, k -> LogLevel.INFO);
 			final String ns = logNamespace.computeIfAbsent(this, k -> "");
 			if (buf != null) {
+				final int items = log.getItemCount();
 				synchronized (buf) {
-					buf.stream().filter(s -> matches(s, level, ns)).forEach(log::add);
+					buf.stream().filter(s -> matches(s, level, ns)).map(BaseTabLayout::expandTabs).forEach(log::add);
 					buf.clear();
 				}
-				log.setTopIndex(log.getItemCount() - 1);
+				if (log.getItemCount() > items)
+					log.setTopIndex(log.getItemCount() - 1);
 			}
 		});
+	}
+
+	private static String expandTabs(final String s)
+	{
+		return s.replace("\t", "    ");
 	}
 
 	@SuppressWarnings("fallthrough")
