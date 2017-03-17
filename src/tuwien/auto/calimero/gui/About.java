@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2016 B. Malinowsky
+    Copyright (c) 2006, 2017 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -36,22 +36,20 @@
 
 package tuwien.auto.calimero.gui;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.ZoneId;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.program.Program;
@@ -71,7 +69,7 @@ public class About
 	private static final String title = "Graphical User Interface for KNX Access";
 
 	private static final String about = "KNX Process Communication * Group && Network Monitoring * "
-			+ "KNXnet/IP Discovery * Device Scan * Device Information\n"
+			+ "KNXnet/IP Discovery * Device Scan * Device Information * KNX Property Editor * KNX Device Memory Editor\n"
 			+ "Supports KNXnet/IP, KNX IP, FT1.2 (BCU2), USB, TP-UART, KNX RF USB.";
 
 	private static final String repositoryLink = "https://github.com/calimero-project/calimero-gui";
@@ -84,8 +82,8 @@ public class About
 	private static final String repository = "Software repository: <A>" + repositoryLink + "</A>";
 	private static final String ghIssuesLink = "https://github.com/calimero-project/calimero-gui/issues";
 	private static final String sfDiscussionLink = "https://sourceforge.net/p/calimero/discussion/";
-	private static final String contrib = "Issues/feature requests:\n\ton Github \u2013 <A>" + ghIssuesLink
-			+ "</A>\n\ton SourceForge \u2013 <A>" + sfDiscussionLink + "</A>";
+	private static final String contrib = "Issues/feature requests:\n        Github \u2013 <A>" + ghIssuesLink
+			+ "</A>\n        SourceForge \u2013 <A>" + sfDiscussionLink + "</A>";
 
 	private static final String license = "The Calimero library, tools, GUI, and documentation "
 			+ "are licensed under\nthe GPL, with the Classpath Exception.";
@@ -98,7 +96,7 @@ public class About
 	About(final Shell parent)
 	{
 		final Shell shell = new Shell(parent, SWT.DIALOG_TRIM | SWT.RESIZE);
-		shell.setMinimumSize(350, 340);
+		shell.setMinimumSize(400, 320);
 		shell.setLayout(new GridLayout());
 		shell.setBackgroundMode(SWT.INHERIT_FORCE);
 		shell.setText(title);
@@ -106,7 +104,9 @@ public class About
 		final Label top = new Label(shell, SWT.NONE | SWT.WRAP | SWT.CENTER);
 		top.setFont(Main.font);
 		top.setText(about);
-		top.setLayoutData(new GridData(SWT.CENTER, SWT.NONE, true, false));
+		final GridData layoutData = new GridData(SWT.CENTER, SWT.TOP, true, false);
+		layoutData.widthHint = 500;
+		top.setLayoutData(layoutData);
 
 		final Composite c = new Composite(shell, SWT.NONE | SWT.TOP);
 		c.setLayout(new GridLayout());
@@ -114,7 +114,7 @@ public class About
 		final Color white = new Color(Main.display, 255, 255, 255);
 		c.setBackground(white);
 
-		final Composite split = new Composite(c, SWT.NO_BACKGROUND | SWT.NO_FOCUS);
+		final Composite split = new Composite(c, SWT.NO_FOCUS);
 		final GridLayout gridLayout = new GridLayout(2, false);
 		gridLayout.marginLeft = 0;
 		gridLayout.marginWidth = 0;
@@ -170,10 +170,11 @@ public class About
 			final Class<? extends About> cl = getClass();
 			final URL url = cl.getClassLoader().getResource(cl.getCanonicalName().replace('.', '/') + ".class");
 			if (url.getProtocol().equals("file"))
-				modified = new File(url.toURI()).lastModified();
+				modified = Paths.get(url.toURI()).toFile().lastModified();
 			else if (url.getProtocol().equals("jar")) {
 				final String path = url.getPath();
-				modified = new File(path.substring(5, path.indexOf("!"))).lastModified();
+				// win: create uri of the substring first, otherwise the first slash (/C:/...) is not parsed correctly
+				modified = Paths.get(URI.create(path.substring(0, path.indexOf("!")))).toFile().lastModified();
 			}
 		}
 		catch (URISyntaxException | RuntimeException ignore) {}
@@ -183,27 +184,8 @@ public class About
 
 		new Label(shell, SWT.NONE).setText("Compiled with " + Settings.getLibraryHeader(false) + compiled);
 
-		// allow scrolling for library configuration details
-		final ScrolledComposite scroll = new ScrolledComposite(shell, SWT.V_SCROLL);
-		scroll.setExpandVertical(true);
-		scroll.setExpandHorizontal(true);
-		scroll.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-
-		final Font mono = new Font(parent.getDisplay(), "Courier", 12, SWT.NONE);
-		final Label lib = new Label(scroll, SWT.NONE);
-		lib.setFont(mono);
-		lib.setText(Settings.getBundleListing().replace("+ ", ""));
-		lib.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		Point size = lib.computeSize(SWT.DEFAULT, SWT.DEFAULT);
-		lib.setSize(size);
-
-		scroll.setContent(lib);
-		scroll.setMinSize(size);
-		size.y /= 2;
-		scroll.setSize(size);
-
 		final Button close = new Button(shell, SWT.NONE);
-		close.setLayoutData(new GridData(SWT.TRAIL, SWT.BOTTOM, false, false));
+		close.setLayoutData(new GridData(SWT.RIGHT, SWT.BOTTOM, false, true));
 		close.setFont(Main.font);
 		close.setText("Close");
 		close.setFocus();
@@ -218,9 +200,7 @@ public class About
 			}
 		});
 
-		size = shell.computeSize(450, SWT.DEFAULT);
-		size.y -= 150;
-		shell.setSize(size);
+		shell.setSize(shell.computeSize(500, SWT.DEFAULT));
 		shell.open();
 	}
 
