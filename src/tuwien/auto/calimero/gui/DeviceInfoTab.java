@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2015, 2016 B. Malinowsky
+    Copyright (c) 2015, 2017 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -99,6 +99,12 @@ class DeviceInfoTab extends BaseTabLayout
 						setHeaderInfo("Device information received from " + device + " over " + connect.remote
 								+ " port " + connect.port + (connect.useNat() ? ", using NAT" : ""));
 					});
+				}
+
+				protected void onCompletion(final Exception thrown, final boolean canceled)
+				{
+					if (thrown != null)
+						asyncAddLog(thrown.toString());
 				}
 
 				private void addItems(final Result result, final Parameter[] params)
