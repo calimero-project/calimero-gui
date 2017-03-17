@@ -253,6 +253,7 @@ public class Main
 			e.printStackTrace();
 		}
 		finally {
+			System.setErr(BaseTabLayout.oldSystemErr);
 			display.dispose();
 		}
 	}
