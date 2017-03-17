@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2016 B. Malinowsky
+    Copyright (c) 2006, 2017 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -104,7 +104,8 @@ class BaseTabLayout
 		@Override
 		public void print(final String s)
 		{
-			logBuffer.forEach((k, v) -> { v.add(s); k.asyncAddLog(); });
+			if (s != null)
+				logBuffer.forEach((k, v) -> { v.add(s); k.asyncAddLog(); });
 		}
 	}
 
