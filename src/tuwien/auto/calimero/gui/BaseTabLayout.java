@@ -198,7 +198,7 @@ class BaseTabLayout
 
 		list = new Table(splitted, SWT.BORDER | SWT.FULL_SELECTION | SWT.V_SCROLL);
 		final FormData tableData = new FormData();
-		tableData.top = new FormAttachment(splitted);
+		tableData.top = new FormAttachment(0);
 		tableData.bottom = new FormAttachment(sash);
 		tableData.left = new FormAttachment(0);
 		tableData.right = new FormAttachment(100);
@@ -353,6 +353,8 @@ class BaseTabLayout
 
 	protected final void setHeaderInfo(final String info)
 	{
+		if (infoLabel.isDisposed())
+			return;
 		infoLabel.setText(info);
 		top.layout();
 	}
