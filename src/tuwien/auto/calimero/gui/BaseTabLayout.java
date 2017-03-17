@@ -148,6 +148,7 @@ class BaseTabLayout
 	final Map<Integer, String> includeFilter = Collections.synchronizedMap(new HashMap<>());
 	final Map<Integer, ArrayList<String>> excludeFilter = Collections.synchronizedMap(new HashMap<>());
 
+	private String filenamePrefix = "";
 	private String filenameSuffix;
 	private String prevFilename;
 
@@ -609,7 +610,7 @@ class BaseTabLayout
 			public void widgetSelected(final SelectionEvent e)
 			{
 				final FileDialog dlg = new FileDialog(Main.shell, SWT.SAVE);
-				dlg.setText("Export data to CSV");
+				dlg.setText("Export data as CSV");
 				dlg.setOverwrite(true);
 
 				// provide a default filename with time stamp, but allow overruling by user
@@ -618,8 +619,8 @@ class BaseTabLayout
 					filename = prevFilename;
 				else {
 					// ISO 8601 would be yyyyMMddTHHmmss, but its not really readable.
-					final String timestamp = new SimpleDateFormat("yyyy-MM-dd--HH-mm-ss").format(new Date());
-					filename = timestamp + filenameSuffix;
+					final String timestamp = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
+					filename = filenamePrefix + timestamp + filenameSuffix;
 				}
 				dlg.setFileName(filename);
 				final String resource = dlg.open();
@@ -631,6 +632,12 @@ class BaseTabLayout
 				saveAs(resource);
 			}
 		});
+	}
+
+	protected void setExportName(final String prefix, final String suffix)
+	{
+		filenamePrefix = prefix;
+		filenameSuffix = suffix;
 	}
 
 	protected void saveAs(final String resource)
