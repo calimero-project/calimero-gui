@@ -91,7 +91,7 @@ public class About
 
 	private static final String swtLink = "http://www.eclipse.org/swt/";
 	private static final String swtInfo = "This GUI uses the <A href=\"" + swtLink
-			+ "\">Standard Widget Toolkit (SWT)</A>.";
+			+ "\">Standard Widget Toolkit (SWT)</A>";
 
 	About(final Shell parent)
 	{
@@ -155,9 +155,12 @@ public class About
 		licenseLabel.setFont(Main.font);
 		licenseLabel.setText(license + " " + copyright);
 
+		final int version = SWT.getVersion();
+		final int major = version / 1000;
+		final int minor = version % 1000;
 		final Link swtUsage = new Link(c, SWT.NONE);
 		swtUsage.setFont(Main.font);
-		swtUsage.setText(swtInfo);
+		swtUsage.setText(swtInfo + ", version " + major + "." + minor + ".");
 		swtUsage.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
 		swtUsage.setToolTipText(swtLink);
 		swtUsage.addSelectionListener(openLink);
