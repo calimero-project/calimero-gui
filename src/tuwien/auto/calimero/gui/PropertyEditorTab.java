@@ -961,7 +961,7 @@ class PropertyEditorTab extends BaseTabLayout
 						@Override
 						protected void runCommand(final String... cmd) throws InterruptedException
 						{
-							toolLink = lnk;
+							toolLink = link();
 							if (init) {
 								Main.asyncExec(() -> setHeaderInfo(statusInfo(1)));
 								pc.addDefinitions(definitions);
