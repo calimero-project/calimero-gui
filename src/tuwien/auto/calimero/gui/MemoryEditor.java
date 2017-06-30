@@ -36,6 +36,8 @@
 
 package tuwien.auto.calimero.gui;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -287,6 +289,36 @@ class MemoryEditor extends BaseTabLayout
 
 		for (final Control c : editArea.getChildren())
 			c.setEnabled(false);
+	}
+
+	@Override
+	protected void saveAs(final String resource)
+	{
+		asyncAddLog("Export data in CSV format to " + resource);
+		try {
+			final char comma = ' ';
+			final char delim = '\n';
+
+			final FileWriter w = new FileWriter(resource);
+			w.write("Start Offset ");
+			w.write(Integer.toHexString(viewerStartOffset));
+			w.write(delim);
+
+			// write list
+			for (int i = 0; i < list.getItemCount(); i++) {
+				final TableItem ti = list.getItem(i);
+				w.append(ti.getText(0));
+				for (int k = 1; k < list.getColumnCount(); k++)
+					w.append(comma).append(ti.getText(k));
+				w.write('\n');
+			}
+			w.close();
+			asyncAddLog("Export completed successfully");
+		}
+		catch (final IOException e) {
+			e.printStackTrace();
+			asyncAddLog("Export aborted with error: " + e.getMessage());
+		}
 	}
 
 	@Override
