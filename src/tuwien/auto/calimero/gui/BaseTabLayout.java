@@ -50,13 +50,19 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.stream.Collectors;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.TextTransfer;
+import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -708,6 +714,23 @@ class BaseTabLayout
 		logData.left = new FormAttachment(0);
 		logData.right = new FormAttachment(100);
 		l.setLayoutData(logData);
+		l.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(final KeyEvent e)
+			{
+				if ((e.stateMask == SWT.COMMAND || e.stateMask == SWT.CTRL) && e.keyCode == 'c') {
+					final String[] selection = ((List) e.widget).getSelection();
+					final String textData = Arrays.asList(selection).stream().collect(Collectors.joining("\n"));
+					if (textData.length() > 0) {
+						final TextTransfer textTransfer = TextTransfer.getInstance();
+						final Clipboard cb = new Clipboard(Main.display);
+						cb.setContents(new Object[] { textData }, new Transfer[] { textTransfer });
+						cb.dispose();
+						e.doit = false;
+					}
+				}
+			}
+		});
 		return l;
 	}
 
