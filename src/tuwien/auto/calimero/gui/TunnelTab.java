@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2016 B. Malinowsky
+    Copyright (c) 2006, 2017 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -42,6 +42,7 @@ import java.util.Calendar;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.regex.Pattern;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -189,6 +190,10 @@ class TunnelTab extends BaseTabLayout
 		decoded.setText("Decoded ASDU");
 		decoded.setWidth(100);
 		enableColumnAdjusting();
+
+		final String filter = args.remote == null ? args.port : args.remote;
+		addLogIncludeFilter(".*" + Pattern.quote(filter) + ".*");
+		addLogExcludeFilter(".*Discoverer.*", ".*DevMgmt.*", ".*calimero\\.mgmt\\..*");
 
 		initFilterMenu();
 		openGroupMonitor();

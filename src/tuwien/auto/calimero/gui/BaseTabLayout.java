@@ -127,7 +127,10 @@ class BaseTabLayout
 	private static Map<BaseTabLayout, java.util.List<String>> logBuffer = Collections
 			.synchronizedMap(new WeakHashMap<>());
 	private static Map<BaseTabLayout, LogLevel> logLevel = Collections.synchronizedMap(new WeakHashMap<>());
-	private static Map<BaseTabLayout, String> logNamespace = Collections.synchronizedMap(new WeakHashMap<>());
+	private static Map<BaseTabLayout, java.util.List<String>> logIncludeFilters = Collections
+			.synchronizedMap(new WeakHashMap<>());
+	private static Map<BaseTabLayout, java.util.List<String>> logExcludeFilters = Collections
+			.synchronizedMap(new WeakHashMap<>());
 
 	final CTabItem tab;
 	final Composite workArea;
@@ -372,10 +375,14 @@ class BaseTabLayout
 		logLevel.put(this, level);
 	}
 
-	// the namespace is converted to a regex, dots are escaped
-	protected final void setLogNamespace(final String namespace)
+	protected final void addLogIncludeFilter(final String... regex)
 	{
-		logNamespace.put(this, namespace.replaceAll("\\.", "\\\\\\."));
+		logIncludeFilters.computeIfAbsent(this, k -> new ArrayList<>()).addAll(Arrays.asList(regex));
+	}
+
+	protected final void addLogExcludeFilter(final String... regex)
+	{
+		logExcludeFilters.computeIfAbsent(this, k -> new ArrayList<>()).addAll(Arrays.asList(regex));
 	}
 
 	/**
@@ -388,11 +395,13 @@ class BaseTabLayout
 				return;
 			final java.util.List<String> buf = logBuffer.get(this);
 			final LogLevel level = logLevel.computeIfAbsent(this, k -> LogLevel.INFO);
-			final String ns = logNamespace.computeIfAbsent(this, k -> "");
+			final java.util.List<String> include = logIncludeFilters.getOrDefault(this, Collections.emptyList());
+			final java.util.List<String> exclude = logExcludeFilters.getOrDefault(this, Collections.emptyList());
 			if (buf != null) {
 				final int items = log.getItemCount();
 				synchronized (buf) {
-					buf.stream().filter(s -> matches(s, level, ns)).map(BaseTabLayout::expandTabs).forEach(log::add);
+					buf.stream().filter(s -> matches(s, level, include, exclude)).map(BaseTabLayout::expandTabs)
+							.forEach(log::add);
 					buf.clear();
 				}
 				if (log.getItemCount() > items)
@@ -407,8 +416,11 @@ class BaseTabLayout
 	}
 
 	@SuppressWarnings("fallthrough")
-	private static boolean matches(final String logMessage, final LogLevel level, final String namespace)
+	private static boolean matches(final String logMessage, final LogLevel level, final java.util.List<String> include,
+		final java.util.List<String> exclude)
 	{
+		if (logMessage.startsWith("> "))
+			return true;
 		boolean match = false;
 		switch (level) {
 		case TRACE:
@@ -424,8 +436,12 @@ class BaseTabLayout
 			match |= logMessage.contains(LogLevel.ERROR.name());
 		default:
 		}
-		final boolean tabLocal = logMessage.startsWith("> ");
-		return tabLocal || match && logMessage.matches(".*" + namespace + "(?s).*");
+		if (!match)
+			return false;
+
+		final boolean included = include.isEmpty() || include.stream().anyMatch(logMessage::matches);
+		final boolean excluded = exclude.stream().anyMatch(logMessage::matches);
+		return included && !excluded;
 	}
 
 	/**

@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2015 B. Malinowsky
+    Copyright (c) 2006, 2017 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@ package tuwien.auto.calimero.gui;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -72,6 +73,10 @@ class IPConfigTab extends BaseTabLayout
 		value.setText("Value");
 		value.setWidth(200);
 		enableColumnAdjusting();
+
+		final String filter = args.remote == null ? args.port : args.remote;
+		addLogIncludeFilter(".*" + Pattern.quote(filter) + ".*", ".*calimero\\.mgmt\\.PC.*", ".*calimero\\.tools.*");
+		addLogExcludeFilter(".*Discoverer.*");
 
 		readConfig();
 	}

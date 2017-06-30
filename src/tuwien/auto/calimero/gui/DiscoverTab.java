@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2016 B. Malinowsky
+    Copyright (c) 2006, 2017 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -66,6 +66,7 @@ import org.usb4java.LibUsb;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 import tuwien.auto.calimero.knxnetip.Discoverer.Result;
 import tuwien.auto.calimero.knxnetip.servicetype.SearchResponse;
+import tuwien.auto.calimero.log.LogService.LogLevel;
 import tuwien.auto.calimero.serial.LibraryAdapter;
 import tuwien.auto.calimero.serial.usb.UsbConnection;
 import tuwien.auto.calimero.tools.Discover;
@@ -100,7 +101,8 @@ class DiscoverTab extends BaseTabLayout
 		setListBanner("Found device endpoints (KNXnet/IP routers and USB interfaces only) "
 				+ "will be listed here.\nSelect an endpoint to open the connection dialog.");
 		enableColumnAdjusting();
-		setLogNamespace("calimero");
+		setLogLevel(LogLevel.DEBUG);
+		addLogIncludeFilter(".*calimero\\.(knxnetip\\.Discoverer|usb).*");
 	}
 
 	@Override
