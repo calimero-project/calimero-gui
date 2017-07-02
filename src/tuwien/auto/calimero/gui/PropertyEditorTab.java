@@ -1023,6 +1023,7 @@ class PropertyEditorTab extends BaseTabLayout
 							addPropertyToTree(d.getObjectType(), d.getPID());
 						}
 
+						@Override
 						protected void onPropertyValue(final int idx, final int pid, final String value)
 						{
 							final Description d = findDescription(idx, pid);
@@ -1039,6 +1040,7 @@ class PropertyEditorTab extends BaseTabLayout
 							});
 						}
 
+						@Override
 						protected void onCompletion(final Exception thrown, final boolean canceled)
 						{
 							if (thrown != null) {
