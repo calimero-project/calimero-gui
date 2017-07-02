@@ -96,7 +96,7 @@ public class SwtChecker
 			// this already fails if swt is not available
 			final Class<?> swt = Class.forName("org.eclipse.swt.SWT");
 
-			final Object instance = swt.newInstance();
+			final Object instance = swt.getConstructor().newInstance();
 			final Boolean loadable = invoke(swt, instance, "isLoadable");
 			final Integer v = invoke(swt, instance, "getVersion");
 			final String platform = invoke(swt, instance, "getPlatform");
