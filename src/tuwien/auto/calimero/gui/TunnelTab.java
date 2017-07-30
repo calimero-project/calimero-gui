@@ -368,10 +368,6 @@ class TunnelTab extends BaseTabLayout
 			c.setEnabled(false);
 	}
 
-	/* (non-Javadoc)
-	 * @see tuwien.auto.calimero.gui.BaseTabLayout#onDispose(
-	 * org.eclipse.swt.events.DisposeEvent)
-	 */
 	@Override
 	protected void onDispose(final DisposeEvent e)
 	{
@@ -379,7 +375,7 @@ class TunnelTab extends BaseTabLayout
 			pc.quit();
 	}
 
-	private void setFieldSize(final Combo field, final int columns)
+	private static void setFieldSize(final Combo field, final int columns)
 	{
 		final GC gc = new GC(field);
 		final FontMetrics fm = gc.getFontMetrics();

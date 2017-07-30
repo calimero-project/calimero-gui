@@ -162,9 +162,9 @@ public class SwtChecker
 		case Win_x86_64:
 			return "win32.win32.x86_64";
 		case Unknown:
-		default:
 			return "";
 		}
+		return "";
 	}
 
 	private static String jarName(final Platform p)

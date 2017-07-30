@@ -36,12 +36,15 @@
 
 package tuwien.auto.calimero.gui;
 
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -440,7 +443,6 @@ class BaseTabLayout
 			match |= logMessage.contains(LogLevel.WARN.name());
 		case ERROR:
 			match |= logMessage.contains(LogLevel.ERROR.name());
-		default:
 		}
 		if (!match)
 			return false;
@@ -679,7 +681,7 @@ class BaseTabLayout
 			final char quote = '\"';
 			final char delim = '\n';
 
-			final FileWriter w = new FileWriter(resource);
+			final Writer w = Files.newBufferedWriter(Paths.get(resource), StandardCharsets.UTF_8);
 			// write list header
 			w.append(list.getColumn(0).getText());
 			for (int i = 1; i < list.getColumnCount(); i++)
@@ -703,7 +705,7 @@ class BaseTabLayout
 		}
 	}
 
-	private List createLogView(final Composite parent, final Sash sash)
+	private static List createLogView(final Composite parent, final Sash sash)
 	{
 		final List l = new List(parent, SWT.MULTI | SWT.V_SCROLL);
 		l.setBackground(new Color(Main.display, 255, 255, 255));

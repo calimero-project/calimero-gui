@@ -36,11 +36,14 @@
 
 package tuwien.auto.calimero.gui;
 
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -299,7 +302,7 @@ class MemoryEditor extends BaseTabLayout
 			final char comma = ' ';
 			final char delim = '\n';
 
-			final FileWriter w = new FileWriter(resource);
+			final Writer w = Files.newBufferedWriter(Paths.get(resource), StandardCharsets.UTF_8);
 			w.write("Start Offset ");
 			w.write(Integer.toHexString(viewerStartOffset));
 			w.write(delim);

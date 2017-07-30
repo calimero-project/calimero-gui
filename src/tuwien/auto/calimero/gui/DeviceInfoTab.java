@@ -101,6 +101,7 @@ class DeviceInfoTab extends BaseTabLayout
 					});
 				}
 
+				@Override
 				protected void onCompletion(final Exception thrown, final boolean canceled)
 				{
 					if (thrown != null)

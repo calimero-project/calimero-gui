@@ -38,6 +38,7 @@ package tuwien.auto.calimero.gui;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -536,7 +537,7 @@ class PropertyEditorTab extends BaseTabLayout
 		}
 	}
 
-	private void setFieldSize(final Combo field, final int columns)
+	private static void setFieldSize(final Combo field, final int columns)
 	{
 		final GC gc = new GC(field);
 		final FontMetrics fm = gc.getFontMetrics();
@@ -621,7 +622,12 @@ class PropertyEditorTab extends BaseTabLayout
 		final int elements;
 		// special case for KNXnet/IP friendly name: 30 chars
 		if (p.getObjectType() == 11 && pid == 76) {
-			final byte[] array = Arrays.copyOf(values.getBytes(), 30);
+			byte[] bytes = new byte[0];
+			try {
+				bytes = values.getBytes("ISO-8859-1");
+			}
+			catch (final UnsupportedEncodingException na) {}
+			final byte[] array = Arrays.copyOf(bytes, 30);
 			data = "0x" + DataUnitBuilder.toHex(array, "");
 			elements = array.length;
 		}
@@ -652,7 +658,7 @@ class PropertyEditorTab extends BaseTabLayout
 		return size;
 	}
 
-	private String altFormatted(final String values, final String onError)
+	private static String altFormatted(final String values, final String onError)
 	{
 		try {
 			final List<Long> tmp = Stream.of(values.split("\\s+|,")).filter(s -> !s.isEmpty()).map(Long::decode)
@@ -727,6 +733,7 @@ class PropertyEditorTab extends BaseTabLayout
 				final Text text = new Text(table, SWT.NONE);
 				@SuppressWarnings("fallthrough")
 				final Listener textListener = new Listener() {
+					@Override
 					public void handleEvent(final Event e)
 					{
 						if (e.type == SWT.FocusOut) {
@@ -741,7 +748,7 @@ class PropertyEditorTab extends BaseTabLayout
 							case SWT.TRAVERSE_ESCAPE:
 								text.dispose();
 								e.doit = false;
-							default:
+							default: // nop
 							}
 						}
 					}
@@ -822,7 +829,7 @@ class PropertyEditorTab extends BaseTabLayout
 		}
 	}
 
-	private Optional<PropertyClient.Property> getDefinition(final int objType, final int pid)
+	private static Optional<PropertyClient.Property> getDefinition(final int objType, final int pid)
 	{
 		PropertyClient.Property p = map.get(new PropertyKey(objType, pid));
 		if (p == null)

@@ -427,7 +427,7 @@ class ConnectDialog
 		shell.open();
 	}
 
-	private Text addHostInput(final Composite c, final String description, final String host,
+	private static Text addHostInput(final Composite c, final String description, final String host,
 		final boolean serial)
 	{
 		final Label label = new Label(c, SWT.NONE);

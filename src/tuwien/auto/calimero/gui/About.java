@@ -207,7 +207,7 @@ public class About
 		shell.open();
 	}
 
-	private void openLinkInBrowser(final String href)
+	private static void openLinkInBrowser(final String href)
 	{
 		final Program p = Program.findProgram(".html");
 		if (p != null)
