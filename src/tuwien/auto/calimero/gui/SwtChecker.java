@@ -48,6 +48,7 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Locale;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,7 +101,6 @@ public class SwtChecker
 			final Boolean loadable = invoke(swt, instance, "isLoadable");
 			final Integer v = invoke(swt, instance, "getVersion");
 			final String platform = invoke(swt, instance, "getPlatform");
-//			logger.info("found SWT library, version {}, platform {}, loadable {}", v, platform, loadable);
 			if (!loadable)
 				System.err.println("SWT library mismatch, version " + v + ", platform " + platform);
 			return loadable;
@@ -183,7 +183,8 @@ public class SwtChecker
 		}
 		final Path path = Paths.get(uri);
 		// remove the file name with extension
-		final Path dir = path.getRoot().resolve(path.subpath(0, path.getNameCount() - 1));
+		final Path dir = Optional.ofNullable(path.getRoot())
+				.map(root -> root.resolve(path.subpath(0, path.getNameCount() - 1))).orElse(Paths.get(""));
 		return dir.toString();
 	}
 
