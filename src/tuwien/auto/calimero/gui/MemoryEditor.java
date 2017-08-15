@@ -49,7 +49,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.function.Consumer;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -57,7 +56,6 @@ import org.eclipse.swt.custom.TableEditor;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.FontMetrics;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
@@ -751,22 +749,6 @@ class MemoryEditor extends BaseTabLayout
 		final String device = connect.knxAddress.isEmpty() ? "" : " device " + connect.knxAddress;
 		return status + device + (connect.remote == null ? "" : " " + connect.remote) + " on port " + connect.port
 				+ (connect.useNat() ? " (using NAT)" : "");
-	}
-
-	private SelectionListener selected(final Consumer<SelectionEvent> c)
-	{
-		return new SelectionAdapter() {
-			@Override
-			public void widgetSelected(final SelectionEvent e)
-			{
-				try {
-					c.accept(e);
-				}
-				catch (final RuntimeException rte) {
-					asyncAddLog(rte);
-				}
-			}
-		};
 	}
 
 	private static String address(final long addr)

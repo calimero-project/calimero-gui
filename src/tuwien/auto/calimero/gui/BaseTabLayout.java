@@ -53,6 +53,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.eclipse.swt.SWT;
@@ -70,6 +71,7 @@ import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -144,7 +146,7 @@ class BaseTabLayout
 	final CTabItem tab;
 	final Composite workArea;
 	final Composite top;
-	final Table list;
+	Table list;
 	final List log;
 
 	int listItemMargin = 2;
@@ -208,29 +210,30 @@ class BaseTabLayout
 			splitted.layout();
 		});
 
-		list = new Table(splitted, SWT.BORDER | SWT.FULL_SELECTION | SWT.V_SCROLL);
-		final FormData tableData = new FormData();
-		tableData.top = new FormAttachment(0);
-		tableData.bottom = new FormAttachment(sash);
-		tableData.left = new FormAttachment(0);
-		tableData.right = new FormAttachment(100);
-		list.setLayoutData(tableData);
-		list.setLinesVisible(false);
-		list.setHeaderVisible(true);
-		list.setFont(Main.font);
-		list.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetDefaultSelected(final SelectionEvent e)
-			{
-				final TableItem i = (TableItem) e.item;
-				if (i.getData("internal") == null)
-					onListItemSelected(e);
-			}
-		});
+		list = newTable(splitted, SWT.BORDER | SWT.FULL_SELECTION | SWT.V_SCROLL, sash);
+		list.addSelectionListener(defaultSelected(e -> {
+			if (e.item.getData("internal") == null)
+				onListItemSelected(e);
+		}));
 		initTableBottom(splitted, sash);
 		log = createLogView(splitted, sash);
 		logBuffer.put(this, Collections.synchronizedList(new ArrayList<>()));
 		workArea.layout();
+	}
+
+	static Table newTable(final Composite parent, final int style, final Sash bottomSash)
+	{
+		final Table table = new Table(parent, style);
+		final FormData tableData = new FormData();
+		tableData.top = new FormAttachment(0);
+		tableData.bottom = new FormAttachment(bottomSash);
+		tableData.left = new FormAttachment(0);
+		tableData.right = new FormAttachment(100);
+		table.setLayoutData(tableData);
+		table.setLinesVisible(false);
+		table.setHeaderVisible(true);
+		table.setFont(Main.font);
+		return table;
 	}
 
 	/**
@@ -703,6 +706,38 @@ class BaseTabLayout
 			e.printStackTrace();
 			asyncAddLog("Export aborted with error: " + e.getMessage());
 		}
+	}
+
+	SelectionListener defaultSelected(final Consumer<SelectionEvent> onSelection)
+	{
+		return new SelectionAdapter() {
+			@Override
+			public void widgetDefaultSelected(final SelectionEvent e)
+			{
+				try {
+					onSelection.accept(e);
+				}
+				catch (final RuntimeException rte) {
+					asyncAddLog(rte.getMessage());
+				}
+			}
+		};
+	}
+
+	SelectionListener selected(final Consumer<SelectionEvent> onSelection)
+	{
+		return new SelectionAdapter() {
+			@Override
+			public void widgetSelected(final SelectionEvent e)
+			{
+				try {
+					onSelection.accept(e);
+				}
+				catch (final RuntimeException rte) {
+					asyncAddLog(rte.getMessage());
+				}
+			}
+		};
 	}
 
 	private static List createLogView(final Composite parent, final Sash sash)
