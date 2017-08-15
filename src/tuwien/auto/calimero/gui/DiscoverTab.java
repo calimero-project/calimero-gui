@@ -40,6 +40,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -51,21 +52,25 @@ import javax.usb.UsbException;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
-import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Sash;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.usb4java.Device;
 import org.usb4java.LibUsb;
 
+import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 import tuwien.auto.calimero.knxnetip.Discoverer.Result;
 import tuwien.auto.calimero.knxnetip.servicetype.SearchResponse;
+import tuwien.auto.calimero.link.medium.KNXMediumSettings;
 import tuwien.auto.calimero.log.LogService.LogLevel;
 import tuwien.auto.calimero.serial.LibraryAdapter;
 import tuwien.auto.calimero.serial.usb.UsbConnection;
@@ -81,6 +86,22 @@ class DiscoverTab extends BaseTabLayout
 	DiscoverTab(final CTabFolder tf)
 	{
 		super(tf, "Endpoint discovery && description", null, false);
+		final Composite parent = list.getParent();
+		final int style = list.getStyle();
+		final Sash bottom = (Sash) ((FormData) list.getLayoutData()).bottom.control;
+		list.dispose();
+		list = newTable(parent, style | SWT.CHECK, bottom);
+		list.addSelectionListener(defaultSelected(e -> {
+			if (e.item.getData("internal") == null)
+				onListItemSelected(e);
+		}));
+		list.addSelectionListener(selected(e -> {
+			if (e.detail == SWT.CHECK) {
+				for (final TableItem ti : list.getItems())
+					if (!ti.equals(e.item))
+						ti.setChecked(false);
+			}
+		}));
 		new TableColumn(list, SWT.LEFT);
 
 		list.setHeaderVisible(false);
@@ -98,11 +119,36 @@ class DiscoverTab extends BaseTabLayout
 			final String text = item.getText(event.index);
 			event.gc.drawText(text, event.x + listItemMargin, event.y + listItemMargin, true);
 		});
-		setListBanner("Found device endpoints (KNXnet/IP routers and USB interfaces only) "
-				+ "will be listed here.\nSelect an endpoint to open the connection dialog.");
+		setListBanner("KNXnet/IP servers and USB interfaces "
+				+ "are listed here.\nSelect an interface to open the connection dialog.");
 		enableColumnAdjusting();
 		setLogLevel(LogLevel.DEBUG);
 		addLogIncludeFilter(".*calimero\\.(knxnetip\\.Discoverer|usb).*");
+		discover();
+	}
+
+	Optional<ConnectArguments> defaultInterface()
+	{
+		final TableItem[] items = list.getItems();
+		if (items.length == 0 || items[0].getData("internal") != null)
+			return Optional.empty();
+
+		final Optional<TableItem> item;
+		if (items.length == 1)
+			item = Optional.of(items[0]);
+		else
+			item = Arrays.asList(items).stream().filter(ti -> ti.getChecked()).findFirst();
+		if (!item.isPresent())
+			return Optional.empty();
+
+		final TableItem defaultInterface = item.get();
+		final ConnectArguments args = new ConnectArguments((Protocol) defaultInterface.getData("protocol"),
+				(String) defaultInterface.getData("localEP"), (String) defaultInterface.getData("host"),
+				(String) defaultInterface.getData("port"), nat.getSelection(), "", "");
+		args.name = (String) defaultInterface.getData("name");
+		args.knxMedium = Optional.ofNullable((Integer) defaultInterface.getData("medium"))
+				.orElse(KNXMediumSettings.MEDIUM_TP1);
+		return Optional.of(args);
 	}
 
 	@Override
@@ -113,13 +159,7 @@ class DiscoverTab extends BaseTabLayout
 		final Button start = new Button(top, SWT.PUSH);
 		start.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		start.setText("Discover devices");
-		start.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(final SelectionEvent e)
-			{
-				discover();
-			}
-		});
+		start.addSelectionListener(selected(e -> discover()));
 		start.setFocus();
 
 		nat = new Button(top, SWT.CHECK);
@@ -134,9 +174,11 @@ class DiscoverTab extends BaseTabLayout
 		args.add("-s");
 		if (nat.getSelection())
 			args.add("--nat");
-		asyncAddLog("KNXnet/IP discovery - using command line: " + String.join(" ", args));
 		list.removeAll();
 		log.removeAll();
+		asyncAddLog("Discover KNXnet/IP servers, KNX USB interfaces, and USB serial KNX interfaces.");
+		asyncAddLog("Selecting an interface opens the connection dialog, checking makes it the default interface.");
+		asyncAddLog("KNXnet/IP discovery - using command line: " + String.join(" ", args));
 		try {
 			final String sep = "\n";
 			final Runnable r = new Discover(args.toArray(new String[0])) {

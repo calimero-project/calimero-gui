@@ -108,7 +108,7 @@ class ConnectDialog
 			return new ConnectArguments(Protocol.FT12, null, null, port, false, "", knxAddress);
 		}
 
-		private ConnectArguments(final Protocol p, final String local, final String remote,
+		ConnectArguments(final Protocol p, final String local, final String remote,
 			final String port, final boolean nat, final String localKnxAddress,
 			final String remoteKnxAddress)
 		{
