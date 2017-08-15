@@ -22,9 +22,10 @@ Supported Features
 * KNX process communication, read or write a KNX datapoint
 * Group monitor for KNX datapoints, decode datapoint values, filter KNX messages
 * Network monitor (busmonitor raw frames on the network, completely passive), filter KNX messages
-* Show device information of a device in a KNX network
+* Show KNX device information (PL110 BCU1, TP1 BCU1/2, KNX IP, Interface Objects)
 * Read the IP configuration of a KNXnet/IP server (Local Device Management) or KNX device (Remote Property Services) using KNX properties
 * Scan KNX devices in a KNX subnet area/line, or check whether a specific KNX individual address is currently assigned to a KNX device
+* Show KNX devices in programming mode
 * KNX property editor for KNX devices that implement an Interface Object Server (IOS)
 * KNX device memory editor
 * Data export
