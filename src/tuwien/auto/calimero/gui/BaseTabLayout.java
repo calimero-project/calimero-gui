@@ -410,13 +410,21 @@ class BaseTabLayout
 			final java.util.List<String> include = logIncludeFilters.getOrDefault(this, Collections.emptyList());
 			final java.util.List<String> exclude = logExcludeFilters.getOrDefault(this, Collections.emptyList());
 			if (buf != null) {
+				// we only scroll to show the newest item if the log is completely scrolled down
 				final int items = log.getItemCount();
+				final int first = log.getTopIndex();
+				final Rectangle area = log.getClientArea();
+				final int height = log.getItemHeight();
+				final int visible = (area.height + height - 1) / height;
+				final int last = first + visible;
+				final boolean atEnd = last >= items;
+
 				synchronized (buf) {
 					buf.stream().filter(s -> matches(s, level, include, exclude)).map(BaseTabLayout::expandTabs)
 							.forEach(log::add);
 					buf.clear();
 				}
-				if (log.getItemCount() > items)
+				if (log.getItemCount() > items && atEnd)
 					log.setTopIndex(log.getItemCount() - 1);
 			}
 		});
