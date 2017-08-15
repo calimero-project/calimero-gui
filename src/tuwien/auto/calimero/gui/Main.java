@@ -43,11 +43,13 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.Locale;
+import java.util.Optional;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
@@ -56,14 +58,17 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 
 import tuwien.auto.calimero.GroupAddress;
 import tuwien.auto.calimero.GroupAddress.Presentation;
+import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 
 /**
@@ -77,6 +82,8 @@ public class Main
 
 	private static Combo localInterfaces;
 	private final CTabFolder tf;
+	private final DiscoverTab discoverTab;
+	private Text address;
 
 	Main()
 	{
@@ -85,28 +92,15 @@ public class Main
 		shell.setLayout(new GridLayout());
 
 		final ToolBar header = new ToolBar(shell, SWT.FLAT | SWT.WRAP);
-		final ToolItem connect = new ToolItem(header, SWT.NONE);
-		connect.setText("Connect ...");
+		new Label(shell, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL,
+				SWT.NONE, true, false));
+		addLauncherBar();
+		tf = new CTabFolder(shell, SWT.NONE | SWT.CAP_ROUND | SWT.BORDER);
 
-		final ToolItem showLog = new ToolItem(header, SWT.NONE);
-		showLog.setText("Show log");
-		showLog.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(final SelectionEvent e)
-			{
-				new LogTab(tf);
-			}
-		});
-
-		final ToolItem about = new ToolItem(header, SWT.NONE);
-		about.setText("About");
-		about.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(final SelectionEvent e)
-			{
-				new About(shell);
-			}
-		});
+		addToolItem(header, "Connect ...",
+				() -> new ConnectDialog(tf, Protocol.Unknown, null, null, "", "", null, null, false));
+		addToolItem(header, "Show log", () -> new LogTab(tf));
+		addToolItem(header, "About", () -> new About(shell));
 
 		// use separator to start area for local host fields
 		new ToolItem(header, SWT.SEPARATOR);
@@ -144,13 +138,8 @@ public class Main
 		}
 		catch (UnknownHostException | SocketException e) {}
 		localInterfaces.setToolTipText((String) localInterfaces.getData(localInterfaces.getText()));
-		localInterfaces.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(final SelectionEvent e)
-			{
-				localInterfaces.setToolTipText((String) localInterfaces.getData(localInterfaces.getText()));
-			}
-		});
+		localInterfaces.addSelectionListener(widgetSelected(
+				() -> localInterfaces.setToolTipText((String) localInterfaces.getData(localInterfaces.getText()))));
 		size = localInterfaces.computeSize(SWT.DEFAULT, SWT.DEFAULT);
 		final ToolItem hostItem = new ToolItem(header, SWT.SEPARATOR);
 		hostItem.setControl(localInterfaces);
@@ -182,27 +171,20 @@ public class Main
 		final Combo addressStyles = new Combo(header, SWT.BORDER | SWT.DROP_DOWN | SWT.READ_ONLY);
 		addressStyles.setItems("3-level style", "2-level style", "Free style");
 		addressStyles.select(0);
-		addressStyles.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(final SelectionEvent e)
-			{
-				if (addressStyles.getSelectionIndex() == 0)
-					GroupAddress.addressStyle(Presentation.ThreeLevelStyle);
-				else if (addressStyles.getSelectionIndex() == 1)
-					GroupAddress.addressStyle(Presentation.TwoLevelStyle);
-				else
-					GroupAddress.addressStyle(Presentation.FreeStyle);
-			}
-		});
+		addressStyles.addSelectionListener(widgetSelected(() -> {
+			if (addressStyles.getSelectionIndex() == 0)
+				GroupAddress.addressStyle(Presentation.ThreeLevelStyle);
+			else if (addressStyles.getSelectionIndex() == 1)
+				GroupAddress.addressStyle(Presentation.TwoLevelStyle);
+			else
+				GroupAddress.addressStyle(Presentation.FreeStyle);
+		}));
 
 		final ToolItem addrStylesItem = new ToolItem(header, SWT.SEPARATOR);
 		addrStylesItem.setControl(addressStyles);
 		addrStylesItem.setWidth(addressStyles.computeSize(SWT.DEFAULT, SWT.DEFAULT).x);
 
-		new Label(shell, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL,
-				SWT.NONE, true, false));
 
-		tf = new CTabFolder(shell, SWT.NONE | SWT.CAP_ROUND | SWT.BORDER);
 		tf.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		tf.setUnselectedCloseVisible(false);
 		tf.setSimple(false);
@@ -211,15 +193,8 @@ public class Main
 		tf.setSelectionBackground(
 				new Color[] { display.getSystemColor(SWT.COLOR_WHITE),
 					display.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND), }, new int[] { 75 }, true);
-		connect.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(final SelectionEvent e)
-			{
-				new ConnectDialog(tf, Protocol.Unknown, null, null, "", "", null, null, false);
-			}
-		});
 
-		new DiscoverTab(tf);
+		discoverTab = new DiscoverTab(tf);
 		shell.pack();
 		shell.setSize(shell.getSize().x + 150, shell.getSize().y + 100);
 		shell.open();
@@ -256,6 +231,96 @@ public class Main
 			System.setErr(BaseTabLayout.oldSystemErr);
 			display.dispose();
 		}
+	}
+
+	private void addLauncherBar()
+	{
+		final ToolBar functions = new ToolBar(shell, SWT.FLAT);
+		addToolItem(functions, "Group Monitor", () -> new TunnelTab(tf, ofDefaultInterface()));
+		addToolItem(functions, "Network Monitor", () -> new MonitorTab(tf, ofDefaultInterface()));
+		addToolItem(functions, "Programming Mode", () -> new ProgmodeTab(tf, ofDefaultInterface()));
+		addToolItem(functions, "Scan Devices", () -> new ScanDevicesTab(tf, ofDefaultInterface()));
+		addToolItem(functions, "Device Info", () -> new DeviceInfoTab(tf, ofDefaultInterface()));
+		addToolItem(functions, "IP Config", () -> new IPConfigTab(tf, ofDefaultInterface()));
+		addToolItem(functions, "Property Editor", () -> new PropertyEditorTab(tf, ofDefaultInterface()));
+		addToolItem(functions, "Memory Editor", () -> new MemoryEditor(tf, ofDefaultInterface()));
+
+		new ToolItem(functions, SWT.SEPARATOR_FILL).setEnabled(false);
+
+		addToolbarLabel(functions, "Device Address:");
+		final ToolItem item = addNonToolItem(functions, address = new Text(functions, SWT.CENTER));
+		address.setMessage("x.y.z");
+		address.setText("XX.XX.XXX");
+		item.setWidth(address.computeSize(SWT.DEFAULT, SWT.DEFAULT, true).x);
+		address.setText("");
+		address.addListener(SWT.Verify, e -> {
+			final String string = e.text;
+			final char[] chars = new char[string.length()];
+			string.getChars(0, chars.length, chars, 0);
+			for (final char c : chars) {
+				if (!(('0' <= c && c <= '9') || c == '.')) {
+					e.doit = false;
+					return;
+				}
+			}
+		});
+	}
+
+	private ToolItem addNonToolItem(final ToolBar tb, final Control t) {
+		final ToolItem item = new ToolItem(tb, SWT.SEPARATOR);
+		final Composite c = new Composite(tb, SWT.NONE);
+		t.setParent(c);
+		item.setControl(c);
+		final GridLayout layout = new GridLayout(1, true);
+		layout.horizontalSpacing = 0;
+		layout.marginWidth = 0;
+		layout.marginHeight = 0;
+		c.setLayout(layout);
+		t.setFont(tb.getFont());
+		t.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, true));
+		item.setWidth(t.computeSize(SWT.DEFAULT, SWT.DEFAULT).x);
+		return item;
+	}
+
+	private Label addToolbarLabel(final ToolBar tb, final String text)
+	{
+		final Label l = new Label(tb, SWT.NONE);
+		l.setText(text);
+		addNonToolItem(tb, l);
+		return l;
+	}
+
+	private void addToolItem(final ToolBar tb, final String text, final Runnable selected)
+	{
+		final ToolItem item = new ToolItem(tb, SWT.NONE);
+		item.setText(text);
+		item.addSelectionListener(widgetSelected(selected));
+	}
+
+	private SelectionListener widgetSelected(final Runnable r)
+	{
+		return new SelectionAdapter() {
+			@Override
+			public void widgetSelected(final SelectionEvent e)
+			{
+				try {
+					r.run();
+				}
+				catch (final RuntimeException rte) {
+					discoverTab.asyncAddLog(rte.getMessage());
+				}
+			}
+		};
+	}
+
+	private ConnectArguments ofDefaultInterface()
+	{
+		final Optional<ConnectArguments> args = discoverTab.defaultInterface();
+
+		// TODO we don't have a provider for the local knx address
+		final String localKnxAddress = "";
+		args.ifPresent(ca -> ca.knxAddress = address.getText());
+		return args.orElseThrow(() -> new RuntimeException("Discover and check default interface first!"));
 	}
 
 	static String getLocalHost()
