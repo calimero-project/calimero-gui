@@ -666,7 +666,7 @@ class BaseTabLayout
 					final String timestamp = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
 					filename = filenamePrefix + timestamp + filenameSuffix;
 				}
-				dlg.setFileName(filename);
+				dlg.setFileName(filename.replace(':', '.')); // avoid illegal char with USB vendor:product
 				final String resource = dlg.open();
 				if (resource == null)
 					return;
