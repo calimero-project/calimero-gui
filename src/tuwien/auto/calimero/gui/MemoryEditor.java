@@ -654,7 +654,7 @@ class MemoryEditor extends BaseTabLayout
 				}
 			}
 			catch (final Exception e) {
-				asyncAddLog(e.getMessage());
+				asyncAddLog(e);
 			}
 		});
 	}

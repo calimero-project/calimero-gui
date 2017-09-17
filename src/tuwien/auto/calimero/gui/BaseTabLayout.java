@@ -39,8 +39,6 @@ package tuwien.auto.calimero.gui;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -501,10 +499,13 @@ class BaseTabLayout
 	 */
 	protected void asyncAddLog(final Throwable t)
 	{
-		final StringWriter w = new StringWriter();
-		t.printStackTrace(new PrintWriter(w));
-		final String[] s = w.toString().split("\\R");
-		Arrays.stream(s).forEach(this::asyncAddLog);
+		asyncAddLog("Error: " + t.toString());
+		for (Throwable i = t; i.getCause() != null && i != i.getCause(); i = i.getCause())
+			asyncAddLog("\t" + i.getCause().toString());
+//		final StringWriter w = new StringWriter();
+//		t.printStackTrace(new PrintWriter(w));
+//		final String[] s = w.toString().split("\\R");
+//		Arrays.stream(s).forEach(this::asyncAddLog);
 	}
 
 	/**

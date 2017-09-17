@@ -120,6 +120,8 @@ class ScanDevicesTab extends BaseTabLayout
 						if (thrown != null) {
 							final TableItem i = new TableItem(list, SWT.NONE);
 							i.setText("Error: " + thrown.getMessage());
+
+							asyncAddLog(thrown);
 						}
 
 						final String status = canceled ? "canceled" : "completed";

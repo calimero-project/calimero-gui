@@ -132,7 +132,7 @@ class MonitorTab extends BaseTabLayout
 			protected void onCompletion(final Exception thrown, final boolean canceled)
 			{
 				if (thrown != null)
-					asyncAddLog("error: " + thrown.getMessage());
+					asyncAddLog(thrown);
 				asyncAddLog("network monitor closed " + (canceled ? "(canceled)" : ""));
 			}
 

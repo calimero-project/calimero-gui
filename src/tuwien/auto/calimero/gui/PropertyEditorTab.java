@@ -1051,7 +1051,7 @@ class PropertyEditorTab extends BaseTabLayout
 						protected void onCompletion(final Exception thrown, final boolean canceled)
 						{
 							if (thrown != null) {
-								asyncAddLog(thrown.toString());
+								asyncAddLog(thrown);
 							}
 							Main.asyncExec(() -> setHeaderInfo(statusInfo(2)));
 						}
@@ -1059,7 +1059,7 @@ class PropertyEditorTab extends BaseTabLayout
 					tool.run();
 				}
 				catch (final Exception e) {
-					asyncAddLog(e.getMessage());
+					asyncAddLog(e);
 				}
 			}
 		};
