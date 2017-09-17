@@ -172,8 +172,8 @@ class PropertyEditorTab extends BaseTabLayout
 	{
 		super(tf, "Properties of " + uniqueId(args), headerInfo(args, "Connecting to"));
 		connect = args;
-		final String device = connect.knxAddress.isEmpty() ? connect.remote : connect.knxAddress;
-		final String prefix = "knx-properties_" + device + "_";
+
+		final String prefix = "knx-properties_" + deviceName() + "_";
 		final String suffix = ".csv";
 		setExportName(prefix, suffix);
 
@@ -192,7 +192,7 @@ class PropertyEditorTab extends BaseTabLayout
 		entries.setText("Elements");
 		entries.setWidth(numberWidth);
 		final TableColumn elems = new TableColumn(list, SWT.LEFT);
-		elems.setText("Values");
+		elems.setText("Value(s)");
 		elems.setWidth(60);
 		final TableColumn rw = new TableColumn(list, SWT.LEFT);
 		rw.setText("R/W Level");
@@ -445,7 +445,7 @@ class PropertyEditorTab extends BaseTabLayout
 		authorize.setText("Authorize");
 		authorize.addSelectionListener(adapt(e -> authorize(authCode.getText())));
 
-		label("Property values", false);
+		label("Property value(s)", false);
 		final Text value = new Text(propertyPage, SWT.BORDER);
 		gridData = new GridData();
 		gridData.horizontalAlignment = SWT.FILL;
@@ -874,7 +874,7 @@ class PropertyEditorTab extends BaseTabLayout
 	private void restart()
 	{
 		if (connect.knxAddress.isEmpty()) {
-			if (askUser("Restart KNX Device " + connect.remote, "Perform local device management reset?") != SWT.YES)
+			if (askUser("Restart KNX Device " + deviceName(), "Perform local device management reset?") != SWT.YES)
 				return;
 
 			toolThread.interrupt();
@@ -1068,8 +1068,8 @@ class PropertyEditorTab extends BaseTabLayout
 	private String statusInfo(final int phase)
 	{
 		final String status = phase == 0 ? "Connecting to"
-				: phase == 1 ? "Reading properties of" : phase == 2 ? "Completed reading properties of" : "Unknown";
-		final String device = connect.knxAddress.isEmpty() ? "" : " device " + connect.knxAddress;
+				: phase == 1 ? "Reading properties of device" : phase == 2 ? "Completed reading properties of device" : "Unknown";
+		final String device = connect.knxAddress.isEmpty() ? "" : " " + connect.knxAddress;
 		return status + device + (connect.remote == null ? "" : " " + connect.remote) + " on port " + connect.port
 				+ (connect.useNat() ? " (using NAT)" : "");
 	}
@@ -1126,6 +1126,14 @@ class PropertyEditorTab extends BaseTabLayout
 			asyncAddLog("Formatting PID " + pid + " value \"" + value + "\": " + e.toString());
 		}
 		return value;
+	}
+
+	private String deviceName() {
+		if (connect.knxAddress != null && !connect.knxAddress.isEmpty())
+			return connect.knxAddress;
+		if (connect.remote != null && !connect.remote.isEmpty())
+			return connect.remote;
+		return connect.port;
 	}
 
 	private static String asString(final String value)
