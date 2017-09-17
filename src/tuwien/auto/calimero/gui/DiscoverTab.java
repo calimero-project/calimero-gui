@@ -236,7 +236,7 @@ class DiscoverTab extends BaseTabLayout
 										final int productId = dd.idProduct() & 0xffff;
 
 										final String product = productName(d, vendorId, productId);
-										sb.append(ind).append("Product: ").append(product).append(sep);
+										sb.append(ind).append("Name: ").append(product).append(sep);
 										sb.append(ind).append(manufacturer(d, vendorId, productId));
 
 										final String vp = String.format("%04x:%04x", vendorId, productId);
@@ -258,7 +258,7 @@ class DiscoverTab extends BaseTabLayout
 										final int productId = dd.idProduct() & 0xffff;
 										final String product = productName(d, vendorId, productId);
 
-										sb.append(ind).append("Product: ").append(product).append(sep);
+										sb.append(ind).append("Name: ").append(product).append(sep);
 										sb.append(ind).append(manufacturer(d, vendorId, productId));
 										final String dev = "/dev/";
 
