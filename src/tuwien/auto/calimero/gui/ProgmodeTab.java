@@ -37,7 +37,9 @@
 package tuwien.auto.calimero.gui;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 import org.eclipse.swt.SWT;
@@ -112,7 +114,8 @@ class ProgmodeTab extends BaseTabLayout
 		if (list.isDisposed())
 			return;
 		list.removeAll();
-		for (final IndividualAddress addr : devices)
+
+		for (final IndividualAddress addr : new TreeSet<>(Arrays.asList(devices)))
 			new TableItem(list, SWT.NONE).setText(addr.toString());
 
 		setHeaderInfo("Connected to " + connectionInfo(connect));
