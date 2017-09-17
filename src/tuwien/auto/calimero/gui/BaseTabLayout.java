@@ -92,6 +92,7 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
+import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.log.LogService.LogLevel;
 
 /**
@@ -372,6 +373,26 @@ class BaseTabLayout
 			return;
 		infoLabel.setText(info);
 		top.layout();
+	}
+
+	protected final void setHeaderInfo(final ConnectArguments connect, final String phase)
+	{
+		setHeaderInfo(headerInfo(connect, phase));
+	}
+
+	static final String headerInfo(final ConnectArguments connect, final String status)
+	{
+		return status + " " + uniqueId(connect) + (connect.useNat() ? " (using NAT)" : "");
+	}
+
+	static String uniqueId(final ConnectArguments connect)
+	{
+		if (!connect.knxAddress.isEmpty())
+			return (connect.knxAddress.split("\\.").length < 3 ? "line " : "device ") + connect.knxAddress;
+
+		if (connect.remote != null)
+			return "interface " + connect.remote + ":" + connect.port;
+		return "interface " + connect.port;
 	}
 
 	/**

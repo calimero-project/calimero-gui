@@ -170,9 +170,7 @@ class PropertyEditorTab extends BaseTabLayout
 
 	PropertyEditorTab(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, (args.protocol + " connection to " + args.name),
-				"Connecting" + (args.remote == null ? "" : " to " + args.remote) + " on port "
-						+ args.port + (args.useNat() ? ", using NAT" : ""));
+		super(tf, "Properties of " + uniqueId(args), headerInfo(args, "Connecting to"));
 		connect = args;
 		final String device = connect.knxAddress.isEmpty() ? connect.remote : connect.knxAddress;
 		final String prefix = "knx-properties_" + device + "_";

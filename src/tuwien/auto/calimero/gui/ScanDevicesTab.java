@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2015, 2016 B. Malinowsky
+    Copyright (c) 2015, 2017 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -60,8 +60,7 @@ class ScanDevicesTab extends BaseTabLayout
 
 	ScanDevicesTab(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, "Scan devices of subnet " + args.knxAddress, "Scanning ... Using connection "
-				+ args.remote + " port " + args.port + (args.useNat() ? ", using NAT" : ""));
+		super(tf, "Scan subnet " + uniqueId(args), headerInfo(args, "Scanning subnet ..."));
 		connect = args;
 
 		final TableColumn cnt = new TableColumn(list, SWT.RIGHT);
@@ -123,9 +122,8 @@ class ScanDevicesTab extends BaseTabLayout
 							i.setText("Error: " + thrown.getMessage());
 						}
 
-						final String status = canceled ? "canceled" : "complete";
-						setHeaderInfo("Scan devices " + status + ", connection " + connect.remote + " port "
-								+ connect.port + (connect.useNat() ? ", using NAT" : ""));
+						final String status = canceled ? "canceled" : "completed";
+						setHeaderInfo(connect, "Device scan " + status);
 					});
 				}
 			};

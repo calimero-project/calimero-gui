@@ -58,7 +58,7 @@ class DeviceInfoTab extends BaseTabLayout
 
 	DeviceInfoTab(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, "Device information of " + args.knxAddress, "Read information using connection "
+		super(tf, "Device info of " + args.knxAddress, "Read information using connection "
 				+ args.remote + " port " + args.port + (args.useNat() ? ", using NAT" : ""));
 		connect = args;
 
