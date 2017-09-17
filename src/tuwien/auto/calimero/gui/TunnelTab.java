@@ -99,13 +99,7 @@ class TunnelTab extends BaseTabLayout
 			try {
 				pc.read(dp);
 			}
-			catch (final KNXException e) {
-				asyncAddLog(e.getMessage());
-			}
-			catch (final KNXIllegalArgumentException e) {
-				asyncAddLog(e.getMessage());
-			}
-			catch (final InterruptedException e) {
+			catch (KNXException | InterruptedException | RuntimeException e) {
 				asyncAddLog(e.getMessage());
 			}
 		}
@@ -115,7 +109,7 @@ class TunnelTab extends BaseTabLayout
 			try {
 				pc.write(dp, value);
 			}
-			catch (final KNXException e) {
+			catch (KNXException | RuntimeException e) {
 				asyncAddLog(e.getMessage());
 			}
 		}
