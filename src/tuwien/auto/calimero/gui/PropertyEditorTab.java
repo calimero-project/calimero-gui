@@ -153,6 +153,7 @@ class PropertyEditorTab extends BaseTabLayout
 	private Combo bounds;
 
 	private final ConnectArguments connect;
+	private final boolean remotePropertySvc;
 	private Thread toolThread;
 	private KNXNetworkLink toolLink;
 	private final List<String[]> commands = Collections.synchronizedList(new ArrayList<>());
@@ -172,6 +173,7 @@ class PropertyEditorTab extends BaseTabLayout
 	{
 		super(tf, "Properties of " + uniqueId(args), headerInfo(args, "Connecting to"));
 		connect = args;
+		remotePropertySvc = connect.getArgs(true).contains("-r");
 
 		final String prefix = "knx-properties_" + deviceName() + "_";
 		final String suffix = ".csv";
@@ -417,7 +419,7 @@ class PropertyEditorTab extends BaseTabLayout
 		description.setLayoutData(gridData);
 
 		final Label ro = new Label(caption, SWT.NONE);
-		ro.setText(d.isWriteEnabled() ? "" : "(read-only)");
+		ro.setText(remotePropertySvc ? (d.isWriteEnabled() ? "" : "(read-only)") : "(read-only?)");
 		gridData = new GridData();
 		gridData.verticalAlignment = SWT.BOTTOM;
 		ro.setLayoutData(gridData);
@@ -491,7 +493,7 @@ class PropertyEditorTab extends BaseTabLayout
 
 		singleLineLabel("(Maximum elements " + (d.getMaxElements() > 0 ? d.getMaxElements() : "unknown") + ")");
 
-		if (!d.isWriteEnabled()) {
+		if (remotePropertySvc && !d.isWriteEnabled()) {
 			authCode.setEnabled(false);
 			authorize.setEnabled(false);
 			set.setEnabled(false);
