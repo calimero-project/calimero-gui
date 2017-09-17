@@ -48,6 +48,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -575,6 +576,16 @@ class PropertyEditorTab extends BaseTabLayout
 	private void addRow(final int index)
 	{
 		final Description d = descriptions.get(index);
+
+		// if user selected an interface object in the tree view, only add row if it belongs to that particular object
+		final AtomicBoolean differentObject = new AtomicBoolean();
+		Main.syncExec(() -> {
+			final TreeItem[] selection = tree.getSelection();
+			if (selection.length > 0 && tree.indexOf(selection[0]) != d.getObjectIndex())
+				differentObject.set(true);
+		});
+		if (differentObject.get())
+			return;
 		if (isNewInterfaceObject(index)) {
 			final String[] keys = new String[] { ObjectHeader, ObjectIndex, ObjectType, };
 			final String[] data = new String[] { "", "" + d.getObjectIndex(), "" + d.getObjectType() };
