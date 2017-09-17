@@ -53,7 +53,6 @@ import javax.usb.UsbException;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.GridData;
@@ -187,20 +186,10 @@ class DiscoverTab extends BaseTabLayout
 				{
 					final StringBuilder buf = new StringBuilder();
 					buf.append("Using local interface ").append(result.getNetworkInterface().getName()).append(" (");
-					buf.append(result.getAddress()).append(")").append(sep);
-
-					Main.syncExec(() -> {
-						final GC gc = new GC(list);
-						final double width = gc.stringExtent("--------------------").x / 20.0;
-						final Point extent = gc.stringExtent(buf.toString());
-						final int chars = (int) (extent.x / width);
-						final String line = String.format("%" + chars + "s", "-").replace(' ', '-');
-						gc.dispose();
-						buf.append(line).append(sep);
-					});
+					buf.append(result.getAddress()).append("): ");
 					final SearchResponse r = result.getResponse();
 					buf.append("\"").append(r.getDevice().getName()).append("\"");
-					buf.append(" at ").append(r.getControlEndpoint()).append(sep);
+					buf.append(" at ").append(r.getControlEndpoint());
 					buf.append("    ").append(r.getDevice().toString().replaceAll("\".*\"", "")).append(sep);
 					for (int i = buf.indexOf(", "); i != -1; i = buf.indexOf(", "))
 						buf.replace(i, i + 2, sep + "    ");
