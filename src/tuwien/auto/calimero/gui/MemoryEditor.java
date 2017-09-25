@@ -534,8 +534,8 @@ class MemoryEditor extends BaseTabLayout
 
 	private KNXNetworkLink createLink() throws KNXException, UnknownHostException, InterruptedException
 	{
-		final IndividualAddress localKnxAddress = connect.localKnxAddress.isEmpty() ? null
-				: new IndividualAddress(connect.localKnxAddress);
+		final IndividualAddress localKnxAddress = connect.localKnxAddress.isEmpty()
+				? KNXMediumSettings.BackboneRouter : new IndividualAddress(connect.localKnxAddress);
 		final KNXMediumSettings medium = KNXMediumSettings.create(connect.knxMedium, localKnxAddress);
 
 		if (connect.protocol == Protocol.FT12) {
