@@ -1,0 +1,108 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.15.0'
+    }
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+    maven { url 'https://maven-eclipse.github.io/maven' } // swt libraries
+}
+
+apply plugin:'java'
+apply plugin:'application'
+apply plugin:'com.github.ben-manes.versions'
+
+version = '2.3'
+
+def date() {
+    new Date().format('yyyyMMdd')
+}
+
+def buildClassifier = date()
+distZip.classifier = buildClassifier
+distTar.classifier = buildClassifier
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+mainClassName = 'tuwien.auto.calimero.gui.SwtChecker'
+
+// TODO excluding the swt which is picked up during compilation does not work for some reason
+applicationDistribution.exclude('org.eclipse.swt.*.jar')
+
+applicationDistribution.from(project.getProjectDir()) {
+    include 'LICENSE.txt'
+//    include 'README.md'
+}
+
+// SWT is platform dependent
+def swtGroupId = 'org.eclipse.swt'
+def swtVersion = '4.6.1'
+def swtArtifact = swtGroupId
+
+def os = System.getProperty("os.name").toLowerCase()
+if (os.contains("windows")) { swtArtifact += '.win32.win32.x86_64' }
+else if (os.contains("linux")) { swtArtifact += '.gtk.linux.x86_64' }
+else if (os.contains("mac")) { swtArtifact += '.cocoa.macosx.x86_64' }
+
+
+sourceSets {
+    main {
+        java.srcDir 'src'
+        resources.srcDir 'resources'
+    }
+}
+
+compileJava.options*.compilerArgs = [
+    '-Xlint:all',
+//    '-Werror'
+]
+
+configurations {
+    provided
+    compile.extendsFrom provided
+}
+
+dependencies {
+    compile "com.github.calimero:calimero-core:${version}"
+    compile "com.github.calimero:calimero-tools:${version}"
+    runtime "com.github.calimero:calimero-rxtx:${version}"
+    provided "${swtGroupId}:${swtArtifact}:${swtVersion}"
+    // bogus dependency which we check for (& download) on application startup
+    compile files('swt.jar')
+}
+
+jar {
+  dependsOn configurations.runtime
+  manifest {
+    attributes(
+      'Class-Path': (configurations.runtime - configurations.provided).collect { it.getName() }.join(' '),
+      'Main-Class': mainClassName
+    )
+  }
+}
+
+startScripts {
+    doLast {
+        // on OS X, SWT needs to run on first thread
+        unixScript.text = unixScript.text.replace('DEFAULT_JVM_OPTS=""',
+            'DEFAULT_JVM_OPTS=""\n' +
+            'if [ "`uname`" = Darwin ] ; then\n' +
+            '    DEFAULT_JVM_OPTS="-XstartOnFirstThread"\n' +
+            'fi')
+    }
+}
+
+run {
+    if (os.contains("mac")) {
+        jvmArgs '-XstartOnFirstThread'
+    }
+}

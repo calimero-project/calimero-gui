@@ -64,16 +64,10 @@ The graphical user interface has the following _optional_ dependencies: serial-n
 Use your specific version in the following commands.
 Either, relying on the Java MANIFEST (check the MANIFEST for exact dependency names and versions)
 
-	java -jar calimero-gui-2.3-beta.jar
+	java -jar calimero-gui-2.3.jar
 
 If all dependencies are resolved, you can also directly start the GUI by opening it in Nautilus, Windows File Explorer, etc.
 
-Or, assuming all dependencies (of any compliant version) are in the current working directory
+Assuming all calimero dependencies (of any compliant version) are in the current working directory (using the JRE `-classpath` or `-cp` option), on first invocation the SWT checker will try to download the appropriate SWT library for your platform (you might have to run the command twice). Note, on MacOS also use `-XstartOnFirstThread`:
 
-	java -cp "./*" tuwien.auto.calimero.gui.Main
-
-Or, as example of using the JRE `-classpath` option to qualify all dependencies (be aware of the terminal line-breaks!)
-
-	java -cp "calimero-gui-2.3-beta.jar:calimero-core-2.3-beta.jar\
-	:calimero-tools-2.3-beta.jar:org.eclipse.swt.gtk.linux.x86_64-4.3.jar" \
-	tuwien.auto.calimero.gui.Main
+	java -cp "./*" tuwien.auto.calimero.gui.SwtChecker

@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>com.github.calimero</groupId>
 		<artifactId>calimero-parent</artifactId>
-		<version>2.3-beta</version>
+		<version>2.3</version>
 	</parent>
 	<artifactId>calimero-gui</artifactId>
 	<name>Calimero GUI</name>
@@ -20,10 +20,16 @@
 			<url>LICENSE.txt</url>
 		</license>
 	</licenses>
+	<developers>
+		<developer>
+			<name>Boris Malinowsky</name>
+			<email>b.malinowsky@gmail.com</email>
+		</developer>
+	</developers>
 
 	<properties>
 		<swt.groupId>org.eclipse.swt</swt.groupId>
-		<swt.version>4.6M5</swt.version>
+		<swt.version>4.6.1</swt.version>
 	</properties>
 
 	<profiles>
@@ -58,7 +64,7 @@
 								<argument>-XstartOnFirstThread</argument>
 								<argument>-classpath</argument>
 								<classpath />
-								<argument>tuwien.auto.calimero.gui.Main</argument>
+								<argument>tuwien.auto.calimero.gui.SwtChecker</argument>
 							</arguments>
 						</configuration>
 					</plugin>
@@ -98,37 +104,31 @@
 				</os>
 			</activation>
 			<properties>
+				<swt.artifactId>org.eclipse.swt.win32.win32.x86_64</swt.artifactId>
+			</properties>
+		</profile>
+		<profile>
+			<id>windows-32</id>
+			<activation>
+				<os>
+					<family>windows</family>
+					<arch>x86</arch>
+				</os>
+			</activation>
+			<properties>
 				<swt.artifactId>org.eclipse.swt.win32.win32.${os.arch}</swt.artifactId>
 			</properties>
 		</profile>
 	</profiles>
 	<build>
-		<sourceDirectory>src</sourceDirectory>
-		<testSourceDirectory>test</testSourceDirectory>
-		<resources>
-			<resource>
-				<directory>${basedir}</directory>
-				<targetPath>META-INF</targetPath>
-				<includes>
-					<include>LICENSE.txt</include>
-				</includes>
-			</resource>
-			<resource>
-				<directory>resources</directory>
-				<includes>
-					<include>testDatapoints.xml</include>
-					<include>asg-small.png</include>
-				</includes>
-			</resource>
-		</resources>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.5.1</version>
 				<configuration>
-					<source>1.7</source>
-					<target>1.7</target>
+					<source>1.8</source>
+					<target>1.8</target>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -138,10 +138,34 @@
 					<archive>
 						<manifest>
 							<addClasspath>true</addClasspath>
-							<mainClass>tuwien.auto.calimero.gui.Main</mainClass>
+							<mainClass>tuwien.auto.calimero.gui.SwtChecker</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>3.0.0</version>
+				<configuration>
+					<overview>src/overview.html</overview>
+					<author>false</author>
+					<quiet>true</quiet>
+					<archive>
+						<manifestEntries>
+							<Built-By>${packager}</Built-By>
+						</manifestEntries>
+					</archive>
+				</configuration>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+							<goal>test-jar</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
@@ -157,7 +181,7 @@
 				<configuration>
 					<executable>java</executable>
 					<longClasspath>true</longClasspath>
-					<mainClass>tuwien.auto.calimero.gui.Main</mainClass>
+					<mainClass>tuwien.auto.calimero.gui.SwtChecker</mainClass>
 				</configuration>
 			</plugin>
 		</plugins>
