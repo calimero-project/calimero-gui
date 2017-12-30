@@ -40,6 +40,10 @@ Supported Access Protocols
 Execution
 ---------
 
+### Using Gradle
+
+	./gradlew run
+
 ### Using Maven
 
 Resolve/Compile/Install
