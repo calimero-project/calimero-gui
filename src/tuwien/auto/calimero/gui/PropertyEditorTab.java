@@ -36,9 +36,13 @@
 
 package tuwien.auto.calimero.gui;
 
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -51,7 +55,6 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.eclipse.swt.SWT;
@@ -128,13 +131,7 @@ class PropertyEditorTab extends BaseTabLayout
 	private static final String ObjectType = "Object Type";
 
 	private enum Columns {
-		Count,
-		Pid,
-		Name,
-		Elements,
-		Values,
-		AccessLevel,
-		Description
+		Count, Pid, Name, Elements, Values, RawValues, AccessLevel, Description,
 	}
 
 	private static final List<PropertyClient.Property> definitions = new ArrayList<>();
@@ -161,6 +158,7 @@ class PropertyEditorTab extends BaseTabLayout
 
 	private final List<Description> descriptions = new ArrayList<>();
 	private final Map<Description, String> values = new HashMap<>();
+	private final Map<Description, List<byte[]>> rawValues = new HashMap<>();
 	private int count;
 
 	private static final String showTree = "Use tree view for interface objects and properties";
@@ -191,12 +189,15 @@ class PropertyEditorTab extends BaseTabLayout
 		final TableColumn name = new TableColumn(list, SWT.LEFT);
 		name.setText("Name");
 		name.setWidth(50);
-		final TableColumn entries = new TableColumn(list, SWT.RIGHT);
-		entries.setText("Elements");
-		entries.setWidth(numberWidth);
-		final TableColumn elems = new TableColumn(list, SWT.LEFT);
-		elems.setText("Value(s)");
-		elems.setWidth(60);
+		final TableColumn elems = new TableColumn(list, SWT.RIGHT);
+		elems.setText("Elements");
+		elems.setWidth(numberWidth);
+		final TableColumn values = new TableColumn(list, SWT.LEFT);
+		values.setText("Value(s)");
+		values.setWidth(60);
+		final TableColumn raw = new TableColumn(list, SWT.LEFT);
+		raw.setText("Raw (hex)");
+		raw.setWidth(80);
 		final TableColumn rw = new TableColumn(list, SWT.LEFT);
 		rw.setText("R/W Level");
 		rw.setWidth(25);
@@ -467,7 +468,7 @@ class PropertyEditorTab extends BaseTabLayout
 		altFormats.setLayoutData(gridData);
 
 		final Text altFormatted = new Text(propertyPage, SWT.READ_ONLY | SWT.WRAP);
-		altFormatted.setText(altFormatted(values.getOrDefault(d, ""), ""));
+		altFormatted.setText(altFormatted(rawValues.getOrDefault(d, Collections.emptyList()), ""));
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
 		gridData.horizontalAlignment = SWT.FILL;
 		altFormatted.setLayoutData(gridData);
@@ -606,7 +607,10 @@ class PropertyEditorTab extends BaseTabLayout
 		final String rw = d.getReadLevel() + "/" + d.getWriteLevel() + (d.isWriteEnabled() ? "" : " (read-only)");
 
 		final String value = formatted(d.getObjectType(), d.getPID(), values.getOrDefault(d, ""));
-		final String[] item = { "" + count++, "" + d.getPID(), name, "" + d.getCurrentElements(), value, rw, desc };
+		final List<byte[]> raw = rawValues.getOrDefault(d, Collections.emptyList());
+		final String rawText = raw.stream().map(bytes -> DataUnitBuilder.toHex(bytes, "")).collect(joining(", "));
+		final String[] item = { "" + count++, "" + d.getPID(), name, "" + d.getCurrentElements(), value, rawText, rw,
+			desc };
 		asyncAddListItem(item, keys, data);
 	}
 
@@ -646,7 +650,7 @@ class PropertyEditorTab extends BaseTabLayout
 			final String format = "%0" + typeSize * 2 + "x";
 			final AtomicInteger count = new AtomicInteger(0);
 			data = Stream.of(values.split("\\s+|,")).filter(s -> !s.isEmpty()).peek(s -> count.incrementAndGet())
-					.map(Long::decode).map(l -> String.format(format, l)).collect(Collectors.joining("", "0x", ""));
+					.map(Long::decode).map(l -> String.format(format, l)).collect(joining("", "0x", ""));
 			elements = elems > 0 ? elems : count.get();
 		}
 		runCommand("set", objectIndex, pid, "1", elements, data);
@@ -669,18 +673,33 @@ class PropertyEditorTab extends BaseTabLayout
 		return size;
 	}
 
-	private static String altFormatted(final String values, final String onError)
+	private static String altFormatted(final String input, final String onError)
 	{
 		try {
-			final List<Long> tmp = Stream.of(values.split("\\s+|,")).filter(s -> !s.isEmpty()).map(Long::decode)
-					.collect(Collectors.toList());
-			final String dec = tmp.stream().map(Object::toString).collect(Collectors.joining(", "));
-			final String hex = tmp.stream().map(Long::toHexString).collect(Collectors.joining(", "));;
-			final String bin = tmp.stream().map(Long::toBinaryString).collect(Collectors.joining(", "));
-			return dec + "\n" + hex + "\n" + bin;
+			final List<BigInteger> values = Arrays.asList(input.split(", ")).stream().map(s -> new BigInteger(s))
+					.collect(toList());
+			return altFormatted(values);
 		}
 		catch (final RuntimeException e) {}
 		return onError;
+	}
+
+	private static String altFormatted(final List<byte[]> values, final String onError)
+	{
+		try {
+			final List<BigInteger> list = values.stream().map(v -> new BigInteger(1, v)).collect(toList());
+			return altFormatted(list);
+		}
+		catch (final RuntimeException e) {}
+		return onError;
+	}
+
+	private static String altFormatted(final List<BigInteger> values)
+	{
+		final String dec = values.stream().map(Object::toString).collect(joining(", "));
+		final String hex = values.stream().map(v -> v.toString(16)).collect(joining(", "));;
+		final String bin = values.stream().map(v -> v.toString(2)).collect(joining(", "));
+		return dec + "\n" + hex + "\n" + bin;
 	}
 
 	private Label label(final String text, final boolean singleLine)
@@ -1042,13 +1061,18 @@ class PropertyEditorTab extends BaseTabLayout
 						}
 
 						@Override
-						protected void onPropertyValue(final int idx, final int pid, final String value)
+						protected void onPropertyValue(final int idx, final int pid, final String value,
+							final List<byte[]> raw)
 						{
 							final Description d = findDescription(idx, pid);
 							values.put(d, value);
+							rawValues.put(d, raw);
 							Main.asyncExec(() -> {
 								if (editArea.isDisposed())
 									return;
+								final String rawText = raw.stream().map(data -> DataUnitBuilder.toHex(data, ""))
+										.collect(joining(", "));
+								find(idx, pid).ifPresent(i -> i.setText(Columns.RawValues.ordinal(), rawText));
 								final String text = formatted(d.getObjectType(), pid, value);
 								find(idx, pid).ifPresent(i -> i.setText(Columns.Values.ordinal(), text));
 								findPropertyPageControl(idx, pid, "property-edit-field")
@@ -1170,7 +1194,7 @@ class PropertyEditorTab extends BaseTabLayout
 			catch (final KNXFormatException e) {
 				return s;
 			}
-		}).collect(Collectors.joining(", "));
+		}).collect(joining(", "));
 	}
 
 	private static String asGroupAddresses(final String value)
@@ -1182,7 +1206,7 @@ class PropertyEditorTab extends BaseTabLayout
 			catch (final KNXFormatException e) {
 				return s;
 			}
-		}).collect(Collectors.joining(", "));
+		}).collect(joining(", "));
 	}
 
 	private static String asIPAddress(final String value)
