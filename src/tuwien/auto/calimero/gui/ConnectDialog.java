@@ -57,7 +57,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
-import tuwien.auto.calimero.KNXIllegalStateException;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 import tuwien.auto.calimero.knxnetip.KNXnetIPConnection;
 import tuwien.auto.calimero.link.medium.KNXMediumSettings;
@@ -156,7 +155,7 @@ class ConnectDialog
 				args.add("--tpuart");
 				break;
 			default:
-				throw new KNXIllegalStateException();
+				throw new IllegalStateException();
 			}
 			args.add(port);
 			args.add("--medium");
