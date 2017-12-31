@@ -185,11 +185,11 @@ class DiscoverTab extends BaseTabLayout
 				protected void onEndpointReceived(final Result<SearchResponse> result)
 				{
 					final StringBuilder buf = new StringBuilder();
-					buf.append("Using local interface ").append(result.getNetworkInterface().getName()).append(" (");
-					buf.append(result.getAddress()).append("): ");
 					final SearchResponse r = result.getResponse();
 					buf.append("\"").append(r.getDevice().getName()).append("\"");
 					buf.append(" at ").append(r.getControlEndpoint());
+					buf.append(" -- using local interface ").append(result.getNetworkInterface().getName()).append(" ");
+					buf.append(result.getAddress());
 					buf.append("    ").append(r.getDevice().toString().replaceAll("\".*\"", "")).append(sep);
 					for (int i = buf.indexOf(", "); i != -1; i = buf.indexOf(", "))
 						buf.replace(i, i + 2, sep + "    ");
@@ -277,7 +277,7 @@ class DiscoverTab extends BaseTabLayout
 							asyncAddLog(l.stream().collect(Collectors.joining(", ", "Available serial ports: ", "")));
 						}
 					}
-					catch (final SecurityException | UsbDisconnectedException | UsbException e) {
+					catch (final RuntimeException e) {
 						asyncAddLog("error: " + e.getMessage());
 					}
 				};
