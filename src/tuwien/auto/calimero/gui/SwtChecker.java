@@ -58,10 +58,9 @@ import org.slf4j.LoggerFactory;
  */
 public class SwtChecker
 {
-	private static final String swtGroupId = "org.eclipse.swt.";
-	private static final String swtVersion = "4.6.1";
-	private static final String baseDownloadUrl = //
-			"https://github.com/maven-eclipse/maven-eclipse.github.io/raw/master/maven/org/eclipse/swt";
+	private static final String swtArtifactId = "org.eclipse.swt.";
+	private static final String swtVersion = "3.106.2";
+	private static final String baseDownloadUrl = "http://central.maven.org/maven2/org/eclipse/platform";
 
 	private final Logger logger;
 
@@ -119,16 +118,15 @@ public class SwtChecker
 		final Platform platform = platform();
 		logger.info("Detected OS: {}", platform);
 
-		final String folder = swtGroupId + swtPlatformId(platform);
+		final String folder = swtArtifactId + swtPlatformId(platform);
 		final String jarName = jarName(platform);
 		final String path = String.join("/", baseDownloadUrl, folder, swtVersion, jarName);
 		final URI link = new URI(path);
 		logger.info("Download {}", link);
 
 		final Path dest = Paths.get(libDir(), "swt.jar");
-		logger.info("Save to {}", dest.normalize().toAbsolutePath());
-
 		download(link, dest);
+		logger.info("Saved to {}", dest.normalize().toAbsolutePath());
 		logger.info("Success, please restart the application!");
 	}
 
@@ -172,7 +170,7 @@ public class SwtChecker
 
 	private static String jarName(final Platform p)
 	{
-		return swtGroupId + swtPlatformId(p) + "-" + swtVersion + ".jar";
+		return swtArtifactId + swtPlatformId(p) + "-" + swtVersion + ".jar";
 	}
 
 	private static String libDir() throws URISyntaxException
