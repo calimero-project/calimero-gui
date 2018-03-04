@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2017 B. Malinowsky
+    Copyright (c) 2006, 2018 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -217,7 +217,7 @@ public class Main
 			final String os = System.getProperty("os.name", "generic").toLowerCase(Locale.ENGLISH);
 			if (os.indexOf("windows") == -1) {
 				int height = fontData[0].getHeight();
-				height -= 0.15 * height;
+				height -= (int) (0.15 * height);
 				fontData[0].setHeight(height);
 			}
 			font = new Font(Main.display, fontData);
@@ -248,9 +248,10 @@ public class Main
 		new ToolItem(functions, SWT.SEPARATOR_FILL).setEnabled(false);
 
 		addToolbarLabel(functions, "Device Address:");
-		final ToolItem item = addNonToolItem(functions, address = new Text(functions, SWT.CENTER));
+		address = new Text(functions, SWT.CENTER);
 		address.setMessage("x.y.z");
 		address.setText("XX.XX.XXX");
+		final ToolItem item = addNonToolItem(functions, address);
 		item.setWidth(address.computeSize(SWT.DEFAULT, SWT.DEFAULT, true).x);
 		address.setText("");
 		address.addListener(SWT.Verify, e -> {

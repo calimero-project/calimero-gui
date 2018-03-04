@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2017 B. Malinowsky
+    Copyright (c) 2017, 2018 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -611,8 +611,8 @@ class MemoryEditor extends BaseTabLayout
 	private void writeModifiedMemory()
 	{
 		runWorker(() -> {
-			try (final ManagementClient mgmt = new ManagementClientImpl(knxLink());
-					final Destination dst = mgmt.createDestination(device, true)) {
+			try (ManagementClient mgmt = new ManagementClientImpl(knxLink());
+					Destination dst = mgmt.createDestination(device, true)) {
 				Main.asyncExec(() -> setHeaderInfo(statusInfo(1)));
 				for (final Iterator<Entry<Integer, Integer>> i = modified.entrySet().iterator(); i.hasNext();) {
 					final Entry<Integer, Integer> entry = i.next();
@@ -636,7 +636,7 @@ class MemoryEditor extends BaseTabLayout
 	private void readMemory(final long startAddress, final int bytes)
 	{
 		runWorker(() -> {
-			try (final ManagementProcedures mgmt = new ManagementProceduresImpl(knxLink())) {
+			try (ManagementProcedures mgmt = new ManagementProceduresImpl(knxLink())) {
 				Main.asyncExec(() -> setHeaderInfo(statusInfo(1)));
 				final int stride = 16;
 				for (long addr = startAddress; addr < startAddress + bytes; addr += stride) {
@@ -759,6 +759,6 @@ class MemoryEditor extends BaseTabLayout
 	private static boolean isPrintable(final char c)
 	{
 		final Character.UnicodeBlock block = Character.UnicodeBlock.of(c);
-		return (!Character.isISOControl(c)) && block != null && block != Character.UnicodeBlock.SPECIALS;
+		return (!Character.isISOControl(c)) && block != null && !block.equals(Character.UnicodeBlock.SPECIALS);
 	}
 }

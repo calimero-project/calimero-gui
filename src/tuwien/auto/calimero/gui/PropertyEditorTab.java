@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2015, 2017 B. Malinowsky
+    Copyright (c) 2015, 2018 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -697,7 +697,7 @@ class PropertyEditorTab extends BaseTabLayout
 	private static String altFormatted(final List<BigInteger> values)
 	{
 		final String dec = values.stream().map(Object::toString).collect(joining(", "));
-		final String hex = values.stream().map(v -> v.toString(16)).collect(joining(", "));;
+		final String hex = values.stream().map(v -> v.toString(16)).collect(joining(", "));
 		final String bin = values.stream().map(v -> v.toString(2)).collect(joining(", "));
 		return dec + "\n" + hex + "\n" + bin;
 	}
@@ -850,8 +850,8 @@ class PropertyEditorTab extends BaseTabLayout
 
 	private static void loadDefinitions()
 	{
-		try (final InputStream is = PropertyEditorTab.class.getResourceAsStream("/properties.xml");
-				final XmlReader r = XmlInputFactory.newInstance().createXMLStreamReader(is)) {
+		try (InputStream is = PropertyEditorTab.class.getResourceAsStream("/properties.xml");
+				XmlReader r = XmlInputFactory.newInstance().createXMLStreamReader(is)) {
 			definitions.addAll(new PropertyClient.XmlPropertyDefinitions().load(r));
 		}
 		catch (final IOException | KNXMLException e) {
@@ -896,10 +896,7 @@ class PropertyEditorTab extends BaseTabLayout
 		}
 
 		toolThread.interrupt();
-		try {
-			toolThread.join();
-		}
-		catch (final InterruptedException ignore) {}
+		joinUninterruptibly(toolThread);
 		runProperties(Arrays.asList("--authorize", authCode), false);
 	}
 
@@ -910,10 +907,7 @@ class PropertyEditorTab extends BaseTabLayout
 				return;
 
 			toolThread.interrupt();
-			try {
-				toolThread.join();
-			}
-			catch (final InterruptedException ignore) {}
+			joinUninterruptibly(toolThread);
 			runProperties(Arrays.asList("reset"), false);
 			// TODO after M_Reset.req, we need to wait for reset to complete and restart our property tool
 			return;
@@ -1225,5 +1219,24 @@ class PropertyEditorTab extends BaseTabLayout
 	private static List<String> strip(final String value)
 	{
 		return Arrays.asList(value.replaceAll("\\[|\\s|\\]", "").split(","));
+	}
+
+	private static void joinUninterruptibly(final Thread t) {
+		boolean interrupted = false;
+		try {
+			while (true) {
+				try {
+					t.join();
+					return;
+				}
+				catch (final InterruptedException e) {
+					interrupted = true;
+				}
+			}
+		}
+		finally {
+			if (interrupted)
+				Thread.currentThread().interrupt();
+		}
 	}
 }

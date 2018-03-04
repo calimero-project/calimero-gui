@@ -87,7 +87,7 @@ public class About
 
 	private static final String license = "The Calimero library, tools, GUI, and documentation "
 			+ "are licensed under\nthe GPL, with the Classpath Exception.";
-	private static final String copyright = "Copyright \u00A9 2006, 2017.";
+	private static final String copyright = "Copyright \u00A9 2006, 2018.";
 
 	private static final String swtLink = "http://www.eclipse.org/swt/";
 	private static final String swtInfo = "This GUI uses the <A href=\"" + swtLink
@@ -137,7 +137,7 @@ public class About
 
 		final Label asg = new Label(split, SWT.NONE);
 		asg.setLayoutData(new GridData(SWT.END, SWT.TOP, false, false));
-		try (final InputStream is = getClass().getResourceAsStream("/asg-small.png")) {
+		try (InputStream is = getClass().getResourceAsStream("/asg-small.png")) {
 			if (is != null) {
 				final Image img = new Image(Main.display, is);
 				asg.setImage(img);

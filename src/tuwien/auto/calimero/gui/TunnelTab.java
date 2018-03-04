@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2017 B. Malinowsky
+    Copyright (c) 2006, 2018 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -423,7 +423,7 @@ class TunnelTab extends BaseTabLayout
 		if (systemID == null)
 			return;
 		model = new DatapointMap<>();
-		try (final XmlReader r = XmlInputFactory.newInstance().createXMLReader(systemID)) {
+		try (XmlReader r = XmlInputFactory.newInstance().createXMLReader(systemID)) {
 			model.load(r);
 			asyncAddLog("datapoints loaded from " + systemID);
 		}

@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2016, 2017 B. Malinowsky
+    Copyright (c) 2016, 2018 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -53,6 +53,9 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Checks for correct SWT library on classpath, if missing/mismatch try to download library.
+ */
 public class SwtChecker
 {
 	private static final String swtGroupId = "org.eclipse.swt.";
@@ -191,8 +194,8 @@ public class SwtChecker
 	private static void download(final URI link, final Path to) throws IOException
 	{
 		final URL url = link.toURL();
-		try (final ReadableByteChannel rbc = Channels.newChannel(url.openStream());
-				final FileOutputStream os = new FileOutputStream(to.toFile())) {
+		try (ReadableByteChannel rbc = Channels.newChannel(url.openStream());
+				FileOutputStream os = new FileOutputStream(to.toFile())) {
 			os.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
 		}
 	}
