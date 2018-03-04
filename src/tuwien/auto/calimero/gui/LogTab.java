@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2016 B. Malinowsky
+    Copyright (c) 2006, 2018 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -36,6 +36,9 @@
 
 package tuwien.auto.calimero.gui;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -59,13 +62,25 @@ class LogTab extends BaseTabLayout
 {
 	private static final String[] levels = new String[] { "Error", "Warn", "Info", "Debug", "Trace" };
 
+	private static final int maxHistorySize = 500;
+	private static final List<String> logHistory = new ArrayList<>(maxHistorySize);
+
 	private Button clear;
 	private Label loglevel;
 	private Scale scale;
 
+	static void log(final String s) {
+		synchronized (logHistory) {
+			if (logHistory.size() >= maxHistorySize)
+				logHistory.remove(0);
+			logHistory.add(s);
+		}
+	}
+
 	LogTab(final CTabFolder tf)
 	{
 		super(tf, "Logging", "Shows log output of all open tabs");
+		populateHistory();
 	}
 
 	@Override
@@ -117,8 +132,8 @@ class LogTab extends BaseTabLayout
 		final Label logMax = new Label(scaleArea, SWT.NONE);
 		logMax.setText(levels[levels.length - 1]);
 
-		scale.setSelection(LogLevel.DEBUG.ordinal());
-		adjustLogLevel(LogLevel.DEBUG.ordinal());
+		scale.setSelection(LogLevel.TRACE.ordinal());
+		adjustLogLevel(LogLevel.TRACE.ordinal());
 		scaleArea.layout(true);
 	}
 
@@ -129,5 +144,12 @@ class LogTab extends BaseTabLayout
 		scale.setToolTipText(name);
 		setLogLevel(LogLevel.values()[level]);
 		top.layout();
+	}
+
+	private void populateHistory()
+	{
+		synchronized (logHistory) {
+			asyncLogAddAll(logHistory);
+		}
 	}
 }

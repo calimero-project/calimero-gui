@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2017 B. Malinowsky
+    Copyright (c) 2006, 2018 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -46,6 +46,7 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -114,8 +115,10 @@ class BaseTabLayout
 		@Override
 		public void print(final String s)
 		{
-			if (s != null)
+			if (s != null) {
 				logBuffer.forEach((k, v) -> { v.add(s); k.asyncAddLog(); });
+				LogTab.log(s);
+			}
 		}
 	}
 
@@ -480,6 +483,14 @@ class BaseTabLayout
 		final boolean included = include.isEmpty() || include.stream().anyMatch(logMessage::matches);
 		final boolean excluded = exclude.stream().anyMatch(logMessage::matches);
 		return included && !excluded;
+	}
+
+	void asyncLogAddAll(final Collection<String> c) {
+		final java.util.List<String> buf = logBuffer.get(this);
+		if (buf != null) {
+			buf.addAll(c);
+			asyncAddLog();
+		}
 	}
 
 	/**
