@@ -13,7 +13,6 @@
 		<url>https://github.com/calimero-project/calimero-gui.git</url>
 	</scm>
 	<url>https://github.com/calimero-project/calimero-gui</url>
-
 	<licenses>
 		<license>
 			<name>GNU General Public License, version 2, with the Classpath Exception</name>
@@ -26,12 +25,10 @@
 			<email>b.malinowsky@gmail.com</email>
 		</developer>
 	</developers>
-
 	<properties>
-		<swt.groupId>org.eclipse.swt</swt.groupId>
-		<swt.version>4.6.1</swt.version>
+		<swt.groupId>org.eclipse.platform</swt.groupId>
+		<swt.version>3.106.2</swt.version>
 	</properties>
-
 	<profiles>
 		<profile>
 			<id>osx</id>
@@ -48,7 +45,7 @@
 					<plugin>
 						<groupId>org.codehaus.mojo</groupId>
 						<artifactId>exec-maven-plugin</artifactId>
-						<version>1.4.0</version>
+						<version>1.6.0</version>
 						<executions>
 							<execution>
 								<goals>
@@ -137,7 +134,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>exec-maven-plugin</artifactId>
-				<version>1.4.0</version>
+				<version>1.6.0</version>
 				<executions>
 					<execution>
 						<goals>
@@ -173,7 +170,13 @@
 			<groupId>${swt.groupId}</groupId>
 			<artifactId>${swt.artifactId}</artifactId>
 			<version>${swt.version}</version>
-			<scope>compile</scope>
+			<exclusions>
+				<exclusion>
+					<!-- exclude swt meta package, because it relies on ${osgi.platform} property -->
+					<groupId>${swt.groupId}</groupId>
+					<artifactId>org.eclipse.swt</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -182,14 +185,4 @@
 			<scope>runtime</scope>
 		</dependency>
 	</dependencies>
-	<repositories>
-		<repository>
-			<id>maven-eclipse-repo</id>
-			<url>http://maven-eclipse.github.io/maven</url>
-		</repository>
-		<repository>
-			<id>maven-eclipse-repo-dev</id>
-			<url>http://maven-eclipse.github.io/dev-releases/maven</url>
-		</repository>
-	</repositories>
 </project>

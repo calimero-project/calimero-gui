@@ -13,7 +13,6 @@ repositories {
     mavenLocal()
     mavenCentral()
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
-    maven { url 'https://maven-eclipse.github.io/maven' } // swt libraries
 }
 
 apply plugin:'java'
@@ -35,23 +34,15 @@ targetCompatibility = 1.8
 
 mainClassName = 'tuwien.auto.calimero.gui.SwtChecker'
 
-// TODO excluding the swt which is picked up during compilation does not work for some reason
-applicationDistribution.exclude('org.eclipse.swt.*.jar')
-
-applicationDistribution.from(project.getProjectDir()) {
-    include 'LICENSE.txt' 
-//    include 'README.md'
-}
-
 // SWT is platform dependent
-def swtGroupId = 'org.eclipse.swt'
-def swtVersion = '4.6.1'
-def swtArtifact = swtGroupId
+def swtGroupId = 'org.eclipse.platform'
+def swtVersion = '3.106.2'
+def swtArtifact = 'org.eclipse.swt.'
 
 def os = System.getProperty("os.name").toLowerCase()
-if (os.contains("windows")) { swtArtifact += '.win32.win32.x86_64' }
-else if (os.contains("linux")) { swtArtifact += '.gtk.linux.x86_64' }
-else if (os.contains("mac")) { swtArtifact += '.cocoa.macosx.x86_64' }
+if (os.contains("windows")) { swtArtifact += 'win32.win32.x86_64' }
+else if (os.contains("linux")) { swtArtifact += 'gtk.linux.x86_64' }
+else if (os.contains("mac")) { swtArtifact += 'cocoa.macosx.x86_64' }
 
 
 sourceSets {
@@ -72,24 +63,37 @@ configurations {
 }
 
 dependencies {
-    compile "com.github.calimero:calimero-core:${version}"
-    compile "com.github.calimero:calimero-tools:${version}"
+    implementation "com.github.calimero:calimero-core:${version}"
+    implementation "com.github.calimero:calimero-tools:${version}"
     runtime "com.github.calimero:calimero-rxtx:${version}"
-    provided "${swtGroupId}:${swtArtifact}:${swtVersion}"
-    compile 'org.slf4j:slf4j-api:1.8.0-alpha2'
-    compile 'org.slf4j:slf4j-simple:1.8.0-alpha2'
-    // bogus dependency which we check for (& download) on application startup
-    compile files('swt.jar')
+    provided("${swtGroupId}:${swtArtifact}:${swtVersion}") {
+		exclude group: "${swtGroupId}", module: 'org.eclipse.swt' 
+    }
+    implementation 'org.slf4j:slf4j-api:1.8.0-beta1'
+    runtime 'org.slf4j:slf4j-simple:1.8.0-beta1'
 }
 
 jar {
   dependsOn configurations.runtime
   manifest {
     attributes(
-      'Class-Path': (configurations.runtime - configurations.provided).collect { it.getName() }.join(' '),
+      'Class-Path': (configurations.runtime - configurations.provided + files('swt.jar')).collect { it.getName() }.join(' '),
       'Main-Class': mainClassName
     )
   }
+}
+
+applicationDistribution.from(project.getProjectDir()) {
+    include 'LICENSE.txt' 
+//    include 'README.md'
+}
+
+distributions {
+    main {
+        contents {
+            exclude configurations.provided.collect { it.getName() }.join(' ')
+        }
+    }
 }
 
 startScripts {
