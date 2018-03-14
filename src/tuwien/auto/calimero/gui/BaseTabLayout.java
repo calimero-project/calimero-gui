@@ -520,6 +520,16 @@ class BaseTabLayout
 	}
 
 	/**
+	 * Adds a log string asynchronously to the log list.
+	 */
+	protected void asyncAddLog(final String msg, final Throwable t)
+	{
+		asyncAddLog("Error " + msg + ": " + t.toString());
+		for (Throwable i = t; i.getCause() != null && i != i.getCause(); i = i.getCause())
+			asyncAddLog("\t" + i.getCause().toString());
+	}
+
+	/**
 	 * Adds a list item asynchronously to the list.
 	 *
 	 * @param itemText list item text of each column

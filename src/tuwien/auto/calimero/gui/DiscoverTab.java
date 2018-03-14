@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2017 B. Malinowsky
+    Copyright (c) 2006, 2018 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -65,6 +65,9 @@ import org.eclipse.swt.widgets.TableItem;
 import org.usb4java.Device;
 import org.usb4java.LibUsb;
 
+import tuwien.auto.calimero.DeviceDescriptor;
+import tuwien.auto.calimero.DeviceDescriptor.DD0;
+import tuwien.auto.calimero.KNXException;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 import tuwien.auto.calimero.knxnetip.Discoverer.Result;
@@ -240,9 +243,20 @@ class DiscoverTab extends BaseTabLayout
 										sb.append(ind).append(manufacturer(d, vendorId, productId));
 
 										final String vp = String.format("%04x:%04x", vendorId, productId);
+
+										// check knx medium, defaults to TP1
+										int medium = KNXMediumSettings.MEDIUM_TP1;
+										try (UsbConnection c = new UsbConnection(vendorId, productId)) {
+											final DD0 dd0 = DeviceDescriptor.DD0.fromType0(c.getDeviceDescriptorType0());
+											medium = dd0.getMedium().getMedium();
+										}
+										catch (KNXException | InterruptedException | RuntimeException e) {
+											asyncAddLog("reading KNX device descriptor of " + d,  e);
+										}
+
 										addListItem(new String[] { sb.toString() },
-												new String[] { "protocol", "name", "port", },
-												new Object[] { Protocol.USB, product, vp });
+												new String[] { "protocol", "name", "port", "medium" },
+												new Object[] { Protocol.USB, product, vp, medium });
 									}
 									catch (final RuntimeException e) {
 										asyncAddLog("error: " + e.getMessage());
@@ -262,9 +276,10 @@ class DiscoverTab extends BaseTabLayout
 										sb.append(ind).append(manufacturer(d, vendorId, productId));
 										final String dev = "/dev/";
 
+										final int medium = KNXMediumSettings.MEDIUM_TP1;
 										addListItem(new String[] { sb.toString() },
-												new String[] { "protocol", "name", "port", },
-												new Object[] { Protocol.Tpuart, product, dev });
+												new String[] { "protocol", "name", "port", "medium" },
+												new Object[] { Protocol.Tpuart, product, dev, medium });
 									}
 									catch (final RuntimeException e) {
 										asyncAddLog("error: " + e.getMessage());
