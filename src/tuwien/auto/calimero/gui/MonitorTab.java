@@ -168,11 +168,18 @@ class MonitorTab extends BaseTabLayout
 					else if (raw instanceof RFLData) {
 						final RFLData rf = (RFLData) raw;
 						try {
-							item.add(DataUnitBuilder.decode(rf.getTpdu(), rf.getDestination()));
-							item.add(NetworkMonitor.decodeLteFrame(rf));
+							final String bibat = NetworkMonitor.decodeBibat(rf);
+							if (!bibat.isEmpty()) {
+								item.add(""); // leave tpci/apci column empty
+								item.add(bibat);
+							}
+							else {
+								item.add(DataUnitBuilder.decode(rf.getTpdu(), rf.getDestination()));
+								item.add(NetworkMonitor.decodeLteFrame(rf));
+							}
 						}
 						catch (final Exception ex) {
-							asyncAddLog("decoding LTE frame", ex);
+							asyncAddLog("decoding RF frame", ex);
 						}
 					}
 				}
