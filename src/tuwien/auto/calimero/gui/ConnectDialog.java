@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2017 B. Malinowsky
+    Copyright (c) 2006, 2018 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -158,8 +158,10 @@ class ConnectDialog
 				throw new IllegalStateException();
 			}
 			args.add(port);
-			args.add("--medium");
-			args.add(KNXMediumSettings.getMediumString(knxMedium));
+			if (knxMedium != 0) {
+				args.add("--medium");
+				args.add(KNXMediumSettings.getMediumString(knxMedium));
+			}
 			if (!knxAddress.isEmpty()) {
 				if (useRemoteAddressOption)
 					args.add("-r");

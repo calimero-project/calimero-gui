@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2015, 2017 B. Malinowsky
+    Copyright (c) 2015, 2018 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -58,8 +58,7 @@ class DeviceInfoTab extends BaseTabLayout
 
 	DeviceInfoTab(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, "Device info of " + args.knxAddress, "Read information using connection "
-				+ args.remote + " port " + args.port + (args.useNat() ? ", using NAT" : ""));
+		super(tf, "Device info of " + uniqueId(args), headerInfo(args, "Read info of "));
 		connect = args;
 
 		final TableColumn pid = new TableColumn(list, SWT.LEFT);
@@ -81,6 +80,9 @@ class DeviceInfoTab extends BaseTabLayout
 		list.removeAll();
 		log.removeAll();
 		final List<String> args = new ArrayList<String>();
+		// remove knx medium if we do local device info
+		if (connect.knxAddress.isEmpty())
+			connect.knxMedium = 0;
 		args.addAll(connect.getArgs(false));
 		asyncAddLog("Using command line: " + String.join(" ", args));
 
@@ -95,17 +97,23 @@ class DeviceInfoTab extends BaseTabLayout
 						list.setRedraw(false);
 						addItems(result, CommonParameter.values());
 						addItems(result, KnxipParameter.values());
+						addItems(result, CemiParameter.values());
+						addItems(result, RfParameter.values());
+//						addItems(result, InternalParameter.values());
 						list.setRedraw(true);
-						setHeaderInfo("Device information received from " + device + " over " + connect.remote
-								+ " port " + connect.port + (connect.useNat() ? ", using NAT" : ""));
 					});
 				}
 
 				@Override
-				protected void onCompletion(final Exception thrown, final boolean canceled)
-				{
+				protected void onCompletion(final Exception thrown, final boolean canceled) {
+					Main.asyncExec(() -> {
+						if (list.isDisposed())
+							return;
+						final String status = canceled ? "canceled" : "completed";
+						setHeaderInfo(connect, "Device info " + status + " for");
+					});
 					if (thrown != null)
-						asyncAddLog(thrown.toString());
+						asyncAddLog(thrown);
 				}
 
 				private void addItems(final Result result, final Parameter[] params)
