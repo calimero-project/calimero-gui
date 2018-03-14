@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2017 B. Malinowsky
+    Copyright (c) 2006, 2018 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -50,6 +50,7 @@ import tuwien.auto.calimero.KNXException;
 import tuwien.auto.calimero.cemi.CEMIBusMon;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.link.MonitorFrameEvent;
+import tuwien.auto.calimero.link.medium.RFLData;
 import tuwien.auto.calimero.link.medium.RawFrame;
 import tuwien.auto.calimero.link.medium.RawFrameBase;
 import tuwien.auto.calimero.tools.NetworkMonitor;
@@ -163,6 +164,16 @@ class MonitorTab extends BaseTabLayout
 						// asdu
 						final byte[] asdu = DataUnitBuilder.extractASDU(f.getTPDU());
 						item.add(DataUnitBuilder.toHex(asdu, " "));
+					}
+					else if (raw instanceof RFLData) {
+						final RFLData rf = (RFLData) raw;
+						try {
+							item.add(DataUnitBuilder.decode(rf.getTpdu(), rf.getDestination()));
+							item.add(NetworkMonitor.decodeLteFrame(rf));
+						}
+						catch (final Exception ex) {
+							asyncAddLog("decoding LTE frame", ex);
+						}
 					}
 				}
 				final String[] sa = item.toArray(new String[0]);
