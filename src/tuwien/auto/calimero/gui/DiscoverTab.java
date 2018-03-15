@@ -65,7 +65,6 @@ import org.eclipse.swt.widgets.TableItem;
 import org.usb4java.Device;
 import org.usb4java.LibUsb;
 
-import tuwien.auto.calimero.DeviceDescriptor;
 import tuwien.auto.calimero.DeviceDescriptor.DD0;
 import tuwien.auto.calimero.KNXException;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
@@ -247,8 +246,7 @@ class DiscoverTab extends BaseTabLayout
 										// check knx medium, defaults to TP1
 										int medium = KNXMediumSettings.MEDIUM_TP1;
 										try (UsbConnection c = new UsbConnection(vendorId, productId)) {
-											final DD0 dd0 = DeviceDescriptor.DD0.fromType0(c.getDeviceDescriptorType0());
-											medium = dd0.getMedium().getMedium();
+											medium = c.deviceDescriptor().medium().getMedium();
 										}
 										catch (KNXException | InterruptedException | RuntimeException e) {
 											asyncAddLog("reading KNX device descriptor of " + d,  e);
