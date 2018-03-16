@@ -36,9 +36,9 @@
 
 package tuwien.auto.calimero.gui;
 
-import java.text.SimpleDateFormat;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -115,21 +115,32 @@ class TunnelTab extends BaseTabLayout
 		}
 
 		@Override
-		protected void onGroupEvent(final ProcessEvent e)
-		{
-			final Datapoint dp = model.get(e.getDestination());
-			final String svc = e.getServiceCode() == 0x00 ? "read request"
-					: e.getServiceCode() == 0x40 ? "read response" : "write";
+		protected void onGroupEvent(final ProcessEvent e) {
+			final int sc = e.getServiceCode();
+			final String svc = sc == 0x00 ? "read"
+					: sc == 0b1111101000 ? "LTE read" : sc == 0x40 ? "read response" : sc == 0b1111101001
+							? "LTE read response"
+							: sc == 0b1111101010 ? "LTE write" : sc == 0b1111101011 ? "LTE info report" : "write";
 			try {
 				final byte[] asdu = e.getASDU();
 				String value = "[empty]";
-				if (asdu.length > 0)
-					value = dp != null && dp.getDPT() != null ? asString(asdu, dp.getMainNumber(), dp.getDPT()) : "n/a";
+				if (asdu.length > 0) {
+					if ((sc & 0b1111111100) == 0b1111101000) {
+						// group property service
+						final LteProcessEvent lteEvent = (LteProcessEvent) e;
+						value = decodeLteFrame(lteEvent.extFrameFormat, e.getDestination(), lteEvent.tpdu());
+					}
+					else {
+						final Datapoint dp = model.get(e.getDestination());
+						value = dp != null && dp.getDPT() != null ? asString(asdu, dp.getMainNumber(), dp.getDPT())
+								: "n/a";
+					}
+				}
 
-				final String now = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
+				final String now = LocalTime.now().truncatedTo(ChronoUnit.MILLIS).toString();
 				final String[] item = new String[] { "" + ++eventCounter, "" + eventCounterFiltered, now,
-					e.getSourceAddr().toString(), e.getDestination().toString(), svc,
-					DataUnitBuilder.toHex(asdu, " "), value };
+					e.getSourceAddr().toString(), e.getDestination().toString(), svc, DataUnitBuilder.toHex(asdu, " "),
+					value };
 				if (applyFilter(item))
 					return;
 				// increment filtered counter after filter
@@ -197,7 +208,7 @@ class TunnelTab extends BaseTabLayout
 	protected void initWorkAreaTop()
 	{
 		super.initWorkAreaTop();
-		addResetAndExport("_tunnel.csv");
+		addResetAndExport("_groupmon.csv");
 	}
 
 	@Override
@@ -384,6 +395,7 @@ class TunnelTab extends BaseTabLayout
 		final java.util.List<String> args = new ArrayList<String>();
 		args.add("--verbose");
 		args.addAll(connect.getArgs(true));
+		args.add("--lte");
 		args.add("monitor");
 		asyncAddLog("Using command line: " + String.join(" ", args));
 
