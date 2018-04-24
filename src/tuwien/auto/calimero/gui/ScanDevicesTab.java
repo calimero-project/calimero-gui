@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2015, 2017 B. Malinowsky
+    Copyright (c) 2015, 2018 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -125,7 +125,8 @@ class ScanDevicesTab extends BaseTabLayout
 						}
 
 						final String status = canceled ? "canceled" : "completed";
-						setHeaderInfo(connect, "Device scan " + status);
+						setHeaderInfo(headerInfo(connect, "Device scan " + status + " for")
+								+ " (select a found device for reading KNX device info)");
 					});
 				}
 			};
