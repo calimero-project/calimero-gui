@@ -65,7 +65,6 @@ import org.eclipse.swt.widgets.TableItem;
 import org.usb4java.Device;
 import org.usb4java.LibUsb;
 
-import tuwien.auto.calimero.DeviceDescriptor.DD0;
 import tuwien.auto.calimero.KNXException;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
