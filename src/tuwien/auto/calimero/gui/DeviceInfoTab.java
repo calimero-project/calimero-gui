@@ -44,7 +44,7 @@ import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
-import tuwien.auto.calimero.IndividualAddress;
+import tuwien.auto.calimero.DataUnitBuilder;
 import tuwien.auto.calimero.KNXIllegalArgumentException;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.tools.DeviceInfo;
@@ -58,7 +58,7 @@ class DeviceInfoTab extends BaseTabLayout
 
 	DeviceInfoTab(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, "Device info of " + uniqueId(args), headerInfo(args, "Read info of "));
+		super(tf, "Device info of " + uniqueId(args), headerInfo(args, "Read info of ") + " ...");
 		connect = args;
 
 		final TableColumn pid = new TableColumn(list, SWT.LEFT);
@@ -89,18 +89,10 @@ class DeviceInfoTab extends BaseTabLayout
 		try {
 			final DeviceInfo config = new DeviceInfo(args.toArray(new String[0])) {
 				@Override
-				protected void onDeviceInformation(final IndividualAddress device, final Result result)
-				{
+				protected void onDeviceInformation(final Parameter parameter, final String value, final byte[] raw) {
 					Main.asyncExec(() -> {
-						if (list.isDisposed())
-							return;
-						list.setRedraw(false);
-						addItems(result, CommonParameter.values());
-						addItems(result, KnxipParameter.values());
-						addItems(result, CemiParameter.values());
-						addItems(result, RfParameter.values());
-//						addItems(result, InternalParameter.values());
-						list.setRedraw(true);
+						if (!list.isDisposed())
+							addItem(parameter, value, raw);
 					});
 				}
 
@@ -116,17 +108,11 @@ class DeviceInfoTab extends BaseTabLayout
 						asyncAddLog(thrown);
 				}
 
-				private void addItems(final Result result, final Parameter[] params)
-				{
-					for (final Parameter p : params) {
-						final String s = result.formatted(p);
-						if (s != null) {
-							final TableItem i = new TableItem(list, SWT.NONE);
-							final String param = p.name().replaceAll("([A-Z])", " $1").replace("I P", "IP").trim();
-							final String raw = result.raw(p).map((v) -> v.toString()).orElse("n/a");
-							i.setText(new String[] { param, result.formatted(p), raw });
-						}
-					}
+				private void addItem(final Parameter p, final String value, final byte[] raw) {
+					final String param = p.name().replaceAll("([A-Z])", " $1").replace("I P", "IP").trim();
+					final String rawString = DataUnitBuilder.toHex(raw, "");
+					final TableItem i = new TableItem(list, SWT.NONE);
+					i.setText(new String[] { param, value, rawString });
 				}
 			};
 			new Thread(config).start();
