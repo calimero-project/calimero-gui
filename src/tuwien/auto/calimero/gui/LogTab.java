@@ -62,7 +62,7 @@ class LogTab extends BaseTabLayout
 {
 	private static final String[] levels = new String[] { "Error", "Warn", "Info", "Debug", "Trace" };
 
-	private static final int maxHistorySize = 500;
+	private static final int maxHistorySize = 1000;
 	private static final List<String> logHistory = new ArrayList<>(maxHistorySize);
 
 	private Button clear;
