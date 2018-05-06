@@ -249,8 +249,14 @@ public class Main
 
 		addToolbarLabel(functions, "Device Address:");
 		address = new Text(functions, SWT.CENTER);
-		address.setMessage("x.y.z");
-		address.setText("XX.XX.XXX");
+		address.setMessage("area.line.dev");
+		address.setToolTipText("Specify device address for\n"
+				+ "  \u2022 reading remote device info\n"
+				+ "  \u2022 opening remote property/memory editor\n"
+				+ "Scan devices:\n"
+				+ "  \u2022 specify area for scanning an area\n"
+				+ "  \u2022 specify area.line for scanning a line");
+		address.setText("XXX.XXX.XXX");
 		final ToolItem item = addNonToolItem(functions, address);
 		item.setWidth(address.computeSize(SWT.DEFAULT, SWT.DEFAULT, true).x);
 		address.setText("");
