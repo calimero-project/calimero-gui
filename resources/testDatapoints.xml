@@ -1,26 +1,24 @@
 <datapoints>
     <datapoint stateBased="true" name="DP 1" mainNumber="1" dptID="1.001" priority="low">
-        <!-- a KNX address is written as plain integer representation 
-             (not formatted as group or individual address) -->
-        <knxAddress type="group">2049</knxAddress>
+        <knxAddress type="group">1/0/1</knxAddress>
         <expiration timeout="0" />
         <updatingAddresses></updatingAddresses>
         <invalidatingAddresses></invalidatingAddresses>
     </datapoint>
-    <datapoint stateBased="true" name="DP 2" mainNumber="1" dptID="1.001" priority="low">
-        <knxAddress type="group">2</knxAddress>
+    <datapoint stateBased="true" name="DP 2" mainNumber="2" dptID="2.001" priority="low">
+        <knxAddress type="group">1/0/2</knxAddress>
         <expiration timeout="0" />
         <updatingAddresses></updatingAddresses>
         <invalidatingAddresses></invalidatingAddresses>
     </datapoint>
-    <datapoint stateBased="true" name="DP 3" mainNumber="1" dptID="1.001" priority="low">
-        <knxAddress type="group">3</knxAddress>
+    <datapoint stateBased="true" name="DP 3" mainNumber="20" dptID="20.102" priority="low">
+        <knxAddress type="group">1/0/3</knxAddress>
         <expiration timeout="0" />
         <updatingAddresses></updatingAddresses>
         <invalidatingAddresses></invalidatingAddresses>
     </datapoint>
     <datapoint stateBased="true" name="DP 4" mainNumber="7" dptID="7.001" priority="low">
-        <knxAddress type="group">4</knxAddress>
+        <knxAddress type="group">1/0/4</knxAddress>
         <expiration timeout="0" />
         <updatingAddresses></updatingAddresses>
         <invalidatingAddresses></invalidatingAddresses>
