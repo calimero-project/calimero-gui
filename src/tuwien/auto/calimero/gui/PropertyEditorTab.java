@@ -149,6 +149,7 @@ class PropertyEditorTab extends BaseTabLayout
 	private Composite propertyPage;
 	private TableEditor editor;
 	private Combo bounds;
+	private Button cancel;
 
 	private final ConnectArguments connect;
 	private final boolean remotePropertySvc;
@@ -230,7 +231,22 @@ class PropertyEditorTab extends BaseTabLayout
 	protected void initWorkAreaTop()
 	{
 		super.initWorkAreaTop();
+		addCancelButton();
 		addResetAndExport(false, ".csv");
+	}
+
+	private void addCancelButton() {
+		((GridLayout) top.getLayout()).numColumns = 3;
+		cancel = new Button(top, SWT.NONE);
+		cancel.setFont(Main.font);
+		cancel.setText("Cancel");
+		cancel.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(final SelectionEvent e) {
+				toolThread.interrupt();
+				asyncAddLog("Cancel property access");
+			}
+		});
 	}
 
 	@Override
@@ -962,6 +978,10 @@ class PropertyEditorTab extends BaseTabLayout
 
 	private void runCommand(final String... cmd)
 	{
+		if (!toolThread.isAlive()) {
+			runProperties(Collections.emptyList(), false);
+			cancel.setEnabled(true);
+		}
 		synchronized (commands) {
 			commands.add(cmd);
 			commands.notify();
@@ -983,7 +1003,7 @@ class PropertyEditorTab extends BaseTabLayout
 		asyncAddLog("Using command line: " + String.join(" ", args));
 		setHeaderInfo(statusInfo(0));
 
-		toolThread = new Thread("Calimero property tool") {
+		toolThread = new Thread("Calimero property editor") {
 			@Override
 			public void run()
 			{
@@ -1082,7 +1102,10 @@ class PropertyEditorTab extends BaseTabLayout
 							if (thrown != null) {
 								asyncAddLog(thrown);
 							}
-							Main.asyncExec(() -> setHeaderInfo(statusInfo(2)));
+							Main.asyncExec(() -> {
+								setHeaderInfo(statusInfo(2));
+								cancel.setEnabled(false);
+							});
 						}
 					};
 					tool.run();
@@ -1099,7 +1122,7 @@ class PropertyEditorTab extends BaseTabLayout
 	private String statusInfo(final int phase)
 	{
 		final String status = phase == 0 ? "Connecting to"
-				: phase == 1 ? "Reading properties of device" : phase == 2 ? "Completed reading properties of device" : "Unknown";
+				: phase == 1 ? "Reading properties of device" : phase == 2 ? "Completed property access of device" : "Unknown";
 		final String device = connect.knxAddress.isEmpty() ? "" : " " + connect.knxAddress;
 		return status + device + (connect.remote == null ? "" : " " + connect.remote) + " on port " + connect.port
 				+ (connect.useNat() ? " (using NAT)" : "");

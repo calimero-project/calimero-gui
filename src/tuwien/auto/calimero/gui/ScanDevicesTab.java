@@ -41,8 +41,12 @@ import java.util.List;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
@@ -57,6 +61,8 @@ import tuwien.auto.calimero.tools.ScanDevices;
 class ScanDevicesTab extends BaseTabLayout
 {
 	private final ConnectArguments connect;
+	private Button cancel;
+	private Thread worker;
 
 	ScanDevicesTab(final CTabFolder tf, final ConnectArguments args)
 	{
@@ -87,6 +93,34 @@ class ScanDevicesTab extends BaseTabLayout
 		});
 
 		scanDevices();
+	}
+
+	@Override
+	protected void initWorkAreaTop() {
+		super.initWorkAreaTop();
+		addCancelButton();
+	}
+
+	private void addCancelButton() {
+		((GridLayout) top.getLayout()).numColumns = 3;
+		cancel = new Button(top, SWT.NONE);
+		cancel.setFont(Main.font);
+		cancel.setText("Cancel");
+		cancel.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(final SelectionEvent e) {
+				if (worker != null) {
+					worker.interrupt();
+					asyncAddLog("Canceled device scan");
+				}
+			}
+		});
+	}
+
+	@Override
+	protected void onDispose(final DisposeEvent e) {
+		if (worker != null)
+			worker.interrupt();
 	}
 
 	private void scanDevices()
@@ -127,10 +161,12 @@ class ScanDevicesTab extends BaseTabLayout
 						final String status = canceled ? "canceled" : "completed";
 						setHeaderInfo(headerInfo(connect, "Device scan " + status + " for")
 								+ " (select a found device for reading KNX device info)");
+						cancel.setEnabled(false);
 					});
 				}
 			};
-			new Thread(config).start();
+			worker = new Thread(config, "Calimero device scan");
+			worker.start();
 		}
 		catch (final KNXIllegalArgumentException e) {
 			asyncAddLog("error: " + e.getMessage());
