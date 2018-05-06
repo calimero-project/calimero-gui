@@ -511,6 +511,7 @@ class BaseTabLayout
 	protected void asyncAddLog(final Throwable t)
 	{
 		asyncAddLog("Error: " + t.toString());
+		asyncAddLog("\t" + t.getStackTrace()[0]);
 		for (Throwable i = t; i.getCause() != null && i != i.getCause(); i = i.getCause())
 			asyncAddLog("\t" + i.getCause().toString());
 //		final StringWriter w = new StringWriter();
