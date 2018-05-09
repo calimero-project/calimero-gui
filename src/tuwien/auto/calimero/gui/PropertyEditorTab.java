@@ -131,7 +131,7 @@ class PropertyEditorTab extends BaseTabLayout
 	private static final String ObjectType = "Object Type";
 
 	private enum Columns {
-		Count, Pid, Name, Elements, Values, RawValues, AccessLevel, Description,
+		Count, Pid, Description, Values, RawValues, Elements, AccessLevel, Name,
 	}
 
 	private static final List<PropertyClient.Property> definitions = new ArrayList<>();
@@ -187,24 +187,24 @@ class PropertyEditorTab extends BaseTabLayout
 		final TableColumn pid = new TableColumn(list, SWT.RIGHT);
 		pid.setText("PID");
 		pid.setWidth(numberWidth);
-		final TableColumn name = new TableColumn(list, SWT.LEFT);
-		name.setText("Name");
-		name.setWidth(50);
-		final TableColumn elems = new TableColumn(list, SWT.RIGHT);
-		elems.setText("Elements");
-		elems.setWidth(numberWidth);
+		final TableColumn desc = new TableColumn(list, SWT.LEFT);
+		desc.setText("Description");
+		desc.setWidth(75);
 		final TableColumn values = new TableColumn(list, SWT.LEFT);
 		values.setText("Value(s)");
 		values.setWidth(60);
 		final TableColumn raw = new TableColumn(list, SWT.LEFT);
 		raw.setText("Raw (hex)");
 		raw.setWidth(80);
+		final TableColumn elems = new TableColumn(list, SWT.RIGHT);
+		elems.setText("Elements");
+		elems.setWidth(numberWidth);
 		final TableColumn rw = new TableColumn(list, SWT.LEFT);
 		rw.setText("R/W Level");
 		rw.setWidth(25);
-		final TableColumn desc = new TableColumn(list, SWT.LEFT);
-		desc.setText("Description");
-		desc.setWidth(80);
+		final TableColumn name = new TableColumn(list, SWT.LEFT);
+		name.setText("Property Name");
+		name.setWidth(55);
 		enableColumnAdjusting();
 		list.addSelectionListener(adapt(this::updateDptBounds));
 
@@ -341,7 +341,7 @@ class PropertyEditorTab extends BaseTabLayout
 
 		tree.addSelectionListener(adapt(this::updateDetailPane));
 
-		sashForm.setWeights(new int[] { 1, 3, 3 });
+		sashForm.setWeights(new int[] { 1, 4, 4 });
 	}
 
 	private void addTreeViewOption()
@@ -620,13 +620,14 @@ class PropertyEditorTab extends BaseTabLayout
 		final PropertyClient.Property p = getDefinition(d.getObjectType(), d.getPID()).orElse(unknown);
 		final String name = p.getPIDName();
 		final String desc = p.getName();
-		final String rw = d.getReadLevel() + "/" + d.getWriteLevel() + (d.isWriteEnabled() ? "" : " (read-only)");
+		final Object writeLevel = d.isWriteEnabled() ? d.getWriteLevel() : "x";
+		final String rw = d.getReadLevel() + "/" + writeLevel + (d.isWriteEnabled() ? "" : " (read-only)");
 
 		final String value = formatted(d.getObjectType(), d.getPID(), values.getOrDefault(d, ""));
 		final List<byte[]> raw = rawValues.getOrDefault(d, Collections.emptyList());
 		final String rawText = raw.stream().map(bytes -> DataUnitBuilder.toHex(bytes, "")).collect(joining(", "));
-		final String[] item = { "" + count++, "" + d.getPID(), name, "" + d.getCurrentElements(), value, rawText, rw,
-			desc };
+		final String[] item = { "" + count++, "" + d.getPID(), desc, value, rawText, "" + d.getCurrentElements(), rw,
+			name };
 		asyncAddListItem(item, keys, data);
 	}
 
@@ -1163,6 +1164,9 @@ class PropertyEditorTab extends BaseTabLayout
 				return asGroupAddresses(value);
 			if (pid == PID.DESCRIPTION)
 				return asString(value);
+			if (pid == PID.OBJECT_NAME)
+				return strip(value).stream().map(Integer::parseInt)
+						.collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append).toString();
 
 			if (objectType == 11) {
 				if (pid == PID.ADDITIONAL_INDIVIDUAL_ADDRESSES || pid == PID.KNX_INDIVIDUAL_ADDRESS)
