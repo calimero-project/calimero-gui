@@ -5,7 +5,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.github.ben-manes:gradle-versions-plugin:0.15.0'
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.17.0'
     }
 }
 
@@ -37,7 +37,7 @@ mainClassName = 'tuwien.auto.calimero.gui.SwtChecker'
 
 // SWT is platform dependent
 def swtGroupId = 'org.eclipse.platform'
-def swtVersion = '3.106.2'
+def swtVersion = '3.106.3'
 def swtArtifact = 'org.eclipse.swt.'
 
 def os = System.getProperty("os.name").toLowerCase()
