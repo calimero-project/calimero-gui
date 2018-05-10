@@ -20,7 +20,7 @@ apply plugin:'application'
 apply plugin:'com.github.ben-manes.versions'
 apply plugin:'eclipse'
 
-version = '2.4-SNAPSHOT'
+version = '2.4-rc1'
 
 def date() {
     new Date().format('yyyyMMdd')
