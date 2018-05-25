@@ -36,13 +36,20 @@
 
 package tuwien.auto.calimero.gui;
 
-import java.time.LocalTime;
-import java.time.temporal.ChronoUnit;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -69,7 +76,6 @@ import tuwien.auto.calimero.GroupAddress;
 import tuwien.auto.calimero.KNXAddress;
 import tuwien.auto.calimero.KNXException;
 import tuwien.auto.calimero.KNXFormatException;
-import tuwien.auto.calimero.KNXIllegalArgumentException;
 import tuwien.auto.calimero.datapoint.Datapoint;
 import tuwien.auto.calimero.datapoint.DatapointMap;
 import tuwien.auto.calimero.datapoint.StateDP;
@@ -138,14 +144,16 @@ class TunnelTab extends BaseTabLayout
 					}
 				}
 
-				final String now = LocalTime.now().truncatedTo(ChronoUnit.MILLIS).toString();
+				final Instant now = Instant.now();
+				final String date = dateFormatter.format(now);
+				final String time = timeFormatter.format(now);
 				final String dst;
 				if (e instanceof LteProcessEvent)
 					dst = lteTag(((LteProcessEvent) e).extFrameFormat, e.getDestination());
 				else
 					dst = e.getDestination().toString();
 
-				final String[] item = new String[] { "" + ++eventCounter, "" + eventCounterFiltered, now,
+				final String[] item = new String[] { "" + ++eventCounter, "" + eventCounterFiltered, date, time,
 					e.getSourceAddr().toString(), dst, svc, DataUnitBuilder.toHex(asdu, " "),
 					value };
 				if (applyFilter(item))
@@ -154,8 +162,8 @@ class TunnelTab extends BaseTabLayout
 				++eventCounterFiltered;
 				asyncAddListItem(item, null, null);
 			}
-			catch (KNXException | KNXIllegalArgumentException e1) {
-				asyncAddLog("error: " + e1.getMessage());
+			catch (KNXException | RuntimeException e1) {
+				asyncAddLog(e1);
 			}
 		}
 	}
@@ -168,6 +176,9 @@ class TunnelTab extends BaseTabLayout
 	private long eventCounter;
 	private long eventCounterFiltered = 1;
 	private final ConnectArguments connect;
+
+	private final DateTimeFormatter dateFormatter;
+	private final DateTimeFormatter timeFormatter;
 
 	TunnelTab(final CTabFolder tf, final ConnectArguments args)
 	{
@@ -183,6 +194,9 @@ class TunnelTab extends BaseTabLayout
 		final TableColumn cntf = new TableColumn(list, SWT.RIGHT);
 		cntf.setText("# (Filtered)");
 		cntf.setWidth(40);
+		final TableColumn date = new TableColumn(list, SWT.RIGHT);
+		date.setText("Date");
+		date.setWidth(35);
 		final TableColumn time = new TableColumn(list, SWT.RIGHT);
 		time.setText("Time");
 		time.setWidth(35);
@@ -206,6 +220,24 @@ class TunnelTab extends BaseTabLayout
 		final String filter = args.remote == null ? args.port : args.remote;
 		addLogIncludeFilter(".*" + Pattern.quote(filter) + ".*");
 		addLogExcludeFilter(".*Discoverer.*", ".*DevMgmt.*", ".*calimero\\.mgmt\\..*");
+
+		DateTimeFormatter dfmt = DateTimeFormatter.ISO_LOCAL_DATE;
+		DateTimeFormatter tfmt = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
+		// check optional config file for user-specific date/time formats
+		try {
+			final Path config = Paths.get(".calimero-gui.config");
+			if (Files.exists(config)) {
+				final Map<String, String> formats = Files.lines(config).filter(s -> s.startsWith("monitor")).collect(Collectors
+						.toMap((final String s) -> s.substring(0, s.indexOf("=")), (final String s) -> s.substring(s.indexOf("=") + 1)));
+				dfmt = Optional.ofNullable(formats.get("monitor.dateFormat")).map(DateTimeFormatter::ofPattern).orElse(dfmt);
+				tfmt = Optional.ofNullable(formats.get("monitor.timeFormat")).map(DateTimeFormatter::ofPattern).orElse(tfmt);
+			}
+		}
+		catch (IOException | RuntimeException e) {
+			asyncAddLog(e);
+		}
+		dateFormatter = dfmt.withZone(ZoneId.systemDefault());
+		timeFormatter = tfmt.withZone(ZoneId.systemDefault());
 
 		initFilterMenu();
 		openGroupMonitor();
