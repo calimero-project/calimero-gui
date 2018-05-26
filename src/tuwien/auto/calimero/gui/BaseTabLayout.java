@@ -511,13 +511,10 @@ class BaseTabLayout
 	protected void asyncAddLog(final Throwable t)
 	{
 		asyncAddLog("Error: " + t.toString());
-		asyncAddLog("\t" + t.getStackTrace()[0]);
+		final java.util.List<StackTraceElement> trace = Arrays.asList(t.getStackTrace());
+		trace.stream().filter(e -> e.getClassName().startsWith("tuwien")).findFirst().map(e -> "\t" + e).ifPresent(this::asyncAddLog);
 		for (Throwable i = t; i.getCause() != null && i != i.getCause(); i = i.getCause())
 			asyncAddLog("\t" + i.getCause().toString());
-//		final StringWriter w = new StringWriter();
-//		t.printStackTrace(new PrintWriter(w));
-//		final String[] s = w.toString().split("\\R");
-//		Arrays.stream(s).forEach(this::asyncAddLog);
 	}
 
 	/**
