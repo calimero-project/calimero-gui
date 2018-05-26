@@ -36,8 +36,18 @@
 
 package tuwien.auto.calimero.gui;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -65,6 +75,9 @@ class MonitorTab extends BaseTabLayout
 	private long eventCounterFiltered = 1;
 	private final ConnectArguments connect;
 
+	private final DateTimeFormatter dateFormatter;
+	private final DateTimeFormatter timeFormatter;
+
 	MonitorTab(final CTabFolder tf, final ConnectArguments args)
 	{
 		super(tf, "Monitor for " + args.name, "Open monitor"
@@ -74,16 +87,22 @@ class MonitorTab extends BaseTabLayout
 
 		final TableColumn cnt = new TableColumn(list, SWT.RIGHT);
 		cnt.setText("#");
-		cnt.setWidth(30);
+		cnt.setWidth(25);
 		final TableColumn cntf = new TableColumn(list, SWT.RIGHT);
 		cntf.setText("# (Filtered)");
 		cntf.setWidth(45);
+		final TableColumn date = new TableColumn(list, SWT.RIGHT);
+		date.setText("Date");
+		date.setWidth(40);
+		final TableColumn time = new TableColumn(list, SWT.RIGHT);
+		time.setText("Time");
+		time.setWidth(40);
 		final TableColumn timestamp = new TableColumn(list, SWT.RIGHT);
 		timestamp.setText("Timestamp");
-		timestamp.setWidth(80);
+		timestamp.setWidth(60);
 		final TableColumn status = new TableColumn(list, SWT.LEFT);
 		status.setText("Sequence / status");
-		status.setWidth(100);
+		status.setWidth(80);
 		final TableColumn raw = new TableColumn(list, SWT.LEFT);
 		raw.setText("Raw frame");
 		raw.setWidth(150);
@@ -101,6 +120,24 @@ class MonitorTab extends BaseTabLayout
 		final String filter = args.remote == null ? args.port : args.remote;
 		addLogIncludeFilter(".*" + Pattern.quote(filter) + ".*");
 		addLogExcludeFilter(".*Discoverer.*", ".*DevMgmt.*", ".*calimero\\.mgmt\\..*");
+
+		DateTimeFormatter dfmt = DateTimeFormatter.ISO_LOCAL_DATE;
+		DateTimeFormatter tfmt = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
+		// check optional config file for user-specific date/time formats
+		try {
+			final Path config = Paths.get(".calimero-gui.config");
+			if (Files.exists(config)) {
+				final Map<String, String> formats = Files.lines(config).filter(s -> s.startsWith("monitor")).collect(Collectors
+						.toMap((final String s) -> s.substring(0, s.indexOf("=")), (final String s) -> s.substring(s.indexOf("=") + 1)));
+				dfmt = Optional.ofNullable(formats.get("monitor.dateFormat")).map(DateTimeFormatter::ofPattern).orElse(dfmt);
+				tfmt = Optional.ofNullable(formats.get("monitor.timeFormat")).map(DateTimeFormatter::ofPattern).orElse(tfmt);
+			}
+		}
+		catch (IOException | RuntimeException e) {
+			asyncAddLog(e);
+		}
+		dateFormatter = dfmt.withZone(ZoneId.systemDefault());
+		timeFormatter = tfmt.withZone(ZoneId.systemDefault());
 
 		initFilterMenu();
 		startMonitor();
@@ -144,6 +181,10 @@ class MonitorTab extends BaseTabLayout
 				// monitor event counters
 				item.add(Long.toString(++eventCounter));
 				item.add(Long.toString(eventCounterFiltered));
+				// date/time
+				final Instant now = Instant.now();
+				item.add(dateFormatter.format(now));
+				item.add(timeFormatter.format(now));
 				// timestamp
 				item.add(Long.toString(((CEMIBusMon) e.getFrame()).getTimestamp()));
 				final String s = e.getFrame().toString();
