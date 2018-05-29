@@ -255,7 +255,8 @@ public class Main
 				+ "  \u2022 opening remote property/memory editor\n"
 				+ "Scan devices:\n"
 				+ "  \u2022 specify area for scanning an area\n"
-				+ "  \u2022 specify area.line for scanning a line");
+				+ "  \u2022 specify area.line for scanning a line\n"
+				+ "  \u2022 specify area.line.device to scan a single device");
 		address.setText("XXX.XXX.XXX");
 		final ToolItem item = addNonToolItem(functions, address);
 		item.setWidth(address.computeSize(SWT.DEFAULT, SWT.DEFAULT, true).x);
