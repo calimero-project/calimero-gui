@@ -252,6 +252,14 @@ class ConnectDialog
 		configKNXAddress.setText("KNX device address (optional): ");
 		final Text knxAddr = new Text(c, SWT.BORDER);
 		knxAddr.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		knxAddr.setMessage("area.line.device");
+		knxAddr.setToolTipText("Specify device address for\n"
+				+ "  \u2022 reading remote device info\n"
+				+ "  \u2022 opening remote property/memory editor\n"
+				+ "Scan devices:\n"
+				+ "  \u2022 specify area for scanning an area\n"
+				+ "  \u2022 specify area.line for scanning a line\n"
+				+ "  \u2022 specify area.line.device to scan a single device");
 
 		final Composite mode = new Composite(shell, SWT.NONE);
 		final RowLayout col = new RowLayout(SWT.VERTICAL);
