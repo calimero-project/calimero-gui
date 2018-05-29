@@ -70,6 +70,7 @@ import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 import tuwien.auto.calimero.knxnetip.Discoverer.Result;
 import tuwien.auto.calimero.knxnetip.servicetype.SearchResponse;
+import tuwien.auto.calimero.knxnetip.util.ServiceFamiliesDIB;
 import tuwien.auto.calimero.link.medium.KNXMediumSettings;
 import tuwien.auto.calimero.log.LogService.LogLevel;
 import tuwien.auto.calimero.serial.LibraryAdapter;
@@ -142,12 +143,13 @@ class DiscoverTab extends BaseTabLayout
 			return Optional.empty();
 
 		final TableItem defaultInterface = item.get();
-		final ConnectArguments args = new ConnectArguments((Protocol) defaultInterface.getData("protocol"),
-				(String) defaultInterface.getData("localEP"), (String) defaultInterface.getData("host"),
+		final Protocol protocol = (Protocol) defaultInterface.getData("protocol");
+		final String remote = (String) (protocol == Protocol.Tunneling ? defaultInterface.getData("host")
+				: defaultInterface.getData("mcast"));
+		final ConnectArguments args = new ConnectArguments(protocol, (String) defaultInterface.getData("localEP"), remote,
 				(String) defaultInterface.getData("port"), nat.getSelection(), "", "");
 		args.name = (String) defaultInterface.getData("name");
-		args.knxMedium = Optional.ofNullable((Integer) defaultInterface.getData("medium"))
-				.orElse(KNXMediumSettings.MEDIUM_TP1);
+		args.knxMedium = Optional.ofNullable((Integer) defaultInterface.getData("medium")).orElse(KNXMediumSettings.MEDIUM_TP1);
 		return Optional.of(args);
 	}
 
@@ -359,9 +361,15 @@ class DiscoverTab extends BaseTabLayout
 		}
 		catch (final UnknownHostException e) {}
 
+		boolean tunneling = false;
+		for (final int id : r.getServiceFamilies().getFamilyIds())
+			if (id == ServiceFamiliesDIB.TUNNELING)
+				tunneling = true;
+		final Protocol protocol = tunneling ? Protocol.Tunneling : Protocol.Routing;
+
 		addListItem(new String[] { newItem },
 				new String[] { "protocol", "localEP", "name", "host", "port", "mcast", "medium" },
-				new Object[] { Protocol.Tunneling, result.getAddress().getHostAddress(), r.getDevice().getName(),
+				new Object[] { protocol, result.getAddress().getHostAddress(), r.getDevice().getName(),
 					r.getControlEndpoint().getAddress().getHostAddress(),
 					Integer.toString(r.getControlEndpoint().getPort()), mcast, r.getDevice().getKNXMedium() });
 	}
