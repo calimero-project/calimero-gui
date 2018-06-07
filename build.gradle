@@ -20,7 +20,7 @@ apply plugin:'application'
 apply plugin:'com.github.ben-manes.versions'
 apply plugin:'eclipse'
 
-version = '2.4-SNAPSHOT'
+version = '2.5-SNAPSHOT'
 
 def date() {
     new Date().format('yyyyMMdd')
@@ -30,8 +30,8 @@ def buildClassifier = date()
 distZip.classifier = buildClassifier
 distTar.classifier = buildClassifier
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 9
+targetCompatibility = 9
 
 mainClassName = 'tuwien.auto.calimero.gui.SwtChecker'
 
