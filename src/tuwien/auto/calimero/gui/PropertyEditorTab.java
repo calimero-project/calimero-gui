@@ -1167,6 +1167,8 @@ class PropertyEditorTab extends BaseTabLayout
 			if (pid == PID.OBJECT_NAME)
 				return strip(value).stream().map(Integer::parseInt)
 						.collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append).toString();
+			if (pid == PID.PROGRAM_VERSION)
+				return programVersion(value);
 
 			if (objectType == 11) {
 				if (pid == PID.ADDITIONAL_INDIVIDUAL_ADDRESSES || pid == PID.KNX_INDIVIDUAL_ADDRESS)
@@ -1241,6 +1243,21 @@ class PropertyEditorTab extends BaseTabLayout
 		catch (final UnknownHostException e) {
 			return value;
 		}
+	}
+
+	private static String programVersion(final String value) {
+		final byte[] data = fromHex(value.replace("0x", ""));
+		if (data.length != 5)
+			return DataUnitBuilder.toHex(data, "");
+		return String.format("%x%02x %02x%02x v%d.%d", data[0], data[1], data[2], data[3], (data[4] & 0xff) >> 4, data[4] & 0xf);
+	}
+
+	private static byte[] fromHex(final String hex) {
+		final int len = hex.length();
+		final byte[] data = new byte[len / 2];
+		for (int i = 0; i < len; i += 2)
+			data[i / 2] = (byte) ((Character.digit(hex.charAt(i), 16) << 4) + Character.digit(hex.charAt(i + 1), 16));
+		return data;
 	}
 
 	private static List<String> strip(final String value)
