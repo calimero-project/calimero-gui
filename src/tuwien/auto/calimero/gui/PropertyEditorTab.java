@@ -559,7 +559,7 @@ class PropertyEditorTab extends BaseTabLayout
 	{
 		final GC gc = new GC(field);
 		final FontMetrics fm = gc.getFontMetrics();
-		final int width = columns * fm.getAverageCharWidth();
+		final int width = (int) (columns * fm.getAverageCharacterWidth());
 		gc.dispose();
 		field.setLayoutData(new RowData(field.computeSize(width, 0).x, SWT.DEFAULT));
 	}
