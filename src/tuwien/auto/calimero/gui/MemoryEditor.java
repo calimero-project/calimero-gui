@@ -379,9 +379,9 @@ class MemoryEditor extends BaseTabLayout
 			c.setText(" ");
 			final GC gc = new GC(asciiView);
 			final FontMetrics fm = gc.getFontMetrics();
-			final int charWidth = fm.getAverageCharWidth();
+			final int charWidth = (int) (3 * fm.getAverageCharacterWidth());
 			gc.dispose();
-			c.setWidth(Math.max(width, 3 * charWidth));
+			c.setWidth(Math.max(width, charWidth));
 		}
 		asciiView.setLinesVisible(true);
 		asciiView.setHeaderVisible(true);
