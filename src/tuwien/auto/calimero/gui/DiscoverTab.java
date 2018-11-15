@@ -83,6 +83,7 @@ import tuwien.auto.calimero.tools.Discover;
 class DiscoverTab extends BaseTabLayout
 {
 	private Button nat;
+	Button preferRouting;
 
 	DiscoverTab(final CTabFolder tf)
 	{
@@ -143,13 +144,21 @@ class DiscoverTab extends BaseTabLayout
 			return Optional.empty();
 
 		final TableItem defaultInterface = item.get();
-		final Protocol protocol = (Protocol) defaultInterface.getData("protocol");
-		final String remote = (String) (protocol == Protocol.Tunneling ? defaultInterface.getData("host")
-				: defaultInterface.getData("mcast"));
+		Protocol protocol = (Protocol) defaultInterface.getData("protocol");
+		boolean tunneling = protocol == Protocol.Tunneling;
+		if (tunneling && preferRouting.getSelection()) {
+			final boolean routing = Optional.ofNullable((Boolean) defaultInterface.getData("supportsRouting")).orElse(false);
+			if (routing) {
+				tunneling = false;
+				protocol = Protocol.Routing;
+			}
+		}
+		final String remote = (String) (tunneling ? defaultInterface.getData("host") : defaultInterface.getData("mcast"));
 		final ConnectArguments args = new ConnectArguments(protocol, (String) defaultInterface.getData("localEP"), remote,
 				(String) defaultInterface.getData("port"), nat.getSelection(), "", "");
 		args.name = (String) defaultInterface.getData("name");
 		args.knxMedium = Optional.ofNullable((Integer) defaultInterface.getData("medium")).orElse(KNXMediumSettings.MEDIUM_TP1);
+		args.secure = (boolean) Optional.ofNullable(defaultInterface.getData("secure")).orElse(Boolean.FALSE);
 		return Optional.of(args);
 	}
 
@@ -157,7 +166,7 @@ class DiscoverTab extends BaseTabLayout
 	protected void initWorkAreaTop()
 	{
 		super.initWorkAreaTop();
-		((GridLayout) top.getLayout()).numColumns = 2;
+		((GridLayout) top.getLayout()).numColumns = 3;
 		final Button start = new Button(top, SWT.PUSH);
 		start.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		start.setText("Discover devices");
@@ -166,8 +175,13 @@ class DiscoverTab extends BaseTabLayout
 
 		nat = new Button(top, SWT.CHECK);
 		nat.setText("Be aware of NAT (Network Address Translation) during search");
-		nat.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false));
+		nat.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		nat.setToolTipText("Some KNXnet/IP devices might not answer in this mode");
+
+		preferRouting = new Button(top, SWT.CHECK);
+		preferRouting.setText("Prefer KNX IP Routing");
+		preferRouting.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false));
+		preferRouting.setToolTipText("If both Routing & Tunneling mode are supported, choose Routing");
 	}
 
 	private void discover()
@@ -342,9 +356,10 @@ class DiscoverTab extends BaseTabLayout
 	protected void onListItemSelected(final SelectionEvent e)
 	{
 		final TableItem i = (TableItem) e.item;
+		final boolean secure = (boolean) Optional.ofNullable(i.getData("secure")).orElse(Boolean.FALSE);
 		new ConnectDialog(getTabFolder(), (Protocol) i.getData("protocol"), (String) i.getData("localEP"),
 				(String) i.getData("name"), (String) i.getData("host"), (String) i.getData("port"),
-				(String) i.getData("mcast"), (Integer) i.getData("medium"), nat.getSelection());
+				(String) i.getData("mcast"), (Integer) i.getData("medium"), nat.getSelection(), secure, preferRouting.getSelection());
 	}
 
 	private void addKnxnetipEndpoint(final Result<SearchResponse> result, final String newItem)
@@ -362,15 +377,23 @@ class DiscoverTab extends BaseTabLayout
 		catch (final UnknownHostException e) {}
 
 		boolean tunneling = false;
-		for (final int id : r.getServiceFamilies().getFamilyIds())
+		boolean routing = false;
+		boolean secure = false;
+		final int[] families = r.getServiceFamilies().getFamilyIds();
+		for (final int id : families) {
 			if (id == ServiceFamiliesDIB.TUNNELING)
 				tunneling = true;
+			if (id == ServiceFamiliesDIB.ROUTING)
+				routing = true;
+			if (id == 9)
+				secure = true;
+		}
 		final Protocol protocol = tunneling ? Protocol.Tunneling : Protocol.Routing;
 
 		addListItem(new String[] { newItem },
-				new String[] { "protocol", "localEP", "name", "host", "port", "mcast", "medium" },
+				new String[] { "protocol", "localEP", "name", "host", "port", "mcast", "medium", "secure", "supportsRouting" },
 				new Object[] { protocol, result.getAddress().getHostAddress(), r.getDevice().getName(),
-					r.getControlEndpoint().getAddress().getHostAddress(),
-					Integer.toString(r.getControlEndpoint().getPort()), mcast, r.getDevice().getKNXMedium() });
+					r.getControlEndpoint().getAddress().getHostAddress(), Integer.toString(r.getControlEndpoint().getPort()), mcast,
+					r.getDevice().getKNXMedium(), secure, routing });
 	}
 }

@@ -97,8 +97,8 @@ public class Main
 		addLauncherBar();
 		tf = new CTabFolder(shell, SWT.NONE | SWT.CAP_ROUND | SWT.BORDER);
 
-		addToolItem(header, "Connect ...",
-				() -> new ConnectDialog(tf, Protocol.Unknown, null, null, "", "", null, null, false));
+		addToolItem(header, "Connect ...", () -> new ConnectDialog(tf, Protocol.Unknown, null, null, "", "", null, null, false, false,
+				discoverTab().preferRouting.getSelection()));
 		addToolItem(header, "Show log", () -> new LogTab(tf));
 		addToolItem(header, "About", () -> new About(shell));
 
@@ -232,6 +232,8 @@ public class Main
 			display.dispose();
 		}
 	}
+
+	private DiscoverTab discoverTab() { return discoverTab; }
 
 	private void addLauncherBar()
 	{

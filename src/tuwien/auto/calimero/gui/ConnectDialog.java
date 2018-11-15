@@ -83,6 +83,7 @@ class ConnectDialog
 		final String local;
 		private final boolean nat;
 		final String localKnxAddress;
+		boolean secure;
 
 		static ConnectArguments newKnxNetIP(final boolean routing, final String localHost,
 			final String remoteHost, final String port, final boolean nat, final String knxAddress)
@@ -173,9 +174,9 @@ class ConnectDialog
 
 	private final int knxMedium;
 
-	ConnectDialog(final CTabFolder tf, final Protocol protocol, final String localEP, final String name,
-		final String host, final String port, final String mcast, final Integer medium, final boolean useNAT)
-	{
+	ConnectDialog(final CTabFolder tf, final Protocol protocol, final String localEP, final String name, final String host,
+		final String port, final String mcast, final Integer medium, final boolean useNAT, final boolean secure,
+		final boolean preferRouting) {
 		final Shell shell = new Shell(Main.shell, SWT.DIALOG_TRIM | SWT.RESIZE);
 		shell.setLayout(new GridLayout());
 		shell.setText("Open connection");
@@ -247,6 +248,8 @@ class ConnectDialog
 					hostData.setText(host);
 			}
 		});
+		routing.setSelection(preferRouting);
+		routing.notifyListeners(SWT.Selection, new Event());
 
 		final Label configKNXAddress = new Label(c, SWT.NONE);
 		configKNXAddress.setText("KNX device address (optional): ");
@@ -371,6 +374,7 @@ class ConnectDialog
 				}
 				else if (!h.isEmpty()) {
 					args = ConnectArguments.newKnxNetIP(useRouting(), local, h, p, natChecked, knxAddr.getText());
+					args.secure = secure;
 				}
 				else
 					args = ConnectArguments.newFT12(p, knxAddr.getText());
