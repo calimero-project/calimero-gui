@@ -36,10 +36,16 @@
 
 package tuwien.auto.calimero.gui;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -139,6 +145,21 @@ class ConnectDialog
 				args.add(remote);
 				if (useNat())
 					args.add("--nat");
+				if (secure) {
+					if (protocol == Protocol.Routing) {
+						args.add("--group-key");
+						args.add(config("group.key"));
+					}
+					else {
+						args.add("--device-key");
+						args.add(config("device.key"));
+						final String user = "1";
+						args.add("--user");
+						args.add(user);
+						args.add("--user-key");
+						args.add(config("user." + user));
+					}
+				}
 				if (!port.isEmpty())
 					args.add("-p");
 				break;
@@ -169,6 +190,23 @@ class ConnectDialog
 				args.add(knxAddress);
 			}
 			return args;
+		}
+
+		private static String config(final String key) {
+			Path p = null;
+			try {
+				final Path keyfile = Paths.get("keyfile");
+				final Path config = Paths.get(".calimero-gui.config");
+				p = Files.exists(keyfile) ? keyfile : config;
+				final Map<String, String> map = Files.lines(p).filter(s -> s.startsWith(key)).collect(Collectors
+						.toMap((final String s) -> s.substring(0, s.indexOf("=")), (final String s) -> s.substring(s.indexOf("=") + 1)));
+				final String value = map.getOrDefault(key, "");
+				return value;
+			}
+			catch (IOException | RuntimeException e) {
+				System.out.println(String.format("Failed to get value for '%s' from file '%s' (error: %s)", key, p, e.getMessage()));
+			}
+			return "";
 		}
 	}
 

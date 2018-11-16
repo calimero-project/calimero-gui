@@ -40,13 +40,17 @@ import java.io.IOException;
 import java.io.Writer;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -86,6 +90,7 @@ import tuwien.auto.calimero.DataUnitBuilder;
 import tuwien.auto.calimero.IndividualAddress;
 import tuwien.auto.calimero.KNXException;
 import tuwien.auto.calimero.KNXFormatException;
+import tuwien.auto.calimero.KNXIllegalArgumentException;
 import tuwien.auto.calimero.KNXTimeoutException;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
@@ -553,10 +558,30 @@ class MemoryEditor extends BaseTabLayout
 
 		final InetSocketAddress local = new InetSocketAddress(connect.local, 0);
 		final InetAddress addr = InetAddress.getByName(connect.remote);
-		if (addr.isMulticastAddress())
+		if (addr.isMulticastAddress()) {
+			if (connect.secure) {
+				try {
+					final List<String> args = connect.getArgs(false);
+					final byte[] groupKey = fromHex(args.get(1 + args.indexOf("--group-key")));
+					final NetworkInterface nif = NetworkInterface.getByInetAddress(local.getAddress());
+					if (!local.getAddress().isAnyLocalAddress() && nif == null)
+						throw new KNXIllegalArgumentException(local.getAddress() + " is not assigned to a network interface");
+					return KNXNetworkLinkIP.newSecureRoutingLink(nif, addr, groupKey, Duration.ofMillis(2000), medium);
+				}
+				catch (final SocketException e) {
+					throw new KNXIllegalArgumentException("getting network interface of " + local.getAddress(), e);
+				}
+			}
 			return KNXNetworkLinkIP.newRoutingLink(local.getAddress(), addr, medium);
-
+		}
 		final InetSocketAddress remote = new InetSocketAddress(addr, Integer.parseInt(connect.port));
+		if (connect.secure) {
+			final List<String> args = connect.getArgs(false);
+			final byte[] devAuth = fromHex(args.get(1 + args.indexOf("--device-key")));
+			final int userId = Integer.parseInt(args.get(1 + args.indexOf("--user")));
+			final byte[] userKey = fromHex(args.get(1 + args.indexOf("--user-key")));
+			return KNXNetworkLinkIP.newSecureTunnelingLink(local, remote, connect.useNat(), devAuth, userId, userKey, medium);
+		}
 		return KNXNetworkLinkIP.newTunnelingLink(local, remote, connect.useNat(), medium);
 	}
 
@@ -760,5 +785,13 @@ class MemoryEditor extends BaseTabLayout
 	{
 		final Character.UnicodeBlock block = Character.UnicodeBlock.of(c);
 		return (!Character.isISOControl(c)) && block != null && !block.equals(Character.UnicodeBlock.SPECIALS);
+	}
+
+	private static byte[] fromHex(final String hex) {
+		final int len = hex.length();
+		final byte[] data = new byte[len / 2];
+		for (int i = 0; i < len; i += 2)
+			data[i / 2] = (byte) ((Character.digit(hex.charAt(i), 16) << 4) + Character.digit(hex.charAt(i + 1), 16));
+		return data;
 	}
 }
