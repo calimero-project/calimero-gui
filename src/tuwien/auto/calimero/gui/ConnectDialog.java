@@ -82,7 +82,7 @@ class ConnectDialog
 
 		final String local;
 		private final boolean nat;
-		final String localKnxAddress;
+		String localKnxAddress;
 
 		static ConnectArguments newKnxNetIP(final boolean routing, final String localHost,
 			final String remoteHost, final String port, final boolean nat, final String knxAddress)
@@ -148,10 +148,6 @@ class ConnectDialog
 				args.add("--ft12");
 				break;
 			case Tpuart:
-				if (!localKnxAddress.isEmpty()) {
-					args.add("--knx-address");
-					args.add(localKnxAddress);
-				}
 				args.add("--tpuart");
 				break;
 			default:
@@ -161,6 +157,10 @@ class ConnectDialog
 			if (knxMedium != 0) {
 				args.add("--medium");
 				args.add(KNXMediumSettings.getMediumString(knxMedium));
+			}
+			if (!localKnxAddress.isEmpty()) {
+				args.add("--knx-address");
+				args.add(localKnxAddress);
 			}
 			if (!knxAddress.isEmpty()) {
 				if (useRemoteAddressOption)
@@ -332,7 +332,6 @@ class ConnectDialog
 		else if (protocol == Protocol.Tunneling) {
 			usb.setEnabled(false);
 			tpuart.setEnabled(false);
-			localKnxAddress.setEnabled(false);
 		}
 
 		final Composite buttons = new Composite(shell, SWT.NONE);
@@ -371,6 +370,8 @@ class ConnectDialog
 				}
 				else if (!h.isEmpty()) {
 					args = ConnectArguments.newKnxNetIP(useRouting(), local, h, p, natChecked, knxAddr.getText());
+					if (!localKnxAddress.getText().isEmpty())
+						args.localKnxAddress = localKnxAddress.getText();
 				}
 				else
 					args = ConnectArguments.newFT12(p, knxAddr.getText());
