@@ -147,17 +147,37 @@ class ConnectDialog
 					args.add("--nat");
 				if (secure) {
 					if (protocol == Protocol.Routing) {
+						String key = config("group.key");
+						if (key.isEmpty()) {
+							final PasswordDialog dlg = new PasswordDialog(name, remote);
+							if (dlg.show())
+								key = dlg.groupKey();
+						}
 						args.add("--group-key");
-						args.add(config("group.key"));
+						args.add(key);
 					}
 					else {
-						args.add("--device-key");
-						args.add(config("device.key"));
 						final String user = "1";
-						args.add("--user");
-						args.add(user);
-						args.add("--user-key");
-						args.add(config("user." + user));
+						final String userPwd = config("user." + user);
+						if (userPwd.isEmpty()) {
+							final PasswordDialog dlg = new PasswordDialog(name, true);
+							if (dlg.show()) {
+								args.add("--user");
+								args.add(dlg.user());
+								args.add(dlg.isUserPasswordHash() ? "--user-key" : "--user-pwd");
+								args.add(dlg.userPassword());
+								args.add(dlg.isDeviceAuthHash() ? "--device-key" : "--device-auth-code");
+								args.add(dlg.deviceAuthCode());
+							}
+						}
+						else {
+							args.add("--user");
+							args.add(user);
+							args.add("--user-key");
+							args.add(userPwd);
+							args.add("--device-key");
+							args.add(config("device.key"));
+						}
 					}
 				}
 				if (!port.isEmpty())
