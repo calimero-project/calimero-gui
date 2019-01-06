@@ -59,7 +59,7 @@ import org.slf4j.LoggerFactory;
 public class SwtChecker
 {
 	private static final String swtArtifactId = "org.eclipse.swt.";
-	private static final String swtVersion = "3.108.0";
+	private static final String swtVersion = "3.109.0";
 	private static final String baseDownloadUrl = "http://central.maven.org/maven2/org/eclipse/platform";
 
 	private final Logger logger;
@@ -74,7 +74,7 @@ public class SwtChecker
 				checker.downloadToLibDir();
 			}
 			catch (IOException | URISyntaxException | RuntimeException e) {
-				checker.logger.error("Failed add SWT library", e);
+				checker.logger.error("Failed to add SWT library", e);
 			}
 		}
 	}
