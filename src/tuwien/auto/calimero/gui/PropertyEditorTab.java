@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2015, 2018 B. Malinowsky
+    Copyright (c) 2015, 2019 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -1003,6 +1003,15 @@ class PropertyEditorTab extends BaseTabLayout
 		args.addAll(cmd);
 		asyncAddLog("Using command line: " + String.join(" ", args));
 		setHeaderInfo(statusInfo(0));
+
+		if (args.indexOf("-r") == -1) {
+			final int user = args.indexOf("--user");
+			if (user != -1 && !"1".equals(args.get(user + 1))) {
+				args.set(user + 1, "1");
+				final int key = args.indexOf("--user-key");
+				args.set(key + 1, ConnectDialog.ConnectArguments.config("user.1"));
+			}
+		}
 
 		toolThread = new Thread("Calimero property editor") {
 			@Override

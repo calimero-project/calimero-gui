@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2018 B. Malinowsky
+    Copyright (c) 2006, 2019 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -212,7 +212,7 @@ class ConnectDialog
 			return args;
 		}
 
-		private static String config(final String key) {
+		static String config(final String key) {
 			Path p = null;
 			try {
 				final Path keyfile = Paths.get("keyfile");
