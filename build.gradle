@@ -71,8 +71,8 @@ dependencies {
     provided("${swtGroupId}:${swtArtifact}:${swtVersion}") {
 		exclude group: "${swtGroupId}", module: 'org.eclipse.swt' 
     }
-    implementation 'org.slf4j:slf4j-api:1.8.0-beta2'
-    runtime 'org.slf4j:slf4j-simple:1.8.0-beta2'
+    implementation 'org.slf4j:slf4j-api:1.8.0-beta4'
+    runtime 'org.slf4j:slf4j-simple:1.8.0-beta4'
 }
 
 jar {
