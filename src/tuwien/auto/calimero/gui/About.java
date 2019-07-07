@@ -88,7 +88,7 @@ class About {
 
 	private static final String license = "The Calimero library, tools, GUI, and documentation "
 			+ "are licensed under\nthe GPL, with the Classpath Exception.";
-	private static final String copyright = "\u00A9 2006, 2018.";
+	private static final String copyright = "\u00A9 2006, 2019.";
 
 	private static final String swtLink = "http://www.eclipse.org/swt/";
 	private static final String swtInfo = "This GUI uses the <A href=\"" + swtLink + "\">Standard Widget Toolkit (SWT)</A>";
@@ -138,7 +138,7 @@ class About {
 
 		final Label author = new Label(c, SWT.NONE);
 		author.setFont(Main.font);
-		author.setText("\nAuthor Boris Malinowsky. \u00A9 2006, 2018.");
+		author.setText("\nAuthor Boris Malinowsky. \u00A9 2006, 2019.");
 		author.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
 
 		final Label licenseLabel = new Label(c, SWT.NONE);

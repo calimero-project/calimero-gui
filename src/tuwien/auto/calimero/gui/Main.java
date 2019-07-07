@@ -87,7 +87,7 @@ public class Main
 		new Label(shell, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL,
 				SWT.NONE, true, false));
 		addLauncherBar();
-		tf = new CTabFolder(shell, SWT.NONE | SWT.CAP_ROUND | SWT.BORDER);
+		tf = new CTabFolder(shell, SWT.NONE | SWT.BORDER);
 
 		addToolItem(header, "Connect ...", () -> new ConnectDialog(tf, Protocol.Unknown, null, null, "", "", null, null, false, false,
 				discoverTab().preferRouting.getSelection()));
