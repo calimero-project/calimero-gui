@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2018 B. Malinowsky
+    Copyright (c) 2006, 2019 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -71,7 +71,6 @@ import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FormAttachment;
@@ -792,7 +791,6 @@ class BaseTabLayout
 	private static List createLogView(final Composite parent, final Sash sash)
 	{
 		final List l = new List(parent, SWT.MULTI | SWT.V_SCROLL);
-		l.setBackground(new Color(Main.display, 255, 255, 255));
 		l.setFont(Main.font);
 		final FormData logData = new FormData();
 		logData.top = new FormAttachment(sash);
