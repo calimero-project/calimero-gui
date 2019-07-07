@@ -36,12 +36,6 @@
 
 package tuwien.auto.calimero.gui;
 
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.util.Collections;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -53,7 +47,6 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -80,7 +73,6 @@ public class Main
 	static Shell shell;
 	static Font font;
 
-	private static Combo localInterfaces;
 	private final CTabFolder tf;
 	private final DiscoverTab discoverTab;
 	private Text address;
@@ -101,49 +93,6 @@ public class Main
 				discoverTab().preferRouting.getSelection()));
 		addToolItem(header, "Show log", () -> new LogTab(tf));
 		addToolItem(header, "About", () -> new About(shell));
-
-		// use separator to start area for local host fields
-		new ToolItem(header, SWT.SEPARATOR);
-
-		// add local host label, use a composite to vertically center the label
-		final Composite comp = new Composite(header, SWT.NONE);
-		final GridLayout layout = new GridLayout();
-		layout.numColumns = 1;
-		layout.makeColumnsEqualWidth = true;
-		comp.setLayout(layout);
-
-		final Label localHostLabel = new Label(comp, SWT.NONE);
-		localHostLabel.setFont(header.getFont());
-		localHostLabel.setText("Local network interface:");
-		final GridData gridData = new GridData();
-		gridData.verticalAlignment = SWT.CENTER;
-		gridData.grabExcessVerticalSpace = true;
-		gridData.horizontalAlignment = SWT.CENTER;
-		localHostLabel.setLayoutData(gridData);
-
-		// set composite (with label) by using a separator item
-		final ToolItem labelItem = new ToolItem(header, SWT.SEPARATOR);
-		labelItem.setControl(comp);
-		Point size = comp.computeSize(SWT.DEFAULT, SWT.DEFAULT);
-		labelItem.setWidth(size.x);
-
-		localInterfaces = new Combo(header, SWT.BORDER);
-		try {
-			localInterfaces.setText(InetAddress.getLocalHost().getHostAddress());
-			Collections.list(NetworkInterface.getNetworkInterfaces()).forEach(ni -> Collections
-					.list(ni.getInetAddresses()).stream().filter(ip -> ip instanceof Inet4Address).forEach(ip -> {
-						localInterfaces.add(ip.getHostAddress());
-						localInterfaces.setData(ip.getHostAddress(), ni.getName() + ": " + ip.getHostAddress());
-					}));
-		}
-		catch (UnknownHostException | SocketException e) {}
-		localInterfaces.setToolTipText((String) localInterfaces.getData(localInterfaces.getText()));
-		localInterfaces.addSelectionListener(widgetSelected(
-				() -> localInterfaces.setToolTipText((String) localInterfaces.getData(localInterfaces.getText()))));
-		size = localInterfaces.computeSize(SWT.DEFAULT, SWT.DEFAULT);
-		final ToolItem hostItem = new ToolItem(header, SWT.SEPARATOR);
-		hostItem.setControl(localInterfaces);
-		hostItem.setWidth(size.x + 100);
 
 		new ToolItem(header, SWT.SEPARATOR);
 
@@ -183,7 +132,6 @@ public class Main
 		final ToolItem addrStylesItem = new ToolItem(header, SWT.SEPARATOR);
 		addrStylesItem.setControl(addressStyles);
 		addrStylesItem.setWidth(addressStyles.computeSize(SWT.DEFAULT, SWT.DEFAULT).x);
-
 
 		tf.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		tf.setUnselectedCloseVisible(false);
@@ -333,11 +281,6 @@ public class Main
 		final String localKnxAddress = "";
 		args.ifPresent(ca -> ca.knxAddress = address.getText());
 		return args.orElseThrow(() -> new RuntimeException("Discover and check default interface first!"));
-	}
-
-	static String getLocalHost()
-	{
-		return localInterfaces.getText();
 	}
 
 	static void asyncExec(final Runnable task)

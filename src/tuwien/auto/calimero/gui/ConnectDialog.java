@@ -251,7 +251,13 @@ class ConnectDialog
 		c.setLayout(new GridLayout(2, false));
 		c.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
 
-		final String local = localEP != null ? localEP : Main.getLocalHost();
+		var localhost = "";
+		try {
+			localhost = InetAddress.getLocalHost().toString();
+		}
+		catch (final UnknownHostException uhe) {}
+
+		final String local = localEP != null ? localEP : localhost;
 		final Text localhostData = addHostInput(c, "Local endpoint:", local,  serial);
 		final Text hostData = addHostInput(c, "Remote endpoint:", host, serial);
 
