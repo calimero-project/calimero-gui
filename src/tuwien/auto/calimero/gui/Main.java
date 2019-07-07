@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2018 B. Malinowsky
+    Copyright (c) 2006, 2019 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -210,6 +210,8 @@ public class Main
 	 */
 	public static void main(final String[] args)
 	{
+		// use current system theme on macOS, i.e., light/dark appearance
+		System.setProperty("org.eclipse.swt.display.useSystemTheme", "true");
 		display = new Display();
 		try {
 			shell = new Shell(display);
