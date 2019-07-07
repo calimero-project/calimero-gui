@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2018 B. Malinowsky
+    Copyright (c) 2006, 2019 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -65,6 +65,7 @@ import org.eclipse.swt.widgets.TableItem;
 import org.usb4java.Device;
 import org.usb4java.LibUsb;
 
+import tuwien.auto.calimero.IndividualAddress;
 import tuwien.auto.calimero.KNXException;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
@@ -153,9 +154,10 @@ class DiscoverTab extends BaseTabLayout
 				protocol = Protocol.Routing;
 			}
 		}
+		final IndividualAddress host = (IndividualAddress) defaultInterface.getData("hostIA");
 		final String remote = (String) (tunneling ? defaultInterface.getData("host") : defaultInterface.getData("mcast"));
 		final ConnectArguments args = new ConnectArguments(protocol, (String) defaultInterface.getData("localEP"), remote,
-				(String) defaultInterface.getData("port"), nat.getSelection(), "", "");
+				(String) defaultInterface.getData("port"), nat.getSelection(), host, "", "");
 		args.name = (String) defaultInterface.getData("name");
 		args.knxMedium = Optional.ofNullable((Integer) defaultInterface.getData("medium")).orElse(KNXMediumSettings.MEDIUM_TP1);
 		args.secure = (boolean) Optional.ofNullable(defaultInterface.getData("secure")).orElse(Boolean.FALSE);
@@ -391,9 +393,9 @@ class DiscoverTab extends BaseTabLayout
 		final Protocol protocol = tunneling ? Protocol.Tunneling : Protocol.Routing;
 
 		addListItem(new String[] { newItem },
-				new String[] { "protocol", "localEP", "name", "host", "port", "mcast", "medium", "secure", "supportsRouting" },
+				new String[] { "protocol", "localEP", "name", "host", "port", "mcast", "medium", "secure", "supportsRouting", "hostIA" },
 				new Object[] { protocol, result.getAddress().getHostAddress(), r.getDevice().getName(),
 					r.getControlEndpoint().getAddress().getHostAddress(), Integer.toString(r.getControlEndpoint().getPort()), mcast,
-					r.getDevice().getKNXMedium(), secure, routing });
+					r.getDevice().getKNXMedium(), secure, routing, result.getResponse().getDevice().getAddress() });
 	}
 }

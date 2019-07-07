@@ -1000,11 +1000,11 @@ class PropertyEditorTab extends BaseTabLayout
 		setHeaderInfo(statusInfo(0));
 
 		if (args.indexOf("-r") == -1) {
-			final int user = args.indexOf("--user");
-			if (user != -1 && !"1".equals(args.get(user + 1))) {
-				args.set(user + 1, "1");
+			final int userIdx = args.indexOf("--user");
+			if (userIdx != -1 && !"1".equals(args.get(userIdx + 1))) {
+				args.set(userIdx + 1, "1");
 				final int key = args.indexOf("--user-key");
-				args.set(key + 1, ConnectDialog.ConnectArguments.config("user.1"));
+				args.set(key + 1, connect.config("user.1", "1"));
 			}
 		}
 

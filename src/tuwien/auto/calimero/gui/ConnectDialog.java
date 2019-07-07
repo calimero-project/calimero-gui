@@ -36,6 +36,8 @@
 
 package tuwien.auto.calimero.gui;
 
+import static tuwien.auto.calimero.DataUnitBuilder.toHex;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -63,6 +65,10 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
+import tuwien.auto.calimero.IndividualAddress;
+import tuwien.auto.calimero.KNXFormatException;
+import tuwien.auto.calimero.Keyring;
+import tuwien.auto.calimero.Keyring.Interface;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 import tuwien.auto.calimero.knxnetip.KNXnetIPConnection;
 import tuwien.auto.calimero.link.medium.KNXMediumSettings;
@@ -88,6 +94,7 @@ class ConnectDialog
 
 		final String local;
 		private final boolean nat;
+		private final IndividualAddress host;
 		String localKnxAddress;
 		boolean secure;
 
@@ -123,6 +130,20 @@ class ConnectDialog
 			this.remote = remote;
 			this.port = port;
 			this.nat = nat;
+			this.host = KNXMediumSettings.BackboneRouter;
+			this.localKnxAddress = localKnxAddress;
+			this.knxAddress = remoteKnxAddress;
+		}
+
+		ConnectArguments(final Protocol p, final String local, final String remote, final String port,
+			final boolean nat, final IndividualAddress host, final String localKnxAddress,
+			final String remoteKnxAddress) {
+			protocol = p;
+			this.local = local;
+			this.remote = remote;
+			this.port = port;
+			this.nat = nat;
+			this.host = host;
 			this.localKnxAddress = localKnxAddress;
 			this.knxAddress = remoteKnxAddress;
 		}
@@ -147,7 +168,7 @@ class ConnectDialog
 					args.add("--nat");
 				if (secure) {
 					if (protocol == Protocol.Routing) {
-						String key = config("group.key");
+						String key = config("group.key", remote);
 						if (key.isEmpty()) {
 							final PasswordDialog dlg = new PasswordDialog(name, remote);
 							if (dlg.show())
@@ -157,8 +178,8 @@ class ConnectDialog
 						args.add(key);
 					}
 					else {
-						final String user = "1";
-						final String userPwd = config("user." + user);
+						final String user = "" + KeyringTab.user();
+						final String userPwd = config("user." + user, user);
 						if (userPwd.isEmpty()) {
 							final PasswordDialog dlg = new PasswordDialog(name, true);
 							if (dlg.show()) {
@@ -173,10 +194,10 @@ class ConnectDialog
 						else {
 							args.add("--user");
 							args.add(user);
-							args.add("--user-key");
+							args.add("--user-pwd");
 							args.add(userPwd);
 							args.add("--device-key");
-							args.add(config("device.key"));
+							args.add(config("device.key", ""));
 						}
 					}
 				}
@@ -212,7 +233,11 @@ class ConnectDialog
 			return args;
 		}
 
-		static String config(final String key) {
+		String config(final String key, final String configValue) {
+			final var result = lookupKeyring(key, configValue);
+			if (result != null)
+				return result;
+
 			Path p = null;
 			try {
 				final Path keyfile = Paths.get("keyfile");
@@ -227,6 +252,61 @@ class ConnectDialog
 				System.out.println(String.format("Failed to get value for '%s' from file '%s' (error: %s)", key, p, e.getMessage()));
 			}
 			return "";
+		}
+
+		private String lookupKeyring(final String key, final String value) {
+			try {
+				return tryLookupKeyring(key, value);
+			}
+			catch (KNXFormatException | IOException | RuntimeException e) {
+				System.out.println("Keyring problem for '" + key + "': " + e.getMessage());
+				return null;
+			}
+		}
+
+		private String tryLookupKeyring(final String key, final String value)
+				throws IOException, KNXFormatException {
+			final Keyring keyring = KeyringTab.keyring().orElse(null);
+			final char[] keyringPassword = KeyringTab.keyringPassword();
+			if (keyring == null || keyringPassword.length == 0)
+				return null;
+
+			if ("group.key".equals(key)) {
+				final InetAddress remote = InetAddress.getByName(value);
+				final var groupKey = (byte[]) keyring.configuration().get(remote);
+				return toHex(keyring.decryptKey(groupKey, keyringPassword), "");
+			}
+
+			if (key.startsWith("user")) {
+				final int user = Integer.parseInt(value);
+				byte[] pwdData = null;
+				if (user == 1) {
+					final var device = keyring.devices().get(host);
+					pwdData = device.password();
+				}
+				else {
+					final var interfaces = keyring.interfaces().get(host);
+					for (final Interface iface : interfaces) {
+						if (iface.user() == user) {
+							pwdData = iface.password();
+							break;
+						}
+					}
+				}
+				if (pwdData != null)
+					return new String(keyring.decryptPassword(pwdData, keyringPassword));
+			}
+
+			if (key.equals("tunnelingAddress")) {
+				final var interfaces = keyring.interfaces().get(host);
+				final IndividualAddress ia = new IndividualAddress(value);
+				for (final Interface iface : interfaces) {
+					if (iface.address().equals(ia))
+						return new String(keyring.decryptPassword(iface.password(), keyringPassword));
+				}
+			}
+
+			return null;
 		}
 	}
 

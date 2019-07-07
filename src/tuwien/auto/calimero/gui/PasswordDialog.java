@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2018 B. Malinowsky
+    Copyright (c) 2018, 2019 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -36,6 +36,8 @@
 
 package tuwien.auto.calimero.gui;
 
+import java.nio.file.Path;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -64,6 +66,12 @@ class PasswordDialog {
 	private String userId;
 	private String userPassword;
 	private String deviceAuthCode;
+
+	private char[] keyringPassword;
+
+	public static PasswordDialog forKeyring(final Path keyringResource) {
+		return new PasswordDialog(keyringResource);
+	}
 
 	PasswordDialog(final String interfaceName, final boolean secureUnicast) {
 		this(interfaceName);
@@ -140,6 +148,36 @@ class PasswordDialog {
 		});
 	}
 
+	private PasswordDialog(final Path keyringResource) {
+		// TODO init code copied over from private ctor
+		shell = new Shell(Main.shell, SWT.DIALOG_TRIM | SWT.PRIMARY_MODAL | SWT.SHEET);
+		shell.setLayout(new GridLayout());
+		shell.setText("KNX Keyring Password");
+
+		final Label connection = new Label(shell, SWT.NONE);
+		final FontData fontData = connection.getFont().getFontData()[0];
+		final Font bold = new Font(Main.display, new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD));
+		connection.setFont(bold);
+		connection.setText("Password for \'" + keyringResource.getFileName() + "\'");
+
+		passwordLabel = new Label(shell, SWT.NONE);
+		passwordLabel.setFont(Main.font);
+		passwordLabel.setText(keyringResource.toString());
+
+		final Text keyringPwdInput = new Text(shell, SWT.BORDER | SWT.PASSWORD);
+		keyringPwdInput.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
+		keyringPwdInput.setFont(Main.font);
+		keyringPwdInput.setFocus();
+
+		addDialogButtons(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(final SelectionEvent e) {
+				keyringPassword = keyringPwdInput.getTextChars();
+				shell.dispose();
+			}
+		});
+	}
+
 	private PasswordDialog(final String interfaceName) {
 		shell = new Shell(Main.shell, SWT.DIALOG_TRIM | SWT.PRIMARY_MODAL | SWT.SHEET);
 		shell.setLayout(new GridLayout());
@@ -165,7 +203,7 @@ class PasswordDialog {
 		buttons.setLayout(row);
 
 		final Button connect = new Button(buttons, SWT.NONE);
-		connect.setText("Connect");
+		connect.setText("OK");
 		connect.setLayoutData(new RowData());
 		connect.addSelectionListener(onConnect);
 
@@ -221,6 +259,8 @@ class PasswordDialog {
 	String deviceAuthCode() {
 		return deviceAuthCode;
 	}
+
+	char[] keyringPassword() { return keyringPassword; }
 
 	private static boolean isHash(final String s) {
 		return s.length() == 32 && s.matches("[0-9a-fA-F]+");

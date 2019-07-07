@@ -92,6 +92,7 @@ public class Main
 		addToolItem(header, "Connect ...", () -> new ConnectDialog(tf, Protocol.Unknown, null, null, "", "", null, null, false, false,
 				discoverTab().preferRouting.getSelection()));
 		addToolItem(header, "Show log", () -> new LogTab(tf));
+		addToolItem(header, "Show keyring", () -> new KeyringTab(tf));
 		addToolItem(header, "About", () -> new About(shell));
 
 		new ToolItem(header, SWT.SEPARATOR);
@@ -146,6 +147,9 @@ public class Main
 		shell.pack();
 		shell.setSize(shell.getSize().x + 150, shell.getSize().y + 100);
 		shell.open();
+
+		KeyringTab.keyring();
+
 		while (!shell.isDisposed())
 			if (!display.readAndDispatch())
 				display.sleep();
