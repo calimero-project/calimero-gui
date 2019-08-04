@@ -91,7 +91,6 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.swt.widgets.ToolTip;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 
@@ -211,13 +210,6 @@ class PropertyEditorTab extends BaseTabLayout
 		list.addListener(SWT.PaintItem, paintListener);
 
 		workArea.layout(true, true);
-
-		final ToolTip tip = new ToolTip(Main.shell, SWT.BALLOON | SWT.ICON_WARNING);
-		tip.setText("KNX property editor");
-		tip.setMessage("This editor allows modification of KNX device properties.\nUse with care!");
-		tip.setLocation(Main.display.map(list, null, 40, 20));
-		tip.setVisible(true);
-		tip.setAutoHide(true);
 
 		runProperties(Arrays.asList("scan", "all"), true);
 	}

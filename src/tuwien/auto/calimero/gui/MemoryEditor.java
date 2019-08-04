@@ -86,7 +86,6 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.swt.widgets.ToolTip;
 
 import tuwien.auto.calimero.DataUnitBuilder;
 import tuwien.auto.calimero.IndividualAddress;
@@ -187,13 +186,6 @@ class MemoryEditor extends BaseTabLayout
 		setExportName(prefix, suffix);
 
 		workArea.layout(true, true);
-
-		final ToolTip tip = new ToolTip(Main.shell, SWT.BALLOON | SWT.ICON_WARNING);
-		tip.setText("Use with care!");
-		tip.setMessage("This view also allows modification of KNX device memory.");
-		tip.setLocation(Main.display.map(list, null, 40, 20));
-		tip.setVisible(true);
-		tip.setAutoHide(true);
 
 		if (device != null)
 			readMemory(initialStartAddress, 40);
