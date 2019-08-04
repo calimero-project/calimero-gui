@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2017, 2018 B. Malinowsky
+    Copyright (c) 2017, 2019 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -35,6 +35,8 @@
 */
 
 package tuwien.auto.calimero.gui;
+
+import static tuwien.auto.calimero.DataUnitBuilder.fromHex;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -785,13 +787,5 @@ class MemoryEditor extends BaseTabLayout
 	{
 		final Character.UnicodeBlock block = Character.UnicodeBlock.of(c);
 		return (!Character.isISOControl(c)) && block != null && !block.equals(Character.UnicodeBlock.SPECIALS);
-	}
-
-	private static byte[] fromHex(final String hex) {
-		final int len = hex.length();
-		final byte[] data = new byte[len / 2];
-		for (int i = 0; i < len; i += 2)
-			data[i / 2] = (byte) ((Character.digit(hex.charAt(i), 16) << 4) + Character.digit(hex.charAt(i + 1), 16));
-		return data;
 	}
 }
