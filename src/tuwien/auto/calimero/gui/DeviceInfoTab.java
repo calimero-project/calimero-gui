@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2015, 2018 B. Malinowsky
+    Copyright (c) 2015, 2019 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -41,6 +41,7 @@ import java.util.List;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
@@ -55,6 +56,7 @@ import tuwien.auto.calimero.tools.DeviceInfo;
 class DeviceInfoTab extends BaseTabLayout
 {
 	private final ConnectArguments connect;
+	private Thread worker;
 
 	DeviceInfoTab(final CTabFolder tf, final ConnectArguments args)
 	{
@@ -73,6 +75,12 @@ class DeviceInfoTab extends BaseTabLayout
 		enableColumnAdjusting();
 
 		readDeviceInfo();
+	}
+
+	@Override
+	protected void onDispose(final DisposeEvent e) {
+		if (worker != null)
+			worker.interrupt();
 	}
 
 	private void readDeviceInfo()
@@ -115,7 +123,8 @@ class DeviceInfoTab extends BaseTabLayout
 					i.setText(new String[] { param, value, rawString });
 				}
 			};
-			new Thread(config).start();
+			worker = new Thread(config, "Info reader " + uniqueId(connect));
+			worker.start();
 		}
 		catch (final KNXIllegalArgumentException e) {
 			asyncAddLog("error: " + e.getMessage());
