@@ -657,7 +657,7 @@ class MemoryEditor extends BaseTabLayout
 		runWorker(() -> {
 			try (ManagementProcedures mgmt = new ManagementProceduresImpl(knxLink())) {
 				Main.asyncExec(() -> setHeaderInfo(statusInfo(1)));
-				final int stride = 16;
+				final int stride = 1;
 				for (long addr = startAddress; addr < startAddress + bytes; addr += stride) {
 					final int min = (int) Math.min(stride, startAddress + bytes - addr);
 					try {
