@@ -572,7 +572,7 @@ class PropertyEditorTab extends BaseTabLayout
 			final TreeItem root = tree.getItem(tree.getItemCount() - 1);
 			final TreeItem item = new TreeItem(root, SWT.NONE);
 			final String name = "PID " + pid;
-			item.setText(getDefinition(objectType, pid).map(p -> p.getPIDName() + " (" + name + ")").orElse(name));
+			item.setText(getDefinition(objectType, pid).map(p -> p.getName() + " (" + name + ")").orElse(name));
 			item.setData(ObjectIndex, root.getData(ObjectIndex));
 			item.setData(Columns.Pid.name(), pid);
 		});
