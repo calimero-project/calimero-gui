@@ -260,6 +260,11 @@ class MemoryEditor extends BaseTabLayout
 			readMemory(Long.parseLong(start.getText(), 16), Integer.parseInt(bytes.getText()));
 		}));
 
+		bytes.addTraverseListener(traverseEvent -> {
+			if (traverseEvent.detail == SWT.TRAVERSE_RETURN)
+				read.notifyListeners(SWT.Selection, new Event());
+		});
+
 		Label spacer = new Label(editArea, SWT.SEPARATOR);
 		data = new RowData();
 		data.height = read.getSize().y;
