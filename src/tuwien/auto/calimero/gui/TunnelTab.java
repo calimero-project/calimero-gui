@@ -87,7 +87,9 @@ import tuwien.auto.calimero.process.ProcessEvent;
 import tuwien.auto.calimero.tools.ProcComm;
 import tuwien.auto.calimero.xml.KNXMLException;
 import tuwien.auto.calimero.xml.XmlInputFactory;
+import tuwien.auto.calimero.xml.XmlOutputFactory;
 import tuwien.auto.calimero.xml.XmlReader;
+import tuwien.auto.calimero.xml.XmlWriter;
 
 /**
  * @author B. Malinowsky
@@ -172,6 +174,7 @@ class TunnelTab extends BaseTabLayout
 	private ProcCommWrapper pc;
 	private Combo points;
 	private DatapointMap<Datapoint> model = new DatapointMap<>();
+	private boolean userLoadedDatapoints;
 
 	private long eventCounter;
 	private long eventCounterFiltered = 1;
@@ -241,6 +244,10 @@ class TunnelTab extends BaseTabLayout
 
 		initFilterMenu();
 		openGroupMonitor();
+
+		final String filename = defaultDatapointsFilename();
+		if (Files.isReadable(Path.of(filename)))
+			loadDatapoints(filename);
 	}
 
 	@Override
@@ -391,6 +398,7 @@ class TunnelTab extends BaseTabLayout
 	{
 		if (pc != null)
 			pc.quit();
+		saveDatapoints();
 	}
 
 	private static void setFieldSize(final Combo field, final int columns)
@@ -447,13 +455,19 @@ class TunnelTab extends BaseTabLayout
 		final String systemID = new FileDialog(Main.shell, SWT.OPEN).open();
 		if (systemID == null)
 			return;
+		loadDatapoints(systemID);
+		userLoadedDatapoints = true;
+	}
+
+	private void loadDatapoints(final String systemId) {
+		userLoadedDatapoints = false;
 		model = new DatapointMap<>();
-		try (XmlReader r = XmlInputFactory.newInstance().createXMLReader(systemID)) {
+		try (XmlReader r = XmlInputFactory.newInstance().createXMLReader(systemId)) {
 			model.load(r);
-			asyncAddLog("datapoints loaded from " + systemID);
+			asyncAddLog("datapoints loaded from " + systemId);
 		}
 		catch (final KNXMLException e) {
-			asyncAddLog("failed to load datapoints from " + systemID + ", " + e.getMessage() + ", line "
+			asyncAddLog("failed to load datapoints from " + systemId + ", " + e.getMessage() + ", line "
 					+ e.getLineNumber() + ", item " + e.getBadItem());
 		}
 		points.removeAll();
@@ -464,6 +478,23 @@ class TunnelTab extends BaseTabLayout
 		set.addAll(model.getDatapoints());
 		for (final Datapoint dp : set)
 			points.add(dp.getMainAddress().toString() + "\t" + dp.getName());
+	}
+
+	private void saveDatapoints() {
+		if (userLoadedDatapoints || model.getDatapoints().isEmpty())
+			return;
+		final String fileName = defaultDatapointsFilename();
+		try (XmlWriter w = XmlOutputFactory.newInstance().createXMLWriter(fileName)) {
+			model.save(w);
+		}
+		catch (final KNXMLException e) {
+			asyncAddLog("saving datapoint information to " + fileName, e);
+		}
+	}
+
+	private String defaultDatapointsFilename() {
+		final String fileName = ".datapoints_" + connect.serialNumber + ".xml";
+		return fileName;
 	}
 
 	private Datapoint fetchDatapoint(final GroupAddress main, final Object[] dptData)
