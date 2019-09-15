@@ -185,9 +185,7 @@ class TunnelTab extends BaseTabLayout
 
 	TunnelTab(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, (args.protocol + " connection to " + args.name),
-				"Connecting" + (args.remote == null ? "" : " to " + args.remote) + " on port " + args.port
-						+ (args.useNat() ? ", using NAT" : ""));
+		super(tf, (args.protocol + " connection to " + args.name), headerInfo(args, "Connecting to"));
 		connect = args;
 
 		list.setLinesVisible(true);
@@ -428,17 +426,12 @@ class TunnelTab extends BaseTabLayout
 				try {
 					pc = new ProcCommWrapper(args.toArray(new String[args.size()]));
 					pc.start(null);
-					Main.asyncExec(new Runnable() {
-						@Override
-						public void run()
-						{
-							if (editArea.isDisposed())
-								return;
-							for (final Control c : editArea.getChildren())
-								c.setEnabled(true);
-							setHeaderInfo("Connected" + (connect.remote == null ? "" : " to " + connect.remote)
-									+ " on port " + connect.port + (connect.useNat() ? ", using NAT" : ""));
-						}
+					Main.asyncExec(() -> {
+						if (editArea.isDisposed())
+							return;
+						for (final Control c : editArea.getChildren())
+							c.setEnabled(true);
+						setHeaderInfo(headerInfo(connect, "Connected to"));
 					});
 				}
 				catch (final Exception e) {
