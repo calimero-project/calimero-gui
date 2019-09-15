@@ -104,6 +104,7 @@ import tuwien.auto.calimero.dptxlator.PropertyTypes;
 import tuwien.auto.calimero.dptxlator.PropertyTypes.DPTID;
 import tuwien.auto.calimero.dptxlator.TranslatorTypes;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
+import tuwien.auto.calimero.knxnetip.SecureConnection;
 import tuwien.auto.calimero.link.KNXNetworkLink;
 import tuwien.auto.calimero.mgmt.Description;
 import tuwien.auto.calimero.mgmt.Destination;
@@ -988,17 +989,25 @@ class PropertyEditorTab extends BaseTabLayout
 		args.add("--verbose");
 		args.addAll(connect.getArgs(true));
 		args.addAll(cmd);
-		asyncAddLog("Using command line: " + String.join(" ", args));
 		setHeaderInfo(statusInfo(0));
 
+		// ensure user 1 if we're using local device management
 		if (args.indexOf("-r") == -1) {
 			final int userIdx = args.indexOf("--user");
 			if (userIdx != -1 && !"1".equals(args.get(userIdx + 1))) {
 				args.set(userIdx + 1, "1");
-				final int key = args.indexOf("--user-key");
-				args.set(key + 1, connect.config("user.1", "1"));
+				String userPwd = connect.config("user.1", "1");
+				int userIndex = args.indexOf("--user-pwd");
+				if (userIndex == -1) {
+					userIndex = args.indexOf("--user-key");
+					userPwd = DataUnitBuilder.toHex(SecureConnection.hashUserPassword(userPwd.toCharArray()), "");
+				}
+				if (userIndex != -1)
+					args.set(userIndex + 1, userPwd);
 			}
 		}
+
+		asyncAddLog("Using command line: " + String.join(" ", args));
 
 		toolThread = new Thread("Calimero property editor") {
 			@Override
