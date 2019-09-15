@@ -213,10 +213,10 @@ class DiscoverTab extends BaseTabLayout
 					buf.append(" at ").append(r.getControlEndpoint());
 					buf.append(" -- using local interface ").append(result.getNetworkInterface().getName()).append(" ");
 					buf.append(result.getAddress());
-					buf.append("    ").append(r.getDevice().toString().replaceAll("\".*\"", "")).append(sep);
+					buf.append("      ").append(r.getDevice().toString().replaceAll("\".*\"", "")).append(sep);
 					for (int i = buf.indexOf(", "); i != -1; i = buf.indexOf(", "))
-						buf.replace(i, i + 2, sep + "    ");
-					buf.append("    Supported services: ");
+						buf.replace(i, i + 2, sep + "      ");
+					buf.append("      Supported services: ");
 					buf.append(r.getServiceFamilies().toString());
 
 					Main.syncExec(() -> addKnxnetipEndpoint(result, buf.toString()));

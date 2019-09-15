@@ -437,7 +437,7 @@ class PropertyEditorTab extends BaseTabLayout
 		singleLineLabel("Located at index " + d.getPropIndex());
 
 		final String rw = d.getReadLevel() + "/" + d.getWriteLevel();
-		label("Required access level " + rw, false);
+		label("Access level " + rw, false);
 
 		final Text authCode = new Text(propertyPage, SWT.BORDER);
 		authCode.setMessage("Authorization code");

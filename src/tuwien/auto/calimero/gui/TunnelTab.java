@@ -111,7 +111,7 @@ class TunnelTab extends BaseTabLayout
 			}
 		}
 
-		void write(final Datapoint dp, final String value)
+		private void write(final Datapoint dp, final String value)
 		{
 			try {
 				pc.write(dp, value);
