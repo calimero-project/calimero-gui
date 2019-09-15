@@ -320,55 +320,29 @@ class TunnelTab extends BaseTabLayout
 			}
 		});
 
-		read.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(final SelectionEvent e)
-			{
-				try {
-					final GroupAddress main = selectedDpAddress();
-					final String selected = dpt.getText();
-					if (!model.contains(main)) {
-						final StateDP dp = new StateDP(main, "-");
-						model.add(dp);
-						points.add(main.toString());
-						if (!selected.isEmpty()) {
-							final Object[] data = (Object[]) dpt.getData(selected);
-							final MainType mt = (MainType) data[0];
-							final DPT dpt = (DPT) data[1];
-							dp.setDPT(mt.getMainNumber(), dpt != null ? dpt.getID()
-									: mt.getSubTypes().entrySet().iterator().next().getValue().getID());
-						}
-					}
-					else if (!selected.isEmpty()) {
-						updateToSelectedDpt(main, (Object[]) dpt.getData(selected));
-					}
-					pc.read(model.get(main));
-				}
-				catch (final KNXException e1) {
-					asyncAddLog(e1.getMessage());
-				}
+		read.addSelectionListener(selected(event -> {
+			try {
+				final String selectedDpt = dpt.getText();
+				pc.read(fetchDatapoint(selectedDpAddress(), (Object[]) dpt.getData(selectedDpt)));
 			}
-		});
+			catch (final KNXException e1) {
+				asyncAddLog(e1.getMessage());
+			}
+		}));
+		write.addSelectionListener(selected(event -> {
+			try {
+				final String selected = dpt.getText();
+				final var dp = fetchDatapoint(selectedDpAddress(), (Object[]) dpt.getData(selected));
+				if (!selected.isEmpty())
+					pc.write(dp, value.getText());
+				else
+					asyncAddLog("writing a datapoint requires a datapoint type and value");
+			}
+			catch (final KNXException e1) {
+				asyncAddLog(e1.getMessage());
+			}
+		}));
 
-		write.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(final SelectionEvent e)
-			{
-				try {
-					final Datapoint dp = model.get(selectedDpAddress());
-					final String selected = dpt.getText();
-					if (dp != null && !selected.isEmpty()) {
-						updateToSelectedDpt(dp.getMainAddress(), (Object[]) dpt.getData(selected));
-						pc.write(dp, value.getText());
-					}
-					else
-						asyncAddLog("datapoint " + points.getText() + " not loaded");
-				}
-				catch (final KNXException e1) {
-					asyncAddLog(e1.getMessage());
-				}
-			}
-		});
 		points.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(final SelectionEvent e)
@@ -492,16 +466,24 @@ class TunnelTab extends BaseTabLayout
 			points.add(dp.getMainAddress().toString() + "\t" + dp.getName());
 	}
 
-	private void updateToSelectedDpt(final GroupAddress main, final Object[] data) throws KNXException
-	{
-		final Datapoint dp = model.get(main);
-		final int current = dp.getMainNumber();
-		final MainType mt = (MainType) data[0];
-		final DPT dpt = (DPT) data[1];
-		if (mt.getMainNumber() != current || (dpt != null && !dpt.getID().equals(dp.getDPT())))
-			dp.setDPT(mt.getMainNumber(),
-					dpt != null ? dpt.getID() : mt.getSubTypes().entrySet().iterator().next().getValue().getID());
+	private Datapoint fetchDatapoint(final GroupAddress main, final Object[] dptData)
+		throws KNXException {
+		if (!model.contains(main)) {
+			final StateDP dp = new StateDP(main, "-");
+			model.add(dp);
+			points.add(main.toString());
+		}
 
+		if (dptData != null) {
+			final Datapoint dp = model.get(main);
+			final int current = dp.getMainNumber();
+			final MainType mt = (MainType) dptData[0];
+			final DPT dpt = (DPT) dptData[1];
+			if (mt.getMainNumber() != current || (dpt != null && !dpt.getID().equals(dp.getDPT())))
+				dp.setDPT(mt.getMainNumber(),
+						dpt != null ? dpt.getID() : mt.getSubTypes().entrySet().iterator().next().getValue().getID());
+		}
+		return model.get(main);
 	}
 
 	private GroupAddress selectedDpAddress() throws KNXFormatException
