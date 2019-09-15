@@ -425,7 +425,7 @@ class PropertyEditorTab extends BaseTabLayout
 		description.setLayoutData(gridData);
 
 		final Label ro = new Label(caption, SWT.NONE);
-		ro.setText(remotePropertySvc ? (d.isWriteEnabled() ? "" : "(read-only)") : "(read-only?)");
+		ro.setText(remotePropertySvc ? (d.isWriteEnabled() ? "(write-enabled)" : "(read-only)") : "(read/write?)");
 		gridData = new GridData();
 		gridData.verticalAlignment = SWT.BOTTOM;
 		ro.setLayoutData(gridData);
