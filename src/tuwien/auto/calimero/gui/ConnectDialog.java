@@ -103,6 +103,8 @@ class ConnectDialog
 		String localKnxAddress;
 		int[] secureServices;
 
+		String serialNumber = "0000";
+
 		static ConnectArguments newKnxNetIP(final boolean routing, final String localHost, final String remoteHost,
 			final String port, final boolean nat, final String knxAddress, final IndividualAddress serverIA) {
 			final var config = new ConnectArguments(routing ? Protocol.Routing : Protocol.Tunneling, localHost,
@@ -357,7 +359,7 @@ class ConnectDialog
 
 	ConnectDialog(final CTabFolder tf, final Protocol protocol, final String localEP, final String name, final String host,
 		final String port, final String mcast, final Integer medium, final boolean useNAT, final int[] secureServices,
-		final boolean preferRouting, final IndividualAddress serverIA) {
+		final boolean preferRouting, final IndividualAddress serverIA, final String serialNumber) {
 		final Shell shell = new Shell(Main.shell, SWT.DIALOG_TRIM | SWT.RESIZE);
 		shell.setLayout(new GridLayout());
 		shell.setText("Open connection");
@@ -569,6 +571,7 @@ class ConnectDialog
 					args = ConnectArguments.newFT12(p, knxAddr.getText());
 				args.name = n;
 				args.knxMedium = knxMedium;
+				args.serialNumber = serialNumber;
 
 				if (monitor.getSelection())
 					new MonitorTab(tf, args);

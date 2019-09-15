@@ -64,6 +64,8 @@ import org.eclipse.swt.widgets.Sash;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.usb4java.Device;
+import org.usb4java.DeviceDescriptor;
+import org.usb4java.DeviceHandle;
 import org.usb4java.LibUsb;
 
 import tuwien.auto.calimero.IndividualAddress;
@@ -165,6 +167,7 @@ class DiscoverTab extends BaseTabLayout
 		args.serverIA = Optional.ofNullable(defaultInterface.getData("hostIA")).map(Objects::toString).orElse("");
 		args.knxMedium = Optional.ofNullable((Integer) defaultInterface.getData("medium")).orElse(KNXMediumSettings.MEDIUM_TP1);
 		args.secureServices = (int[]) Optional.ofNullable(defaultInterface.getData("secure")).orElse(new int[0]);
+		args.serialNumber = (String) defaultInterface.getData("SN");
 		return Optional.of(args);
 	}
 
@@ -273,9 +276,12 @@ class DiscoverTab extends BaseTabLayout
 											asyncAddLog("reading KNX device descriptor of " + d,  e);
 										}
 
+										final var sn = serialNumber(d, vendorId, productId);
+										final var serialNumber = sn.substring(0, 4) + ":" + sn.substring(4);
+
 										addListItem(new String[] { sb.toString() },
-												new String[] { "protocol", "name", "port", "medium" },
-												new Object[] { Protocol.USB, product, vp, medium });
+												new String[] { "protocol", "name", "port", "medium", "SN" },
+												new Object[] { Protocol.USB, product, vp, medium, serialNumber });
 									}
 									catch (final RuntimeException e) {
 										asyncAddLog("error: " + e.getMessage());
@@ -296,9 +302,11 @@ class DiscoverTab extends BaseTabLayout
 										final String dev = "/dev/";
 
 										final int medium = KNXMediumSettings.MEDIUM_TP1;
+										final String serialNumber = serialNumber(d, vendorId, productId);
+
 										addListItem(new String[] { sb.toString() },
-												new String[] { "protocol", "name", "port", "medium" },
-												new Object[] { Protocol.Tpuart, product, dev, medium });
+												new String[] { "protocol", "name", "port", "medium", "SN" },
+												new Object[] { Protocol.Tpuart, product, dev, medium, serialNumber });
 									}
 									catch (final RuntimeException e) {
 										asyncAddLog("error: " + e.getMessage());
@@ -344,6 +352,29 @@ class DiscoverTab extends BaseTabLayout
 					return "Manufacturer: " + nullTerminate(mf.orElse("n/a"));
 				}
 
+				private String serialNumber(final UsbDevice d, final int vendorId, final int productId) {
+					try {
+						return d.getSerialNumberString();
+					}
+					catch (UnsupportedEncodingException | UsbDisconnectedException | UsbException e) {
+						final Device device = UsbConnection.findDeviceLowLevel(vendorId, productId);
+						final DeviceDescriptor dd = new DeviceDescriptor();
+						final DeviceHandle dh = new DeviceHandle();
+						final int ret = LibUsb.getDeviceDescriptor(device, dd);
+						final int open = LibUsb.open(device, dh);
+						String sn = null;
+						try {
+							if (ret == 0 && open == 0)
+								sn = LibUsb.getStringDescriptor(dh, dd.iSerialNumber());
+						}
+						finally {
+							LibUsb.close(dh);
+							LibUsb.unrefDevice(device);
+						}
+						return sn == null ? "0000" : sn;
+					}
+				}
+
 				// sometimes usb4java returns strings which exceed past the null terminator
 				private String nullTerminate(final String s)
 				{
@@ -366,7 +397,7 @@ class DiscoverTab extends BaseTabLayout
 		new ConnectDialog(getTabFolder(), (Protocol) i.getData("protocol"), (String) i.getData("localEP"),
 				(String) i.getData("name"), (String) i.getData("host"), (String) i.getData("port"),
 				(String) i.getData("mcast"), (Integer) i.getData("medium"), nat.getSelection(), secure,
-				preferRouting.getSelection(), (IndividualAddress) i.getData("hostIA") );
+				preferRouting.getSelection(), (IndividualAddress) i.getData("hostIA"), (String) i.getData("SN"));
 	}
 
 	private static final String secureSymbol = new String(Character.toChars(0x1F512));
@@ -415,9 +446,10 @@ class DiscoverTab extends BaseTabLayout
 		final Protocol protocol = tunneling ? Protocol.Tunneling : Protocol.Routing;
 
 		addListItem(new String[] { itemText },
-				new String[] { "protocol", "localEP", "name", "host", "port", "mcast", "medium", "secure", "supportsRouting", "hostIA" },
+				new String[] { "protocol", "localEP", "name", "host", "port", "mcast", "medium", "secure", "supportsRouting", "hostIA", "SN" },
 				new Object[] { protocol, result.getAddress().getHostAddress(), r.getDevice().getName(),
 					r.getControlEndpoint().getAddress().getHostAddress(), Integer.toString(r.getControlEndpoint().getPort()), mcast,
-					r.getDevice().getKNXMedium(), secureServices, routing, result.getResponse().getDevice().getAddress() });
+					r.getDevice().getKNXMedium(), secureServices, routing, result.getResponse().getDevice().getAddress(),
+					result.getResponse().getDevice().getSerialNumberString() });
 	}
 }
