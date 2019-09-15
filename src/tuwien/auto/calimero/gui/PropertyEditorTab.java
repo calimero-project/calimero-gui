@@ -407,7 +407,7 @@ class PropertyEditorTab extends BaseTabLayout
 		final PropertyClient.Property p = getDefinition(d.getObjectType(), d.getPID()).orElse(unknown);
 
 		final Composite caption = new Composite(propertyPage, SWT.FILL);
-		layout = new GridLayout(2, false);
+		layout = new GridLayout(3, false);
 		layout.marginWidth = 0;
 		layout.marginLeft = 0;
 		layout.horizontalSpacing = 7;
@@ -416,19 +416,22 @@ class PropertyEditorTab extends BaseTabLayout
 		gridData.horizontalSpan = 3;
 		caption.setLayoutData(gridData);
 
-		final Label description = new Label(caption, SWT.NONE);
-		description.setText(p.getName());
-		final FontData fontData = description.getFont().getFontData()[0];
-		description.setFont(new Font(Main.display, new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD)));
+		final Label name = new Label(caption, SWT.NONE);
+		name.setText(p.getName());
+		final FontData fontData = name.getFont().getFontData()[0];
+		name.setFont(new Font(Main.display, new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD)));
 		gridData = new GridData();
 		gridData.verticalAlignment = SWT.BOTTOM;
-		description.setLayoutData(gridData);
+		name.setLayoutData(gridData);
 
 		final Label ro = new Label(caption, SWT.NONE);
 		ro.setText(remotePropertySvc ? (d.isWriteEnabled() ? "(write-enabled)" : "(read-only)") : "(read/write?)");
 		gridData = new GridData();
 		gridData.verticalAlignment = SWT.BOTTOM;
 		ro.setLayoutData(gridData);
+
+		final var description = new Label(caption, SWT.NONE);
+		description.setText(p.description());
 
 		singleLineLabel(p.getPIDName() + " (" + pid + ")");
 		singleLineLabel("Located at index " + d.getPropIndex());
