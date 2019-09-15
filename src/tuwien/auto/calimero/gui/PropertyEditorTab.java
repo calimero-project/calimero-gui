@@ -468,6 +468,11 @@ class PropertyEditorTab extends BaseTabLayout
 		final Button set = new Button(propertyPage, SWT.PUSH);
 		set.setText("Set");
 
+		value.addTraverseListener(traverseEvent -> {
+			if (traverseEvent.detail == SWT.TRAVERSE_RETURN)
+				set.notifyListeners(SWT.Selection, new Event());
+		});
+
 		final Label altFormats = new Label(propertyPage, SWT.RIGHT);
 		altFormats.setText("Decimal\nHex\nBinary");
 		gridData = new GridData();
