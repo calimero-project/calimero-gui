@@ -276,7 +276,7 @@ class TunnelTab extends BaseTabLayout
 			}
 		});
 		points = new Combo(editArea, SWT.DROP_DOWN);
-		setFieldSize(points, 30);
+		setFieldSize(points, 50);
 
 		final Button read = new Button(editArea, SWT.NONE);
 		read.setText("Read");
