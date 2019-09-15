@@ -71,6 +71,7 @@ import tuwien.auto.calimero.Keyring;
 import tuwien.auto.calimero.Keyring.Interface;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 import tuwien.auto.calimero.knxnetip.KNXnetIPConnection;
+import tuwien.auto.calimero.knxnetip.SecureConnection;
 import tuwien.auto.calimero.link.medium.KNXMediumSettings;
 
 /**
@@ -275,6 +276,15 @@ class ConnectDialog
 				final InetAddress remote = InetAddress.getByName(value);
 				final var groupKey = (byte[]) keyring.configuration().get(remote);
 				return toHex(keyring.decryptKey(groupKey, keyringPassword), "");
+			}
+
+			if (key.startsWith("device")) {
+				final var devicePwd = keyring.devices().get(host).authentication();
+				final char[] decryptPassword = keyring.decryptPassword(devicePwd, keyringPassword);
+				if ("device.pwd".equals(key))
+					return new String(decryptPassword);
+				if ("device.key".equals(key))
+					return toHex(SecureConnection.hashDeviceAuthenticationPassword(decryptPassword), "");
 			}
 
 			if (key.startsWith("user")) {
