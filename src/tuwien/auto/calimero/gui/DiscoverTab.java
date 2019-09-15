@@ -72,6 +72,7 @@ import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 import tuwien.auto.calimero.knxnetip.Discoverer.Result;
 import tuwien.auto.calimero.knxnetip.servicetype.SearchResponse;
+import tuwien.auto.calimero.knxnetip.util.DIB;
 import tuwien.auto.calimero.knxnetip.util.ServiceFamiliesDIB;
 import tuwien.auto.calimero.link.medium.KNXMediumSettings;
 import tuwien.auto.calimero.log.LogService.LogLevel;
@@ -368,6 +369,8 @@ class DiscoverTab extends BaseTabLayout
 				preferRouting.getSelection(), (IndividualAddress) i.getData("hostIA") );
 	}
 
+	private static final String secureSymbol = new String(Character.toChars(0x1F512));
+
 	private void addKnxnetipEndpoint(final Result<SearchResponse> result, final String newItem)
 	{
 		// only add the new item if it is different from any already shown in the list
@@ -387,6 +390,27 @@ class DiscoverTab extends BaseTabLayout
 		int[] secureServices = {};
 
 		String itemText = newItem;
+
+		for (final var d : r.description()) {
+			if (d instanceof ServiceFamiliesDIB) {
+				final var families = (ServiceFamiliesDIB) d;
+				if (families.getDescTypeCode() == DIB.SUPP_SVC_FAMILIES) {
+					for (final int id : families.getFamilyIds()) {
+						if (id == ServiceFamiliesDIB.CORE && families.getVersion(id) > 1)
+							itemText = itemText.replaceFirst("UDP", "UDP & TCP");
+						if (id == ServiceFamiliesDIB.TUNNELING)
+							tunneling = true;
+						if (id == ServiceFamiliesDIB.ROUTING)
+							routing = true;
+					}
+				}
+				else if (families.getDescTypeCode() == DIB.SecureServiceFamilies) {
+					secureServices = families.getFamilyIds();
+					itemText += "\n                                        " + families;
+					itemText = itemText.replaceFirst("--", secureSymbol + " --");
+				}
+			}
+		}
 
 		final Protocol protocol = tunneling ? Protocol.Tunneling : Protocol.Routing;
 
