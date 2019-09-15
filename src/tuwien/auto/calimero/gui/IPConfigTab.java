@@ -88,28 +88,27 @@ class IPConfigTab extends BaseTabLayout
 		try {
 			final IPConfig config = new IPConfig(args.toArray(new String[0])) {
 				@Override
+				public void run() {
+					Main.asyncExec(() -> setHeaderInfo(headerInfo(connect, "Query configuration from")));
+					super.run();
+				}
+
+				@Override
 				protected void onConfigurationReceived(final List<String[]> config)
 				{
-					Main.asyncExec(new Runnable() {
-						@Override
-						public void run()
-						{
-							if (list.isDisposed())
-								return;
-							list.setRedraw(false);
-							for (final String[] s : config) {
-								if (s[2].isEmpty())
-									s[2] = "--";
-								final TableItem i = new TableItem(list, SWT.NONE);
-								i.setText(s);
-							}
-							list.setRedraw(true);
-
-							setHeaderInfo("Configuration received from "
-									+ (connect.knxAddress.isEmpty() ? "" : connect.knxAddress
-											+ " over ") + connect.remote + " port " + connect.port
-									+ (connect.useNat() ? ", using NAT" : ""));
+					Main.asyncExec(() -> {
+						if (list.isDisposed())
+							return;
+						list.setRedraw(false);
+						for (final String[] s : config) {
+							if (s[2].isEmpty())
+								s[2] = "--";
+							final TableItem i = new TableItem(list, SWT.NONE);
+							i.setText(s);
 						}
+						list.setRedraw(true);
+
+						setHeaderInfo(headerInfo(connect, "Configuration received from"));
 					});
 				}
 			};

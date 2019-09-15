@@ -159,9 +159,7 @@ class MonitorTab extends BaseTabLayout
 			public void start() throws KNXException, InterruptedException
 			{
 				super.start();
-				Main.asyncExec(() -> setHeaderInfo("Monitoring"
-						+ (connect.remote == null ? "" : " on host " + connect.remote)
-						+ " on port " + connect.port + (connect.useNat() ? ", using NAT" : "")));
+				Main.asyncExec(() -> setHeaderInfo(headerInfo(connect, "Monitoring on")));
 			}
 
 			@Override
