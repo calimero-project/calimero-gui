@@ -167,7 +167,7 @@ class PropertyEditorTab extends BaseTabLayout
 	{
 		super(tf, "Properties of " + uniqueId(args), headerInfo(args, "Connecting to"));
 		connect = args;
-		remotePropertySvc = connect.getArgs(true).contains("-r");
+		remotePropertySvc = !connect.knxAddress.isEmpty();
 
 		final String prefix = "knx-properties_" + deviceName() + "_";
 		final String suffix = ".csv";
