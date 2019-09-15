@@ -433,7 +433,7 @@ class ConnectDialog
 			{
 				if (routing.getSelection() && mcast != null)
 					hostData.setText(mcast);
-				if (!routing.getSelection())
+				if (!routing.getSelection() && host != null)
 					hostData.setText(host);
 			}
 		});
