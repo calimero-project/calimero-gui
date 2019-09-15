@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2018 B. Malinowsky
+    Copyright (c) 2006, 2019 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -80,9 +80,7 @@ class MonitorTab extends BaseTabLayout
 
 	MonitorTab(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, "Monitor for " + args.name, "Open monitor"
-				+ (args.remote == null ? "" : " on host " + args.remote) + " on port " + args.port
-				+ (args.useNat() ? ", using NAT" : ""));
+		super(tf, "Monitor for " + args.name, headerInfo(ignoreRoutingAndRemoteAddress(args), "Open monitor on"));
 		connect = args;
 
 		final TableColumn cnt = new TableColumn(list, SWT.RIGHT);
@@ -254,5 +252,12 @@ class MonitorTab extends BaseTabLayout
 	{
 		if (m != null)
 			m.quit();
+	}
+
+	// routing is not supported with netmon, remote address not used
+	private static ConnectArguments ignoreRoutingAndRemoteAddress(final ConnectArguments config) {
+		config.ignoreRoutingProtocol();
+		config.knxAddress = "";
+		return config;
 	}
 }

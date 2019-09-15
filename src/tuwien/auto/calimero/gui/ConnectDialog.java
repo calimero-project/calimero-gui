@@ -159,6 +159,13 @@ class ConnectDialog
 			return nat;
 		}
 
+		public void ignoreRoutingProtocol() {
+			if (protocol == Protocol.Routing) {
+				protocol = Protocol.Tunneling;
+				remote = serverIP;
+			}
+		}
+
 		public void useServerIA() {
 			knxAddress = serverIA;
 		}
