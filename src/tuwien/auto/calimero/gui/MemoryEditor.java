@@ -553,7 +553,7 @@ class MemoryEditor extends BaseTabLayout
 		final InetSocketAddress local = new InetSocketAddress(connect.local, 0);
 		final InetAddress addr = InetAddress.getByName(connect.remote);
 		if (addr.isMulticastAddress()) {
-			if (connect.secure) {
+			if (connect.isSecure(Protocol.Routing)) {
 				try {
 					final List<String> args = connect.getArgs(false);
 					final byte[] groupKey = fromHex(args.get(1 + args.indexOf("--group-key")));
@@ -569,7 +569,7 @@ class MemoryEditor extends BaseTabLayout
 			return KNXNetworkLinkIP.newRoutingLink(local.getAddress(), addr, medium);
 		}
 		final InetSocketAddress remote = new InetSocketAddress(addr, Integer.parseInt(connect.port));
-		if (connect.secure) {
+		if (connect.isSecure(Protocol.Tunneling)) {
 			final List<String> args = connect.getArgs(false);
 			final byte[] devAuth = fromHex(args.get(1 + args.indexOf("--device-key")));
 			final int userId = Integer.parseInt(args.get(1 + args.indexOf("--user")));

@@ -72,6 +72,7 @@ import tuwien.auto.calimero.Keyring.Interface;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 import tuwien.auto.calimero.knxnetip.KNXnetIPConnection;
 import tuwien.auto.calimero.knxnetip.SecureConnection;
+import tuwien.auto.calimero.knxnetip.util.ServiceFamiliesDIB;
 import tuwien.auto.calimero.link.medium.KNXMediumSettings;
 
 /**
@@ -82,28 +83,32 @@ class ConnectDialog
 	public static final class ConnectArguments
 	{
 		public enum Protocol {
-			Unknown, Tunneling, Routing, FT12, USB, Tpuart
+			Unknown, DeviceManagement, Tunneling, Routing, FT12, USB, Tpuart
 		}
 
 		String name;
 		String knxAddress;
+		String serverIA;
 
-		final Protocol protocol;
-		final String remote;
+		Protocol protocol;
+		String remote;
 		final String port;
 		int knxMedium;
 
 		final String local;
 		private final boolean nat;
 		private final IndividualAddress host;
-		String localKnxAddress;
-		boolean secure;
+		String serverIP;
 
-		static ConnectArguments newKnxNetIP(final boolean routing, final String localHost,
-			final String remoteHost, final String port, final boolean nat, final String knxAddress)
-		{
-			return new ConnectArguments(routing ? Protocol.Routing : Protocol.Tunneling, localHost,
+		String localKnxAddress;
+		int[] secureServices;
+
+		static ConnectArguments newKnxNetIP(final boolean routing, final String localHost, final String remoteHost,
+			final String port, final boolean nat, final String knxAddress, final IndividualAddress serverIA) {
+			final var config = new ConnectArguments(routing ? Protocol.Routing : Protocol.Tunneling, localHost,
 					remoteHost, port, nat, "", knxAddress);
+			config.serverIA = serverIA != null ? serverIA.toString() : "";
+			return config;
 		}
 
 		static ConnectArguments newUsb(final String port, final String knxAddress)
@@ -167,41 +172,46 @@ class ConnectDialog
 				args.add(remote);
 				if (useNat())
 					args.add("--nat");
-				if (secure) {
-					if (protocol == Protocol.Routing) {
-						String key = config("group.key", remote);
-						if (key.isEmpty()) {
+				if (protocol == Protocol.Routing && isSecure(Protocol.Routing)) {
+					String key = config("group.key", remote);
+					if (key.isEmpty()) {
+						final String[] tempKey = new String[1];
+						Main.syncExec(() -> {
 							final PasswordDialog dlg = new PasswordDialog(name, remote);
 							if (dlg.show())
-								key = dlg.groupKey();
-						}
-						args.add("--group-key");
-						args.add(key);
+								tempKey[0] = dlg.groupKey();
+						});
+						key = tempKey[0];
 					}
-					else {
-						final String user = "" + KeyringTab.user();
-						final String userPwd = config("user." + user, user);
-						if (userPwd.isEmpty()) {
-							final PasswordDialog dlg = new PasswordDialog(name, true);
-							if (dlg.show()) {
-								args.add("--user");
-								args.add(dlg.user());
-								args.add(dlg.isUserPasswordHash() ? "--user-key" : "--user-pwd");
-								args.add(dlg.userPassword());
+					args.add("--group-key");
+					args.add(key);
+				}
+				else if (protocol == Protocol.Tunneling && isSecure(Protocol.Tunneling)) {
+					final String user = "" + KeyringTab.user();
+					final String userPwd = config("user." + user, user);
+					if (userPwd.isEmpty()) {
+						final PasswordDialog dlg = new PasswordDialog(name, true);
+						if (dlg.show()) {
+							args.add("--user");
+							args.add(dlg.user());
+							args.add(dlg.isUserPasswordHash() ? "--user-key" : "--user-pwd");
+							args.add(dlg.userPassword());
+							if (!dlg.deviceAuthCode().isEmpty()) {
 								args.add(dlg.isDeviceAuthHash() ? "--device-key" : "--device-auth-code");
 								args.add(dlg.deviceAuthCode());
 							}
 						}
-						else {
-							args.add("--user");
-							args.add(user);
-							args.add("--user-pwd");
-							args.add(userPwd);
-							args.add("--device-key");
-							args.add(config("device.key", ""));
-						}
+					}
+					else {
+						args.add("--user");
+						args.add(user);
+						args.add("--user-pwd");
+						args.add(userPwd);
+						args.add("--device-key");
+						args.add(config("device.key", ""));
 					}
 				}
+
 				if (!port.isEmpty())
 					args.add("-p");
 				break;
@@ -232,6 +242,18 @@ class ConnectDialog
 				args.add(knxAddress);
 			}
 			return args;
+		}
+
+		boolean isSecure(final Protocol protocol) {
+			for (final int service : secureServices) {
+				if (service == ServiceFamiliesDIB.DEVICE_MANAGEMENT && protocol == Protocol.DeviceManagement)
+					return true;
+				if (service == ServiceFamiliesDIB.TUNNELING && protocol == Protocol.Tunneling)
+					return true;
+				if (service == ServiceFamiliesDIB.ROUTING && protocol == Protocol.Routing)
+					return true;
+			}
+			return false;
 		}
 
 		String config(final String key, final String configValue) {
@@ -323,8 +345,8 @@ class ConnectDialog
 	private final int knxMedium;
 
 	ConnectDialog(final CTabFolder tf, final Protocol protocol, final String localEP, final String name, final String host,
-		final String port, final String mcast, final Integer medium, final boolean useNAT, final boolean secure,
-		final boolean preferRouting) {
+		final String port, final String mcast, final Integer medium, final boolean useNAT, final int[] secureServices,
+		final boolean preferRouting, final IndividualAddress serverIA) {
 		final Shell shell = new Shell(Main.shell, SWT.DIALOG_TRIM | SWT.RESIZE);
 		shell.setLayout(new GridLayout());
 		shell.setText("Open connection");
@@ -526,10 +548,11 @@ class ConnectDialog
 					args = ConnectArguments.newTpuart(p, lka, knxAddr.getText());
 				}
 				else if (!h.isEmpty()) {
-					args = ConnectArguments.newKnxNetIP(useRouting(), local, h, p, natChecked, knxAddr.getText());
+					args = ConnectArguments.newKnxNetIP(useRouting(), local, h, p, natChecked, knxAddr.getText(), serverIA);
 					if (!localKnxAddress.getText().isEmpty())
 						args.localKnxAddress = localKnxAddress.getText();
-					args.secure = secure;
+					args.serverIP = host;
+					args.secureServices = secureServices;
 				}
 				else
 					args = ConnectArguments.newFT12(p, knxAddr.getText());
