@@ -511,7 +511,7 @@ class BaseTabLayout
 	{
 		asyncAddLog("Error: " + t.toString());
 		final java.util.List<StackTraceElement> trace = Arrays.asList(t.getStackTrace());
-		trace.stream().filter(e -> e.getClassName().startsWith("tuwien")).findFirst().map(e -> "\t" + e).ifPresent(this::asyncAddLog);
+		trace.stream().filter(e -> e.getClassName().startsWith("tuwien")).limit(3).map(e -> "\t" + e).forEach(this::asyncAddLog);
 		for (Throwable i = t; i.getCause() != null && i != i.getCause(); i = i.getCause())
 			asyncAddLog("\t" + i.getCause().toString());
 	}
