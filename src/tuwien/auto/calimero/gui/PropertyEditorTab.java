@@ -540,6 +540,7 @@ class PropertyEditorTab extends BaseTabLayout
 	{
 		hidePropertyPage();
 		resetTable();
+		tree.deselectAll();
 		sashForm.setMaximizedControl(list);
 		for (int i = 0; i < descriptions.size(); i++) {
 			addRow(i);
