@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2018 B. Malinowsky
+    Copyright (c) 2006, 2019 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -58,9 +58,7 @@ class IPConfigTab extends BaseTabLayout
 
 	IPConfigTab(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, "KNX IP configuration of " + args.name, "Query configuration from "
-				+ (args.knxAddress == null ? "" : args.knxAddress + " over ") + args.remote
-				+ " port " + args.port + (args.useNat() ? ", using NAT" : ""));
+		super(tf, "KNX IP configuration of " + args.name, headerInfo(adjustPreferRoutingConfig(args), "Connecting to"));
 		connect = args;
 
 		final TableColumn pid = new TableColumn(list, SWT.LEFT);

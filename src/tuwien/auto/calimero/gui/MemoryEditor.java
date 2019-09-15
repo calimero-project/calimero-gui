@@ -143,9 +143,7 @@ class MemoryEditor extends BaseTabLayout
 
 	MemoryEditor(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, (args.protocol + " connection to " + args.name),
-				"Connecting" + (args.remote == null ? "" : " to " + args.remote) + " on port " + args.port
-						+ (args.useNat() ? ", using NAT" : ""));
+		super(tf, (args.protocol + " connection to " + args.name), headerInfo(adjustPreferRoutingConfig(args), "Connecting to"));
 		connect = args;
 		IndividualAddress ia;
 		try {

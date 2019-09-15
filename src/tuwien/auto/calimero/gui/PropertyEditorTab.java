@@ -166,7 +166,7 @@ class PropertyEditorTab extends BaseTabLayout
 
 	PropertyEditorTab(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, "Properties of " + uniqueId(args), headerInfo(args, "Connecting to"));
+		super(tf, "Properties of " + uniqueId(args), headerInfo(adjustPreferRoutingConfig(args), "Connecting to"));
 		connect = args;
 		remotePropertySvc = !connect.knxAddress.isEmpty();
 

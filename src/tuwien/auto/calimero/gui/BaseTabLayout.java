@@ -91,6 +91,7 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
+import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 import tuwien.auto.calimero.log.LogService.LogLevel;
 
 /**
@@ -393,6 +394,13 @@ class BaseTabLayout
 		if (connect.remote != null)
 			return "interface " + connect.remote + ":" + connect.port;
 		return "interface " + connect.port;
+	}
+
+	// if prefer routing option is set but no knx address is given, we use the server knx address
+	static ConnectArguments adjustPreferRoutingConfig(final ConnectArguments config) {
+		if (config.protocol == Protocol.Routing && config.knxAddress.isEmpty())
+			config.useServerIA();
+		return config;
 	}
 
 	/**

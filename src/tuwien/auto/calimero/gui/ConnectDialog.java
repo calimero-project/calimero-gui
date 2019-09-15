@@ -159,6 +159,10 @@ class ConnectDialog
 			return nat;
 		}
 
+		public void useServerIA() {
+			knxAddress = serverIA;
+		}
+
 		public List<String> getArgs(final boolean useRemoteAddressOption)
 		{
 			final List<String> args = new ArrayList<String>();

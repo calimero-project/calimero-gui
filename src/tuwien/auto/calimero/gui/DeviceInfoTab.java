@@ -60,7 +60,7 @@ class DeviceInfoTab extends BaseTabLayout
 
 	DeviceInfoTab(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, "Device info of " + uniqueId(args), headerInfo(args, "Read info of ") + " ...");
+		super(tf, "Device info of " + uniqueId(args), headerInfo(adjustPreferRoutingConfig(args), "Read info of") + " ...");
 		connect = args;
 
 		final TableColumn pid = new TableColumn(list, SWT.LEFT);
