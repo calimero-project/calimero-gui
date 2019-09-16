@@ -1113,6 +1113,8 @@ class PropertyEditorTab extends BaseTabLayout
 								asyncAddLog(thrown);
 							}
 							Main.asyncExec(() -> {
+								if (cancel.isDisposed())
+									return;
 								setHeaderInfo(statusInfo(2));
 								cancel.setEnabled(false);
 							});
