@@ -56,14 +56,21 @@ import org.eclipse.swt.widgets.TableColumn;
 
 import tuwien.auto.calimero.DataUnitBuilder;
 import tuwien.auto.calimero.FrameEvent;
+import tuwien.auto.calimero.GroupAddress;
 import tuwien.auto.calimero.KNXException;
+import tuwien.auto.calimero.KNXIllegalArgumentException;
 import tuwien.auto.calimero.cemi.CEMIBusMon;
+import tuwien.auto.calimero.datapoint.DatapointMap;
+import tuwien.auto.calimero.dptxlator.TranslatorTypes;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.link.MonitorFrameEvent;
 import tuwien.auto.calimero.link.medium.RFLData;
 import tuwien.auto.calimero.link.medium.RawFrame;
 import tuwien.auto.calimero.link.medium.RawFrameBase;
 import tuwien.auto.calimero.tools.NetworkMonitor;
+import tuwien.auto.calimero.xml.KNXMLException;
+import tuwien.auto.calimero.xml.XmlInputFactory;
+import tuwien.auto.calimero.xml.XmlReader;
 
 /**
  * @author B. Malinowsky
@@ -77,6 +84,8 @@ class MonitorTab extends BaseTabLayout
 
 	private final DateTimeFormatter dateFormatter;
 	private final DateTimeFormatter timeFormatter;
+
+	private final DatapointMap<?> datapoints = new DatapointMap<>();
 
 	MonitorTab(final CTabFolder tf, final ConnectArguments args)
 	{
@@ -97,7 +106,7 @@ class MonitorTab extends BaseTabLayout
 		time.setWidth(40);
 		final TableColumn timestamp = new TableColumn(list, SWT.RIGHT);
 		timestamp.setText("Timestamp");
-		timestamp.setWidth(60);
+		timestamp.setWidth(50);
 		final TableColumn status = new TableColumn(list, SWT.LEFT);
 		status.setText("Sequence / status");
 		status.setWidth(80);
@@ -113,6 +122,10 @@ class MonitorTab extends BaseTabLayout
 		final TableColumn asdu = new TableColumn(list, SWT.LEFT);
 		asdu.setText("ASDU");
 		asdu.setWidth(50);
+		final TableColumn decodedAsdu = new TableColumn(list, SWT.LEFT);
+		decodedAsdu.setText("Decoded ASDU");
+		decodedAsdu.setWidth(60);
+
 		enableColumnAdjusting();
 
 		final String filter = args.remote == null ? args.port : args.remote;
@@ -138,6 +151,9 @@ class MonitorTab extends BaseTabLayout
 		timeFormatter = tfmt.withZone(ZoneId.systemDefault());
 
 		initFilterMenu();
+		final String filename = defaultDatapointsFilename();
+		if (Files.isReadable(Path.of(filename)))
+			loadDatapoints(filename);
 		startMonitor();
 	}
 
@@ -201,6 +217,17 @@ class MonitorTab extends BaseTabLayout
 						// asdu
 						final byte[] asdu = DataUnitBuilder.extractASDU(f.getTPDU());
 						item.add(DataUnitBuilder.toHex(asdu, " "));
+
+						// let's see if we can decode a group-addressed asdu based on datapoint information
+						final var dst = f.getDestination();
+						if (dst instanceof GroupAddress && datapoints.contains((GroupAddress) dst)) {
+							final var datapoint = datapoints.get((GroupAddress) dst);
+							try {
+								final var translator = TranslatorTypes.createTranslator(datapoint.getDPT(), asdu);
+								item.add(translator.getValue());
+							}
+							catch (KNXIllegalArgumentException | KNXException ignore) {}
+						}
 					}
 					else if (raw instanceof RFLData) {
 						final RFLData rf = (RFLData) raw;
@@ -250,6 +277,22 @@ class MonitorTab extends BaseTabLayout
 	{
 		if (m != null)
 			m.quit();
+	}
+
+	private String defaultDatapointsFilename() {
+		final String fileName = ".datapoints_" + connect.serialNumber + ".xml";
+		return fileName;
+	}
+
+	private void loadDatapoints(final String systemId) {
+		try (XmlReader r = XmlInputFactory.newInstance().createXMLReader(systemId)) {
+			datapoints.load(r);
+			asyncAddLog("datapoints loaded from " + systemId);
+		}
+		catch (final KNXMLException e) {
+			asyncAddLog("failed to load datapoints from " + systemId + ", " + e.getMessage() + ", line "
+					+ e.getLineNumber() + ", item " + e.getBadItem());
+		}
 	}
 
 	// routing is not supported with netmon, remote address not used
