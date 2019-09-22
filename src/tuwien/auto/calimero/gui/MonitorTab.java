@@ -281,7 +281,7 @@ class MonitorTab extends BaseTabLayout
 
 	private String defaultDatapointsFilename() {
 		final String fileName = ".datapoints_" + connect.serialNumber + ".xml";
-		return fileName;
+		return fileName.replaceAll(":", "-");
 	}
 
 	private void loadDatapoints(final String systemId) {

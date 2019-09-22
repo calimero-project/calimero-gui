@@ -487,7 +487,7 @@ class TunnelTab extends BaseTabLayout
 
 	private String defaultDatapointsFilename() {
 		final String fileName = ".datapoints_" + connect.serialNumber + ".xml";
-		return fileName;
+		return fileName.replaceAll(":", "-");
 	}
 
 	private Datapoint fetchDatapoint(final GroupAddress main, final Object[] dptData)
