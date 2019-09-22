@@ -34,6 +34,9 @@ distTar.classifier = buildClassifier
 sourceCompatibility = 11
 targetCompatibility = 11
 
+compileJava.options.encoding = 'UTF-8'
+compileTestJava.options.encoding = 'UTF-8'
+
 mainClassName = 'tuwien.auto.calimero.gui.SwtChecker'
 
 // SWT is platform dependent
