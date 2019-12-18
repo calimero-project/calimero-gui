@@ -70,12 +70,12 @@ configurations {
 dependencies {
     implementation "com.github.calimero:calimero-core:${version}"
     implementation "com.github.calimero:calimero-tools:${version}"
-    runtime "com.github.calimero:calimero-rxtx:${version}"
+    runtimeOnly "com.github.calimero:calimero-rxtx:${version}"
     provided("${swtGroupId}:${swtArtifact}:${swtVersion}") {
 		exclude group: "${swtGroupId}", module: 'org.eclipse.swt' 
     }
     implementation 'org.slf4j:slf4j-api:1.8.0-beta4'
-    runtime 'org.slf4j:slf4j-simple:1.8.0-beta4'
+    runtimeOnly 'org.slf4j:slf4j-simple:1.8.0-beta4'
 }
 
 java {
@@ -86,7 +86,7 @@ jar {
   dependsOn configurations.runtime
   manifest {
     attributes(
-      'Class-Path': (configurations.runtime - configurations.provided + files('swt.jar')).collect { it.getName() }.join(' '),
+      'Class-Path': (configurations.runtimeClasspath - configurations.provided + files('swt.jar')).collect { it.getName() }.join(' '),
       'Main-Class': mainClassName
     )
   }
