@@ -78,6 +78,10 @@ dependencies {
     runtime 'org.slf4j:slf4j-simple:1.8.0-beta4'
 }
 
+java {
+    withSourcesJar()
+}
+
 jar {
   dependsOn configurations.runtime
   manifest {
