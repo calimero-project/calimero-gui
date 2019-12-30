@@ -160,7 +160,6 @@ class MonitorTab extends BaseTabLayout
 	private void startMonitor()
 	{
 		final java.util.List<String> args = new ArrayList<String>();
-		args.add("--verbose");
 		args.addAll(connect.getArgs(true));
 		asyncAddLog("Using command line: " + String.join(" ", args));
 

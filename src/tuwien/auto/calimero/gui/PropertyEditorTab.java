@@ -995,7 +995,6 @@ class PropertyEditorTab extends BaseTabLayout
 	{
 		// setup tool argument array
 		final List<String> args = new ArrayList<String>();
-		args.add("--verbose");
 		args.addAll(connect.getArgs(true));
 		args.addAll(cmd);
 		setHeaderInfo(statusInfo(0));

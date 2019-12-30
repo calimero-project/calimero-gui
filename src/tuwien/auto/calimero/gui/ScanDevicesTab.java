@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2015, 2018 B. Malinowsky
+    Copyright (c) 2015, 2019 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -126,7 +126,6 @@ class ScanDevicesTab extends BaseTabLayout
 	private void scanDevices()
 	{
 		final List<String> args = new ArrayList<String>();
-		args.add("--verbose");
 		args.addAll(connect.getArgs(false));
 		asyncAddLog("Using command line: " + String.join(" ", args));
 

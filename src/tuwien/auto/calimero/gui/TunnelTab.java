@@ -412,7 +412,6 @@ class TunnelTab extends BaseTabLayout
 	{
 		// setup tool argument array
 		final java.util.List<String> args = new ArrayList<String>();
-		args.add("--verbose");
 		args.addAll(connect.getArgs(true));
 		args.add("--lte");
 		args.add("monitor");
