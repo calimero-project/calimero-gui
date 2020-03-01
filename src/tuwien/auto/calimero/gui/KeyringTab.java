@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2019 B. Malinowsky
+    Copyright (c) 2019, 2020 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -45,6 +45,12 @@ import java.util.StringJoiner;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.dnd.DND;
+import org.eclipse.swt.dnd.DropTarget;
+import org.eclipse.swt.dnd.DropTargetAdapter;
+import org.eclipse.swt.dnd.DropTargetEvent;
+import org.eclipse.swt.dnd.FileTransfer;
+import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
@@ -111,6 +117,18 @@ class KeyringTab extends BaseTabLayout {
 		list.dispose();
 		list = newTable(parent, style | SWT.CHECK | SWT.SINGLE, bottom);
 		list.addSelectionListener(selected(this::updateInterfaceSelection));
+		final var dropTarget = new DropTarget(list, DND.DROP_MOVE | DND.DROP_COPY | DND.DROP_LINK | DND.DROP_DEFAULT);
+		dropTarget.setTransfer(TextTransfer.getInstance(), FileTransfer.getInstance());
+		dropTarget.addDropListener(new DropTargetAdapter() {
+			@Override
+			public void dragEnter(final DropTargetEvent event) {
+				event.detail = isSupportedType(event) ? DND.DROP_LINK : DND.DROP_NONE;
+			}
+
+			@Override
+			public void drop(final DropTargetEvent event) { dataDropped(event); }
+		});
+
 
 		final TableColumn host = new TableColumn(list, SWT.RIGHT);
 		host.setText("Host interface");
@@ -183,6 +201,26 @@ class KeyringTab extends BaseTabLayout {
 		final var resource = dlg.open();
 		if (resource == null)
 			return;
+		setKeyring(resource);
+	}
+
+	private boolean isSupportedType(final DropTargetEvent event) {
+		return FileTransfer.getInstance().isSupportedType(event.currentDataType);
+	}
+
+	private void dataDropped(final DropTargetEvent event) {
+		if (isSupportedType(event) && event.data instanceof String[]) {
+			final String[] paths = (String[]) event.data;
+			for (final String path : paths) {
+				if (path.endsWith(".knxkeys")) {
+					setKeyring(path);
+					break;
+				}
+			}
+		}
+	}
+
+	private void setKeyring(final String resource) {
 		loadKeyring(resource);
 		keyringLabel.setText(keyringResource);
 		keyringLabel.requestLayout();
