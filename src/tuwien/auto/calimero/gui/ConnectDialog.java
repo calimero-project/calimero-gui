@@ -378,7 +378,7 @@ class ConnectDialog
 
 		var localhost = "";
 		try {
-			localhost = InetAddress.getLocalHost().toString();
+			localhost = InetAddress.getLocalHost().getHostAddress();
 		}
 		catch (final UnknownHostException uhe) {}
 
