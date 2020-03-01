@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2019 B. Malinowsky
+    Copyright (c) 2006, 2020 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -455,6 +455,7 @@ class BaseTabLayout
 				}
 				if (log.getItemCount() > items && atEnd)
 					log.setTopIndex(log.getItemCount() - 1);
+				log.redraw();
 			}
 		});
 	}
@@ -588,6 +589,7 @@ class BaseTabLayout
 		if (atEnd)
 			list.showItem(list.getItem(list.getItemCount() - 1));
 		list.setRedraw(true);
+		list.redraw();
 	}
 
 	// this method must be invoked from the GUI thread only

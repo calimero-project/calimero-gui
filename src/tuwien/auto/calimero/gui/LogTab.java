@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2018 B. Malinowsky
+    Copyright (c) 2006, 2020 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -107,6 +107,7 @@ class LogTab extends BaseTabLayout
 			public void widgetSelected(final SelectionEvent e)
 			{
 				log.removeAll();
+				log.redraw();
 			}
 		});
 		loglevel = new Label(top, SWT.NONE);

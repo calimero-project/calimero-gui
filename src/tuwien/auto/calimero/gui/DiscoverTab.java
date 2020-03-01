@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2019 B. Malinowsky
+    Copyright (c) 2006, 2020 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -200,6 +200,7 @@ class DiscoverTab extends BaseTabLayout
 		if (nat.getSelection())
 			args.add("--nat");
 		list.removeAll();
+		list.redraw();
 		log.removeAll();
 		asyncAddLog("Discover KNXnet/IP servers, KNX USB interfaces, and USB serial KNX interfaces.");
 		asyncAddLog("Selecting an interface opens the connection dialog, checking makes it the default interface.");
