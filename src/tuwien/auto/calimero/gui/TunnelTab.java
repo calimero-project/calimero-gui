@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2019 B. Malinowsky
+    Copyright (c) 2006, 2020 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -72,6 +72,7 @@ import org.eclipse.swt.widgets.Sash;
 import org.eclipse.swt.widgets.TableColumn;
 
 import tuwien.auto.calimero.DataUnitBuilder;
+import tuwien.auto.calimero.DetachEvent;
 import tuwien.auto.calimero.GroupAddress;
 import tuwien.auto.calimero.KNXAddress;
 import tuwien.auto.calimero.KNXException;
@@ -84,6 +85,7 @@ import tuwien.auto.calimero.dptxlator.TranslatorTypes;
 import tuwien.auto.calimero.dptxlator.TranslatorTypes.MainType;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.process.ProcessEvent;
+import tuwien.auto.calimero.process.ProcessListener;
 import tuwien.auto.calimero.tools.ProcComm;
 import tuwien.auto.calimero.xml.KNXMLException;
 import tuwien.auto.calimero.xml.XmlInputFactory;
@@ -424,7 +426,33 @@ class TunnelTab extends BaseTabLayout
 			{
 				try {
 					pc = new ProcCommWrapper(args.toArray(new String[args.size()]));
-					pc.start(null);
+					final var listener = new ProcessListener() {
+						@Override
+						public void groupWrite(final ProcessEvent e) {}
+
+						@Override
+						public void groupReadResponse(final ProcessEvent e) {}
+
+						@Override
+						public void groupReadRequest(final ProcessEvent e) {}
+
+						@Override
+						public void detached(final DetachEvent e) {
+							Main.asyncExec(() -> {
+								if (editArea.isDisposed())
+									return;
+								for (final Control c : editArea.getChildren()) {
+									if (c instanceof Button) {
+										final var text = ((Button) c).getText();
+										if (text.equals("Read") || text.equals("Write"))
+											c.setEnabled(false);
+									}
+								}
+								setHeaderInfo(headerInfo(connect, "Disconnected from"));
+							});
+						}
+					};
+					pc.start(listener);
 					Main.asyncExec(() -> {
 						if (editArea.isDisposed())
 							return;
