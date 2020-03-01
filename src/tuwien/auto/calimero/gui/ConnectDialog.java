@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2019 B. Malinowsky
+    Copyright (c) 2006, 2020 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -210,7 +210,7 @@ class ConnectDialog
 							args.add(dlg.isUserPasswordHash() ? "--user-key" : "--user-pwd");
 							args.add(dlg.userPassword());
 							if (!dlg.deviceAuthCode().isEmpty()) {
-								args.add(dlg.isDeviceAuthHash() ? "--device-key" : "--device-auth-code");
+								args.add(dlg.isDeviceAuthHash() ? "--device-key" : "--device-pwd");
 								args.add(dlg.deviceAuthCode());
 							}
 						}
