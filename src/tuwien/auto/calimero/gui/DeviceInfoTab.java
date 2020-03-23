@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2015, 2019 B. Malinowsky
+    Copyright (c) 2015, 2020 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -97,10 +97,10 @@ class DeviceInfoTab extends BaseTabLayout
 		try {
 			final DeviceInfo config = new DeviceInfo(args.toArray(new String[0])) {
 				@Override
-				protected void onDeviceInformation(final Parameter parameter, final String value, final byte[] raw) {
+				protected void onDeviceInformation(final Item item) {
 					Main.asyncExec(() -> {
 						if (!list.isDisposed())
-							addItem(parameter, value, raw);
+							addItem(item);
 					});
 				}
 
@@ -116,11 +116,18 @@ class DeviceInfoTab extends BaseTabLayout
 						asyncAddLog(thrown);
 				}
 
-				private void addItem(final Parameter p, final String value, final byte[] raw) {
-					final String param = p.name().replaceAll("([A-Z])", " $1").replace("I P", "IP").trim();
-					final String rawString = DataUnitBuilder.toHex(raw, "");
+				private String currentCategory = "";
+
+				private void addItem(final Item item) {
+					if (!currentCategory.equals(item.category())) {
+						currentCategory = item.category();
+						final TableItem i = new TableItem(list, SWT.NONE);
+						i.setText(new String[] { currentCategory, "", "" });
+					}
+					final String param = item.parameter().friendlyName();
+					final String rawString = DataUnitBuilder.toHex(item.raw(), "");
 					final TableItem i = new TableItem(list, SWT.NONE);
-					i.setText(new String[] { param, value, rawString });
+					i.setText(new String[] { "\t" + param, item.value(), rawString });
 				}
 			};
 			worker = new Thread(config, "Info reader " + uniqueId(connect));
