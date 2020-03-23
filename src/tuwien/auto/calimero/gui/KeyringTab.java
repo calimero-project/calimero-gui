@@ -68,6 +68,7 @@ import tuwien.auto.calimero.GroupAddress;
 import tuwien.auto.calimero.IndividualAddress;
 import tuwien.auto.calimero.KNXFormatException;
 import tuwien.auto.calimero.Keyring;
+import tuwien.auto.calimero.internal.Security;
 
 class KeyringTab extends BaseTabLayout {
 	private Button load;
@@ -96,8 +97,10 @@ class KeyringTab extends BaseTabLayout {
 	static char[] keyringPassword() {
 		if (keyringPassword.length == 0 && keyring != null) {
 			final var dlg = PasswordDialog.forKeyring(Path.of(keyringResource));
-			if (dlg.show())
+			if (dlg.show()) {
 				keyringPassword = dlg.keyringPassword();
+				Security.useKeyring(keyring, keyringPassword);
+			}
 		}
 		return keyringPassword;
 	}
@@ -105,6 +108,8 @@ class KeyringTab extends BaseTabLayout {
 	static int user() {
 		return user;
 	}
+
+	static IndividualAddress tunnelingAddress() { return address; }
 
 	KeyringTab(final CTabFolder tf) {
 		super(tf, "Keyring", "Available interfaces in");
