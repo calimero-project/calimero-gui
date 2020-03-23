@@ -223,6 +223,8 @@ class ConnectDialog
 						args.add("--device-key");
 						args.add(config("device.key", ""));
 					}
+					args.add("--knx-address");
+					args.add("0.0.0");
 				}
 
 				if (!port.isEmpty())
