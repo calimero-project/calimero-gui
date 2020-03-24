@@ -73,8 +73,9 @@ class About {
 			+ "\u2022 Device Scan && Device Information\n"
 			+ "\u2022 KNX Property Editor\n"
 			+ "\u2022 KNX Device Memory Editor\n"
-			+ "\u2022 KNXnet/IP && KNX IP Secure\n"
-			+ "\u2022 FT1.2 (BCU2), USB, TP-UART, KNX RF USB\n";
+			+ "\u2022 KNXnet/IP\n"
+			+ "\u2022 FT1.2 (BCU2), USB, TP-UART, KNX RF USB\n"
+			+ "\u2022 KNX IP Secure && KNX Data Secure\n";
 	// @formatter:on
 	private static final String repositoryLink = "https://github.com/calimero-project/calimero-gui";
 
@@ -138,7 +139,7 @@ class About {
 
 		final Label author = new Label(c, SWT.NONE);
 		author.setFont(Main.font);
-		author.setText("\nAuthor Boris Malinowsky. \u00A9 2006, 2019.");
+		author.setText("\nAuthor Boris Malinowsky. \u00A9 2006, 2020.");
 		author.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
 
 		final Label licenseLabel = new Label(c, SWT.NONE);

@@ -1,25 +1,17 @@
 Calimero Graphical User Interface
 =================================
 
-A graphical user interface based on the [Standard Widget Toolkit](https://www.eclipse.org/swt/) for device discovery, process communication, monitoring, and management.
-
-Download
---------
-
 ~~~ sh
-# Either using git
 git clone https://github.com/calimero-project/calimero-gui.git
-
-# Or using hub
-hub clone calimero-project/calimero-gui
 ~~~
 
+A graphical user interface based on the [Standard Widget Toolkit](https://www.eclipse.org/swt/) for device discovery, process communication, monitoring, and management.
 
 Supported Features
 ------------------
 
-* KNXnet/IP discovery and self description
-* KNX process communication, read or write a KNX datapoint
+* KNXnet/IP discovery & self description
+* KNX process communication, read or write KNX datapoints
 * Group monitor for KNX datapoints, decode datapoint values, filter KNX messages
 * Network monitor (busmonitor raw frames on the network, completely passive), filter KNX messages
 * Show KNX device information (PL110 BCU1, TP1 BCU1/2, KNX IP, Interface Objects)
@@ -28,14 +20,13 @@ Supported Features
 * Show KNX devices in programming mode
 * KNX property editor for KNX devices that implement an Interface Object Server (IOS)
 * KNX device memory editor
+* KNX IP Secure & KNX Data Secure communication
 * Data export
 
 Supported Access Protocols
 --------------------------
 
-* KNXnet/IP Tunneling
-* KNXnet/IP Routing
-* KNX IP
+* KNXnet/IP Tunneling & Routing, KNX IP
 * KNXnet/IP Local Device Management
 * KNX RF USB
 * KNX USB
