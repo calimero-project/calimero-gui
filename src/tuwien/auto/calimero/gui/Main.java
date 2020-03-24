@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2019 B. Malinowsky
+    Copyright (c) 2006, 2020 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -93,6 +93,7 @@ public class Main
 				false, new int[0], discoverTab().preferRouting.getSelection(), null, "0000"));
 		addToolItem(header, "Show log", () -> new LogTab(tf));
 		addToolItem(header, "Show keyring", () -> new KeyringTab(tf));
+		addToolItem(header, "Show projects", () -> new ProjectTab(tf));
 		addToolItem(header, "About", () -> new About(shell));
 
 		new ToolItem(header, SWT.SEPARATOR);
@@ -149,6 +150,8 @@ public class Main
 		shell.open();
 
 		KeyringTab.keyring();
+
+		ProjectTab.findProjects();
 
 		while (!shell.isDisposed())
 			if (!display.readAndDispatch())

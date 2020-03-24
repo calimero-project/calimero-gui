@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2018, 2019 B. Malinowsky
+    Copyright (c) 2018, 2020 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -71,6 +71,10 @@ class PasswordDialog {
 
 	public static PasswordDialog forKeyring(final Path keyringResource) {
 		return new PasswordDialog(keyringResource);
+	}
+
+	public static PasswordDialog forProject(final Path project) {
+		return new PasswordDialog(project);
 	}
 
 	PasswordDialog(final String interfaceName, final boolean secureUnicast) {
@@ -261,6 +265,8 @@ class PasswordDialog {
 	}
 
 	char[] keyringPassword() { return keyringPassword; }
+
+	char[] password() { return keyringPassword; }
 
 	private static boolean isHash(final String s) {
 		return s.length() == 32 && s.matches("[0-9a-fA-F]+");
