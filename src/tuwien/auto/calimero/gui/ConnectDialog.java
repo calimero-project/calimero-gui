@@ -174,6 +174,18 @@ class ConnectDialog
 
 		public List<String> getArgs(final boolean useRemoteAddressOption)
 		{
+			// make sure keyring is decrypted in case remote device requires data secure
+			if (knxAddress != null) {
+				try {
+					final var device = new IndividualAddress(knxAddress);
+					KeyringTab.keyring().map(Keyring::devices).filter(devices -> devices.containsKey(device))
+							.ifPresent(__ -> KeyringTab.keyringPassword());
+				}
+				catch (final KNXFormatException e) {
+					e.printStackTrace();
+				}
+			}
+
 			final List<String> args = new ArrayList<String>();
 			switch (protocol) {
 			case Routing:
