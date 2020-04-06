@@ -281,8 +281,8 @@ class ConnectDialog
 				final Path keyfile = Paths.get("keyfile");
 				final Path config = Paths.get(".calimero-gui.config");
 				p = Files.exists(keyfile) ? keyfile : config;
-				final Map<String, String> map = Files.lines(p).filter(s -> s.startsWith(key)).collect(Collectors
-						.toMap((final String s) -> s.substring(0, s.indexOf("=")), (final String s) -> s.substring(s.indexOf("=") + 1)));
+				final Map<String, String> map = Files.lines(p).filter(s -> s.startsWith(key)).collect(
+						Collectors.toMap(s -> s.substring(0, s.indexOf("=")), s -> s.substring(s.indexOf("=") + 1)));
 				final String value = map.getOrDefault(key, "");
 				return value;
 			}
