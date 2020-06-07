@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2015, 2019 B. Malinowsky
+    Copyright (c) 2015, 2020 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -566,12 +566,12 @@ class PropertyEditorTab extends BaseTabLayout
 		return index <= 0 || descriptions.get(index).getObjectIndex() != descriptions.get(index - 1).getObjectIndex();
 	}
 
-	private void addInterfaceObjectToTree(final int interfaceObject, final int objectType)
+	private void addInterfaceObjectToTree(final int objectIndex, final int objectType)
 	{
 		Main.syncExec(() -> {
 			final TreeItem item = new TreeItem(tree, SWT.NONE);
-			item.setText(PropertyClient.getObjectTypeName(objectType) + " (Object Type " + objectType + ")");
-			item.setData(ObjectIndex, interfaceObject);
+			item.setText(objectIndex + " - " + PropertyClient.getObjectTypeName(objectType) + " (Object Type " + objectType + ")");
+			item.setData(ObjectIndex, objectIndex);
 		});
 	}
 
