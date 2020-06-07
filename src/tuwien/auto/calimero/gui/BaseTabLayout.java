@@ -449,9 +449,13 @@ class BaseTabLayout
 				final boolean atEnd = last >= items;
 
 				synchronized (buf) {
-					buf.stream().filter(s -> matches(s, level, include, exclude)).map(BaseTabLayout::expandTabs)
-							.forEach(log::add);
+					final var entries = buf.stream().filter(s -> matches(s, level, include, exclude))
+							.map(BaseTabLayout::expandTabs).toArray(String[]::new);
 					buf.clear();
+					if (entries.length == 0)
+						return;
+					for (final String s : entries)
+						log.add(s);
 				}
 				if (log.getItemCount() > items && atEnd)
 					log.setTopIndex(log.getItemCount() - 1);
