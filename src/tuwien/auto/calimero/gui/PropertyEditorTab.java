@@ -790,7 +790,11 @@ class PropertyEditorTab extends BaseTabLayout
 						else if (e.type == SWT.Traverse) {
 							switch (e.detail) {
 							case SWT.TRAVERSE_RETURN:
-								item.setText(column, text.getText());
+								final int objectIndex = Integer.parseInt((String) item.getData(ObjectIndex));
+								final int objectType = Integer.parseInt((String) item.getData(ObjectType));
+								final int pid = Integer.parseInt(item.getText(Columns.Pid.ordinal()));
+								final var definition = getDefinition(objectType, pid).orElse(unknown);
+								writeValues(objectIndex, pid, text.getText(), -1, definition);
 								// fall through
 							case SWT.TRAVERSE_ESCAPE:
 								text.dispose();
