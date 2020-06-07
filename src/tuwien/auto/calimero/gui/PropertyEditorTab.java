@@ -41,8 +41,8 @@ import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -652,10 +652,7 @@ class PropertyEditorTab extends BaseTabLayout
 		// special case for KNXnet/IP friendly name: 30 chars
 		if (p.getObjectType() == 11 && pid == 76) {
 			byte[] bytes = new byte[0];
-			try {
-				bytes = values.getBytes("ISO-8859-1");
-			}
-			catch (final UnsupportedEncodingException na) {}
+			bytes = values.getBytes(StandardCharsets.ISO_8859_1);
 			final byte[] array = Arrays.copyOf(bytes, 30);
 			data = "0x" + DataUnitBuilder.toHex(array, "");
 			elements = array.length;
@@ -877,7 +874,7 @@ class PropertyEditorTab extends BaseTabLayout
 	{
 		PropertyClient.Property p = map.get(new PropertyKey(objType, pid));
 		if (p == null)
-			p = map.get(new PropertyKey(PropertyKey.GLOBAL_OBJTYPE, pid));
+			p = map.get(new PropertyKey(pid));
 		return Optional.ofNullable(p);
 	}
 
