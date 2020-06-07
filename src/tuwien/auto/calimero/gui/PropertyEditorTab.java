@@ -658,11 +658,17 @@ class PropertyEditorTab extends BaseTabLayout
 			elements = array.length;
 		}
 		else {
-			final String format = "%0" + typeSize * 2 + "x";
-			final AtomicInteger count = new AtomicInteger(0);
-			data = Stream.of(values.split("\\s+|,")).filter(s -> !s.isEmpty()).peek(s -> count.incrementAndGet())
-					.map(Long::decode).map(l -> String.format(format, l)).collect(joining("", "0x", ""));
-			elements = elems > 0 ? elems : count.get();
+			try {
+				final String format = "%0" + typeSize * 2 + "x";
+				final AtomicInteger count = new AtomicInteger(0);
+				data = Stream.of(values.split("\\s+|,")).filter(s -> !s.isEmpty()).peek(s -> count.incrementAndGet())
+						.map(Long::decode).map(l -> String.format(format, l)).collect(joining("", "0x", ""));
+				elements = elems > 0 ? elems : count.get();
+			}
+			catch (final RuntimeException e) {
+				System.out.println("> Cannot format '" + values + "', only numbers are supported: " + e.getMessage());
+				return;
+			}
 		}
 		runCommand("set", objectIndex, pid, "1", elements, data);
 		// update our description to reflect the valid number of elements
