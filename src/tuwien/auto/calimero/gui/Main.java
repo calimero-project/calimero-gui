@@ -61,6 +61,7 @@ import org.eclipse.swt.widgets.ToolItem;
 
 import tuwien.auto.calimero.GroupAddress;
 import tuwien.auto.calimero.GroupAddress.Presentation;
+import tuwien.auto.calimero.baos.Baos;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 
@@ -203,6 +204,7 @@ public class Main
 		addToolItem(functions, "IP Config", () -> new IPConfigTab(tf, ofDefaultInterface()));
 		addToolItem(functions, "Property Editor", () -> new PropertyEditorTab(tf, ofDefaultInterface()));
 		addToolItem(functions, "Memory Editor", () -> new MemoryEditor(tf, ofDefaultInterface()));
+		addToolItem(functions, "BAOS View", () -> new BaosTab(tf, ofDefaultInterface()));
 
 		new ToolItem(functions, SWT.SEPARATOR_FILL).setEnabled(false);
 
