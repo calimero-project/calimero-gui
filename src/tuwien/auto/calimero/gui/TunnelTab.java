@@ -139,7 +139,7 @@ class TunnelTab extends BaseTabLayout
 					if ((sc & 0b1111111100) == 0b1111101000) {
 						// group property service
 						final LteProcessEvent lteEvent = (LteProcessEvent) e;
-						value = decodeLteFrame(lteEvent.extFrameFormat, e.getDestination(), lteEvent.tpdu());
+						value = decodeLteFrame(lteEvent.extFrameFormat(), e.getDestination(), lteEvent.tpdu());
 					}
 					else {
 						final Datapoint dp = model.get(e.getDestination());
@@ -153,7 +153,7 @@ class TunnelTab extends BaseTabLayout
 				final String time = timeFormatter.format(now);
 				final String dst;
 				if (e instanceof LteProcessEvent)
-					dst = lteTag(((LteProcessEvent) e).extFrameFormat, e.getDestination());
+					dst = lteTag(((LteProcessEvent) e).extFrameFormat(), e.getDestination());
 				else
 					dst = e.getDestination().toString();
 
