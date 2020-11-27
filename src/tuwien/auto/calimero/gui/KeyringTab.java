@@ -99,7 +99,7 @@ class KeyringTab extends BaseTabLayout {
 			final var dlg = PasswordDialog.forKeyring(Path.of(keyringResource));
 			if (dlg.show()) {
 				keyringPassword = dlg.keyringPassword();
-				Security.useKeyring(keyring, keyringPassword);
+				Security.defaultInstallation().useKeyring(keyring, keyringPassword);
 			}
 		}
 		return keyringPassword;
