@@ -47,6 +47,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.eclipse.swt.SWT;
@@ -175,7 +176,7 @@ class ConnectDialog
 		public List<String> getArgs(final boolean useRemoteAddressOption)
 		{
 			// make sure keyring is decrypted in case remote device requires data secure
-			if (knxAddress != null) {
+			if (knxAddress != null && !knxAddress.isEmpty()) {
 				try {
 					final var device = new IndividualAddress(knxAddress);
 					KeyringTab.keyring().map(Keyring::devices).filter(devices -> devices.containsKey(device))
@@ -323,17 +324,20 @@ class ConnectDialog
 
 			if ("group.key".equals(key)) {
 				final InetAddress remote = InetAddress.getByName(value);
-				final var groupKey = (byte[]) keyring.configuration().get(remote);
-				return toHex(keyring.decryptKey(groupKey, keyringPassword), "");
+				final var backbone = keyring.backbone().filter(bb -> bb.multicastGroup().equals(remote)).orElseThrow();
+				return toHex(keyring.decryptKey(backbone.groupKey(), keyringPassword), "");
 			}
 
 			if (key.startsWith("device")) {
-				final var devicePwd = keyring.devices().get(host).authentication();
-				final char[] decryptPassword = keyring.decryptPassword(devicePwd, keyringPassword);
+				final var pwd = Optional.ofNullable(keyring.devices().get(host))
+						.flatMap(Keyring.Device::authentication)
+						.map(auth -> keyring.decryptPassword(auth, keyringPassword));
+				if (pwd.isEmpty())
+					return null;
 				if ("device.pwd".equals(key))
-					return new String(decryptPassword);
+					return new String(pwd.get());
 				if ("device.key".equals(key))
-					return toHex(SecureConnection.hashDeviceAuthenticationPassword(decryptPassword), "");
+					return toHex(SecureConnection.hashDeviceAuthenticationPassword(pwd.get()), "");
 			}
 
 			if (key.startsWith("user")) {
@@ -341,13 +345,13 @@ class ConnectDialog
 				byte[] pwdData = null;
 				if (user == 1) {
 					final var device = keyring.devices().get(host);
-					pwdData = device.password();
+					pwdData = device.password().orElse(null);
 				}
 				else {
 					final var interfaces = keyring.interfaces().get(host);
 					for (final Interface iface : interfaces) {
 						if (iface.user() == user) {
-							pwdData = iface.password();
+							pwdData = iface.password().orElse(null);
 							break;
 						}
 					}
@@ -361,7 +365,7 @@ class ConnectDialog
 				final IndividualAddress ia = new IndividualAddress(value);
 				for (final Interface iface : interfaces) {
 					if (iface.address().equals(ia))
-						return new String(keyring.decryptPassword(iface.password(), keyringPassword));
+						return new String(keyring.decryptPassword(iface.password().get(), keyringPassword));
 				}
 			}
 
