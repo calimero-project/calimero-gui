@@ -38,12 +38,15 @@ package tuwien.auto.calimero.gui;
 
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.usb.UsbDevice;
@@ -403,6 +406,8 @@ class DiscoverTab extends BaseTabLayout
 
 	private static final String secureSymbol = new String(Character.toChars(0x1F512));
 
+	private final Set<InetSocketAddress> supportsSearchResponseV2 = new HashSet<>();
+
 	private void addKnxnetipEndpoint(final Result<SearchResponse> result, final String newItem)
 	{
 		// only add the new item if it is different from any already shown in the list
@@ -411,6 +416,12 @@ class DiscoverTab extends BaseTabLayout
 				return;
 		}
 		final SearchResponse r = result.getResponse();
+
+		if (r.v2())
+			supportsSearchResponseV2.add(result.remoteEndpoint());
+		else if (supportsSearchResponseV2.contains(result.remoteEndpoint()))
+			return;
+
 		String mcast = null;
 		try {
 			mcast = InetAddress.getByAddress(r.getDevice().getMulticastAddress()).getHostAddress();
