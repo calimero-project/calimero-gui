@@ -137,7 +137,7 @@ public class Main
 
 		tf.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		tf.setUnselectedCloseVisible(false);
-		tf.setSimple(false);
+		tf.setSimple(true);
 		tf.setMRUVisible(true);
 		tf.setFont(font);
 		tf.setSelectionBackground(
