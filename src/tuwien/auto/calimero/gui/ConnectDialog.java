@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2020 B. Malinowsky
+    Copyright (c) 2006, 2021 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -70,10 +70,11 @@ import tuwien.auto.calimero.IndividualAddress;
 import tuwien.auto.calimero.KNXFormatException;
 import tuwien.auto.calimero.Keyring;
 import tuwien.auto.calimero.Keyring.Interface;
+import tuwien.auto.calimero.SerialNumber;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 import tuwien.auto.calimero.knxnetip.KNXnetIPConnection;
 import tuwien.auto.calimero.knxnetip.SecureConnection;
-import tuwien.auto.calimero.knxnetip.util.ServiceFamiliesDIB;
+import tuwien.auto.calimero.knxnetip.util.ServiceFamiliesDIB.ServiceFamily;
 import tuwien.auto.calimero.link.medium.KNXMediumSettings;
 
 /**
@@ -102,9 +103,9 @@ class ConnectDialog
 		String serverIP;
 
 		String localKnxAddress;
-		int[] secureServices;
+		Map<ServiceFamily, Integer> secureServices;
 
-		String serialNumber = "0000";
+		SerialNumber serialNumber = SerialNumber.Zero;
 
 		static ConnectArguments newKnxNetIP(final boolean routing, final String localHost, final String remoteHost,
 			final String port, final boolean nat, final String knxAddress, final IndividualAddress serverIA) {
@@ -273,12 +274,12 @@ class ConnectDialog
 		}
 
 		boolean isSecure(final Protocol protocol) {
-			for (final int service : secureServices) {
-				if (service == ServiceFamiliesDIB.DEVICE_MANAGEMENT && protocol == Protocol.DeviceManagement)
+			for (final var service : secureServices.keySet()) {
+				if (service == ServiceFamily.DeviceManagement && protocol == Protocol.DeviceManagement)
 					return true;
-				if (service == ServiceFamiliesDIB.TUNNELING && protocol == Protocol.Tunneling)
+				if (service == ServiceFamily.Tunneling && protocol == Protocol.Tunneling)
 					return true;
-				if (service == ServiceFamiliesDIB.ROUTING && protocol == Protocol.Routing)
+				if (service == ServiceFamily.Routing && protocol == Protocol.Routing)
 					return true;
 			}
 			return false;
@@ -375,9 +376,10 @@ class ConnectDialog
 
 	private final int knxMedium;
 
-	ConnectDialog(final CTabFolder tf, final Protocol protocol, final String localEP, final String name, final String host,
-		final String port, final String mcast, final Integer medium, final boolean useNAT, final int[] secureServices,
-		final boolean preferRouting, final IndividualAddress serverIA, final String serialNumber) {
+	ConnectDialog(final CTabFolder tf, final Protocol protocol, final String localEP, final String name,
+			final String host, final String port, final String mcast, final Integer medium, final boolean useNAT,
+			final Map<ServiceFamily, Integer> secureServices, final boolean preferRouting,
+			final IndividualAddress serverIA, final SerialNumber serialNumber) {
 		final Shell shell = new Shell(Main.shell, SWT.DIALOG_TRIM | SWT.RESIZE);
 		shell.setLayout(new GridLayout());
 		shell.setText("Open connection");

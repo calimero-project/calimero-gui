@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2020 B. Malinowsky
+    Copyright (c) 2006, 2021 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -37,6 +37,7 @@
 package tuwien.auto.calimero.gui;
 
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 
 import org.eclipse.swt.SWT;
@@ -61,6 +62,7 @@ import org.eclipse.swt.widgets.ToolItem;
 
 import tuwien.auto.calimero.GroupAddress;
 import tuwien.auto.calimero.GroupAddress.Presentation;
+import tuwien.auto.calimero.SerialNumber;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 
@@ -90,7 +92,7 @@ public class Main
 		tf = new CTabFolder(shell, SWT.NONE | SWT.BORDER);
 
 		addToolItem(header, "Connect ...", () -> new ConnectDialog(tf, Protocol.Unknown, null, null, "", "", null, null,
-				false, new int[0], discoverTab().preferRouting.getSelection(), null, "0000"));
+				false, Map.of(), discoverTab().preferRouting.getSelection(), null, SerialNumber.Zero));
 		addToolItem(header, "Show log", () -> new LogTab(tf));
 		addToolItem(header, "Show keyring", () -> new KeyringTab(tf));
 		addToolItem(header, "Show projects", () -> new ProjectTab(tf));

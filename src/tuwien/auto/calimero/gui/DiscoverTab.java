@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2020 B. Malinowsky
+    Copyright (c) 2006, 2021 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -73,12 +74,14 @@ import org.usb4java.LibUsb;
 
 import tuwien.auto.calimero.IndividualAddress;
 import tuwien.auto.calimero.KNXException;
+import tuwien.auto.calimero.SerialNumber;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 import tuwien.auto.calimero.knxnetip.Discoverer.Result;
 import tuwien.auto.calimero.knxnetip.servicetype.SearchResponse;
 import tuwien.auto.calimero.knxnetip.util.DIB;
 import tuwien.auto.calimero.knxnetip.util.ServiceFamiliesDIB;
+import tuwien.auto.calimero.knxnetip.util.ServiceFamiliesDIB.ServiceFamily;
 import tuwien.auto.calimero.link.medium.KNXMediumSettings;
 import tuwien.auto.calimero.log.LogService.LogLevel;
 import tuwien.auto.calimero.serial.LibraryAdapter;
@@ -169,9 +172,14 @@ class DiscoverTab extends BaseTabLayout
 		args.name = (String) defaultInterface.getData("name");
 		args.serverIA = Optional.ofNullable(defaultInterface.getData("hostIA")).map(Objects::toString).orElse("");
 		args.knxMedium = Optional.ofNullable((Integer) defaultInterface.getData("medium")).orElse(KNXMediumSettings.MEDIUM_TP1);
-		args.secureServices = (int[]) Optional.ofNullable(defaultInterface.getData("secure")).orElse(new int[0]);
-		args.serialNumber = (String) defaultInterface.getData("SN");
+		args.secureServices = secureServices(defaultInterface);
+		args.serialNumber = (SerialNumber) defaultInterface.getData("SN");
 		return Optional.of(args);
+	}
+
+	@SuppressWarnings("unchecked")
+	private static Map<ServiceFamily, Integer> secureServices(final TableItem tableItem) {
+		return (Map<ServiceFamily, Integer>) Optional.ofNullable(tableItem.getData("secure")).orElse(Map.of());
 	}
 
 	@Override
@@ -397,11 +405,11 @@ class DiscoverTab extends BaseTabLayout
 	protected void onListItemSelected(final SelectionEvent e)
 	{
 		final TableItem i = (TableItem) e.item;
-		final int[] secure = (int[]) Optional.ofNullable(i.getData("secure")).orElse(new int[0]);
+		final var secure = secureServices(i);
 		new ConnectDialog(getTabFolder(), (Protocol) i.getData("protocol"), (String) i.getData("localEP"),
 				(String) i.getData("name"), (String) i.getData("host"), (String) i.getData("port"),
 				(String) i.getData("mcast"), (Integer) i.getData("medium"), nat.getSelection(), secure,
-				preferRouting.getSelection(), (IndividualAddress) i.getData("hostIA"), (String) i.getData("SN"));
+				preferRouting.getSelection(), (IndividualAddress) i.getData("hostIA"), (SerialNumber) i.getData("SN"));
 	}
 
 	private static final String secureSymbol = new String(Character.toChars(0x1F512));
@@ -430,7 +438,7 @@ class DiscoverTab extends BaseTabLayout
 
 		boolean tunneling = false;
 		boolean routing = false;
-		int[] secureServices = {};
+		Map<ServiceFamily, Integer> secureServices = Map.of();
 
 		String itemText = newItem;
 
@@ -438,17 +446,17 @@ class DiscoverTab extends BaseTabLayout
 			if (d instanceof ServiceFamiliesDIB) {
 				final var families = (ServiceFamiliesDIB) d;
 				if (families.getDescTypeCode() == DIB.SUPP_SVC_FAMILIES) {
-					for (final int id : families.getFamilyIds()) {
-						if (id == ServiceFamiliesDIB.CORE && families.getVersion(id) > 1)
+					for (final var entry : families.families().entrySet()) {
+						if (entry.getKey() == ServiceFamily.Core && entry.getValue() > 1)
 							itemText = itemText.replaceFirst("UDP", "UDP & TCP");
-						if (id == ServiceFamiliesDIB.TUNNELING)
+						if (entry.getKey() == ServiceFamily.Tunneling)
 							tunneling = true;
-						if (id == ServiceFamiliesDIB.ROUTING)
+						if (entry.getKey() == ServiceFamily.Routing)
 							routing = true;
 					}
 				}
 				else if (families.getDescTypeCode() == DIB.SecureServiceFamilies) {
-					secureServices = families.getFamilyIds();
+					secureServices = families.families();
 					itemText += "\n                                        " + families;
 					itemText = itemText.replaceFirst("--", secureSymbol + " --");
 				}
@@ -462,6 +470,6 @@ class DiscoverTab extends BaseTabLayout
 				new Object[] { protocol, result.getAddress().getHostAddress(), r.getDevice().getName(),
 					r.getControlEndpoint().getAddress().getHostAddress(), Integer.toString(r.getControlEndpoint().getPort()), mcast,
 					r.getDevice().getKNXMedium(), secureServices, routing, result.getResponse().getDevice().getAddress(),
-					result.getResponse().getDevice().getSerialNumberString() });
+					result.getResponse().getDevice().serialNumber() });
 	}
 }
