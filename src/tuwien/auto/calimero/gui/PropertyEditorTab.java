@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2015, 2020 B. Malinowsky
+    Copyright (c) 2015, 2021 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -101,7 +101,6 @@ import tuwien.auto.calimero.KNXTimeoutException;
 import tuwien.auto.calimero.dptxlator.DPT;
 import tuwien.auto.calimero.dptxlator.DPTXlator;
 import tuwien.auto.calimero.dptxlator.PropertyTypes;
-import tuwien.auto.calimero.dptxlator.PropertyTypes.DPTID;
 import tuwien.auto.calimero.dptxlator.TranslatorTypes;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.knxnetip.SecureConnection;
@@ -638,14 +637,10 @@ class PropertyEditorTab extends BaseTabLayout
 	private void writeValues(final int objectIndex, final int pid, final String values, final int elems,
 		final PropertyClient.Property p)
 	{
-		int typeSize = -1;
-		final DPTID dptid = PropertyTypes.getAllPropertyTypes().get(p.getPDT());
-		if (dptid != null)
-			typeSize = dptSize(pid, dptid.getMainNumber(), dptid.getDPT());
-		if (typeSize == -1 && p.getDPT() != null)
-			typeSize = dptSize(pid, 0, p.getDPT());
-		if (typeSize == -1)
-			typeSize = 1;
+		final var optDptid = Optional.ofNullable(PropertyTypes.getAllPropertyTypes().get(p.getPDT()));
+		final int typeSize = optDptid.flatMap(dptid -> dptSize(dptid.getMainNumber(), dptid.getDPT()))
+					.or(() -> p.dpt().flatMap(dpt -> dptSize(0, dpt)))
+					.orElse(1);
 
 		final String data;
 		final int elements;
@@ -679,15 +674,26 @@ class PropertyEditorTab extends BaseTabLayout
 		runCommand("get", objectIndex, pid, "1", readBack);
 	}
 
-	private int dptSize(final int pid, final int main, final String dpt)
-	{
-		int size = -1;
+	private static Optional<Integer> dptSize(final int main, final String dpt) {
+		return createTranslator(main, dpt).map(DPTXlator::getTypeSize).map(size -> Math.max(1, size));
+	}
+
+	private static Optional<DPTXlator> createTranslator(final int main, final String dptId) {
 		try {
-			size = Math.max(1, TranslatorTypes.createTranslator(main, dpt).getTypeSize());
-			asyncAddLog("PID " + pid + " has type size " + size + " (DPT " + dpt + ")");
+			return Optional.of(TranslatorTypes.createTranslator(main, dptId));
 		}
-		catch (final KNXException ignore) {}
-		return size;
+		catch (final KNXException ignore) {
+			return Optional.empty();
+		}
+	}
+
+	private static Optional<DPTXlator> createTranslator(final int pdt) {
+		try {
+			return Optional.of(PropertyTypes.createTranslator(pdt));
+		}
+		catch (final KNXException e) {
+			return Optional.empty();
+		}
 	}
 
 	private static String altFormatted(final String input, final String onError)
@@ -839,34 +845,23 @@ class PropertyEditorTab extends BaseTabLayout
 		bounds.removeAll();
 
 		final Optional<PropertyClient.Property> opt = getDefinition(Integer.parseInt(objType), Integer.parseInt(pid));
-		if (!opt.isPresent()) {
-			bounds.add("n/a");
-			bounds.select(0);
-			return;
+		if (opt.isPresent()) {
+			final PropertyClient.Property p = opt.get();
+			p.dpt().flatMap(dpt -> createTranslator(0, dpt)).or(() -> createTranslator(p.getPDT()))
+					.ifPresentOrElse(t -> {
+						final DPT dpt = t.getType();
+						bounds.add(dpt.getLowerValue());
+						bounds.add(dpt.getUpperValue());
+						bounds.select(1);
+					}, this::noDptBounds);
 		}
-		final PropertyClient.Property p = opt.get();
+		else
+			noDptBounds();
+	}
 
-		DPTXlator t = null;
-		try {
-			if (p.getDPT() != null)
-				t = TranslatorTypes.createTranslator(0, p.getDPT());
-		}
-		catch (final KNXException | RuntimeException e) {}
-		try {
-			if (t == null)
-				t = PropertyTypes.createTranslator(p.getPDT());
-		}
-		catch (final KNXException | RuntimeException e) {}
-		if (t == null) {
-			bounds.add("n/a");
-			bounds.select(0);
-			return;
-		}
-
-		final DPT dpt = t.getType();
-		bounds.add(dpt.getLowerValue());
-		bounds.add(dpt.getUpperValue());
-		bounds.select(1);
+	private void noDptBounds() {
+		bounds.add("n/a");
+		bounds.select(0);
 	}
 
 	private static void loadDefinitions()
