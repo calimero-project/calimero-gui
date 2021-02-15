@@ -1,17 +1,9 @@
-buildscript {
-    repositories {
-        mavenCentral()
-        maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
-        jcenter()
-    }
-    dependencies {
-        classpath 'com.github.ben-manes:gradle-versions-plugin:0.36.0'
-    }
+plugins {
+  id "com.github.ben-manes.versions" version "0.36.0"
 }
 
 repositories {
     mavenLocal()
-    jcenter()
     mavenCentral()
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
 }
