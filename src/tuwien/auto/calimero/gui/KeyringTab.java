@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2019, 2020 B. Malinowsky
+    Copyright (c) 2019, 2021 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -67,8 +67,8 @@ import org.eclipse.swt.widgets.TableItem;
 import tuwien.auto.calimero.GroupAddress;
 import tuwien.auto.calimero.IndividualAddress;
 import tuwien.auto.calimero.KNXFormatException;
-import tuwien.auto.calimero.Keyring;
-import tuwien.auto.calimero.internal.Security;
+import tuwien.auto.calimero.secure.Keyring;
+import tuwien.auto.calimero.secure.Security;
 
 class KeyringTab extends BaseTabLayout {
 	private Button load;

@@ -68,14 +68,14 @@ import org.eclipse.swt.widgets.Text;
 
 import tuwien.auto.calimero.IndividualAddress;
 import tuwien.auto.calimero.KNXFormatException;
-import tuwien.auto.calimero.Keyring;
-import tuwien.auto.calimero.Keyring.Interface;
 import tuwien.auto.calimero.SerialNumber;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 import tuwien.auto.calimero.knxnetip.KNXnetIPConnection;
 import tuwien.auto.calimero.knxnetip.SecureConnection;
 import tuwien.auto.calimero.knxnetip.util.ServiceFamiliesDIB.ServiceFamily;
 import tuwien.auto.calimero.link.medium.KNXMediumSettings;
+import tuwien.auto.calimero.secure.Keyring;
+import tuwien.auto.calimero.secure.Keyring.Interface;
 
 /**
  * @author B. Malinowsky
