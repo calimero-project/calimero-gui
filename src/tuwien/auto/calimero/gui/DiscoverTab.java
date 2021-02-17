@@ -288,9 +288,7 @@ class DiscoverTab extends BaseTabLayout
 											asyncAddLog("reading KNX device descriptor of " + d,  e);
 										}
 
-										final var sn = serialNumber(d, vendorId, productId);
-										final var serialNumber = sn.substring(0, 4) + ":" + sn.substring(4);
-
+										final var serialNumber = serialNumber(d, vendorId, productId);
 										addListItem(new String[] { sb.toString() },
 												new String[] { "protocol", "name", "port", "medium", "SN" },
 												new Object[] { Protocol.USB, product, vp, medium, serialNumber });
@@ -314,7 +312,7 @@ class DiscoverTab extends BaseTabLayout
 										final String dev = "/dev/";
 
 										final int medium = KNXMediumSettings.MEDIUM_TP1;
-										final String serialNumber = serialNumber(d, vendorId, productId);
+										final var serialNumber = serialNumber(d, vendorId, productId);
 
 										addListItem(new String[] { sb.toString() },
 												new String[] { "protocol", "name", "port", "medium", "SN" },
@@ -364,9 +362,9 @@ class DiscoverTab extends BaseTabLayout
 					return "Manufacturer: " + nullTerminate(mf.orElse("n/a"));
 				}
 
-				private String serialNumber(final UsbDevice d, final int vendorId, final int productId) {
+				private SerialNumber serialNumber(final UsbDevice d, final int vendorId, final int productId) {
 					try {
-						return d.getSerialNumberString();
+						return SerialNumber.of(Long.parseLong(d.getSerialNumberString(), 16));
 					}
 					catch (UnsupportedEncodingException | UsbDisconnectedException | UsbException e) {
 						final Device device = UsbConnection.findDeviceLowLevel(vendorId, productId);
@@ -383,7 +381,7 @@ class DiscoverTab extends BaseTabLayout
 							LibUsb.close(dh);
 							LibUsb.unrefDevice(device);
 						}
-						return sn == null ? "0000" : sn;
+						return SerialNumber.of(sn == null ? 0 : Long.parseLong(sn, 16));
 					}
 				}
 
