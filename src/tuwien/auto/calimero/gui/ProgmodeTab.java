@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2017 B. Malinowsky
+    Copyright (c) 2006, 2021 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -69,9 +69,6 @@ class ProgmodeTab extends BaseTabLayout
 		final TableColumn device = new TableColumn(list, SWT.LEFT);
 		device.setText("Device Address");
 		device.setWidth(100);
-		final TableColumn pidName = new TableColumn(list, SWT.LEFT);
-		pidName.setText("Descriptor");
-		pidName.setWidth(200);
 		enableColumnAdjusting();
 
 		final String filter = args.remote == null ? args.port : args.remote;
