@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2015, 2019 B. Malinowsky
+    Copyright (c) 2015, 2021 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -44,12 +44,12 @@ import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
+import tuwien.auto.calimero.DeviceDescriptor.DD0;
 import tuwien.auto.calimero.IndividualAddress;
 import tuwien.auto.calimero.KNXIllegalArgumentException;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
@@ -72,25 +72,20 @@ class ScanDevicesTab extends BaseTabLayout
 		final TableColumn cnt = new TableColumn(list, SWT.RIGHT);
 		cnt.setText("#");
 		cnt.setWidth(30);
-		final TableColumn pid = new TableColumn(list, SWT.LEFT);
-		pid.setText("Existing KNX device address");
-		pid.setWidth(180);
+		final TableColumn addr = new TableColumn(list, SWT.RIGHT);
+		addr.setText("Existing device address");
+		addr.setWidth(180);
+		final TableColumn dd = new TableColumn(list, SWT.RIGHT);
+		dd.setText("Device descriptor");
+		dd.setWidth(130);
 
-		list.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetSelected(final SelectionEvent e)
-			{}
-
-			@Override
-			public void widgetDefaultSelected(final SelectionEvent e)
-			{
+		list.addSelectionListener(defaultSelected(e -> {
 				final TableItem row = list.getSelection()[0];
 				final String device = row.getText(1);
 				asyncAddLog("Read device information of KNX device " + device);
 				connect.knxAddress = device;
 				new DeviceInfoTab(tf, connect);
-			}
-		});
+			}));
 
 		scanDevices();
 	}
@@ -137,15 +132,31 @@ class ScanDevicesTab extends BaseTabLayout
 					Main.asyncExec(() -> {
 						if (list.isDisposed())
 							return;
-						list.setToolTipText("Select an address to read the KNX device information");
+						list.setToolTipText("Select an address to read KNX device information");
 						final TableItem i = new TableItem(list, SWT.NONE);
 						i.setText(new String[] { "" + list.getItemCount(), device.toString() });
 					});
 				}
 
 				@Override
-				protected void onCompletion(final Exception thrown, final boolean canceled)
-				{
+				protected void onDeviceFound(final IndividualAddress device, final DD0 dd0) {
+					Main.asyncExec(() -> {
+						if (list.isDisposed())
+							return;
+						for (final var item : list.getItems()) {
+							if (device.toString().equals(item.getText(1))) {
+								item.setText(2, dd0.toString());
+								return;
+							}
+						}
+
+						final TableItem i = new TableItem(list, SWT.NONE);
+						i.setText(new String[] { "" + list.getItemCount(), device.toString(), dd0.toString() });
+					});
+				}
+
+				@Override
+				protected void onCompletion(final Exception thrown, final boolean canceled) {
 					Main.asyncExec(() -> {
 						if (list.isDisposed())
 							return;
@@ -159,7 +170,7 @@ class ScanDevicesTab extends BaseTabLayout
 
 						final String status = canceled ? "canceled" : "completed";
 						setHeaderInfo(headerInfo(connect, "Device scan " + status + " for")
-								+ " (select a found device for reading KNX device info)");
+								+ " (select an address to read KNX device info)");
 						cancel.setEnabled(false);
 					});
 				}
