@@ -207,7 +207,7 @@ class DiscoverTab extends BaseTabLayout
 	private void discover()
 	{
 		final java.util.List<String> args = new ArrayList<String>();
-		args.add("-s");
+		args.add("search");
 		if (nat.getSelection())
 			args.add("--nat");
 		list.removeAll();
