@@ -1,4 +1,4 @@
-Calimero Graphical User Interface
+Calimero Graphical User Interface [![CI with Gradle](https://github.com/calimero-project/calimero-gui/actions/workflows/gradle.yml/badge.svg)](https://github.com/calimero-project/calimero-gui/actions/workflows/gradle.yml)
 =================================
 
 ~~~ sh
