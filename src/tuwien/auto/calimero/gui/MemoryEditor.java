@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2017, 2019 B. Malinowsky
+    Copyright (c) 2017, 2021 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -177,7 +177,6 @@ class MemoryEditor extends BaseTabLayout
 			if ((e.detail & SWT.FOREGROUND) != 0)
 				e.detail &= ~SWT.FOREGROUND;
 		});
-		list.setForeground(Display.getCurrent().getSystemColor(SWT.COLOR_DARK_RED));
 
 		final String prefix = "memory_" + device + "_";
 		final String suffix = ".hex";
@@ -433,7 +432,7 @@ class MemoryEditor extends BaseTabLayout
 		if (event.type == SWT.PaintItem && event.item != null) {
 			final TableItem ti = (TableItem) event.item;
 			final int location = viewerStartOffset + list.indexOf(ti) * viewerColumns + event.index;
-			final int fgnd = modified.containsKey(location) ? SWT.COLOR_BLUE : SWT.COLOR_DARK_RED;
+			final int fgnd = modified.containsKey(location) ? SWT.COLOR_DARK_YELLOW : SWT.COLOR_LIST_FOREGROUND;
 			event.gc.setForeground(Main.display.getSystemColor(fgnd));
 			final Rectangle rect = ti.getTextBounds(event.index);
 			final Point extent = event.gc.stringExtent(ti.getText(event.index));
