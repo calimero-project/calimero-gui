@@ -59,13 +59,19 @@ configurations {
     compile.extendsFrom provided    
 }
 
+configurations.all {
+    resolutionStrategy {
+        dependencySubstitution {
+            substitute module('org.eclipse.platform:org.eclipse.swt.${osgi.platform}') with module("${swtGroupId}:${swtArtifact}:${swtVersion}")
+        }
+    }
+}
+
 dependencies {
     implementation "com.github.calimero:calimero-core:${version}"
     implementation "com.github.calimero:calimero-tools:${version}"
+    implementation "${swtGroupId}:${swtArtifact}:${swtVersion}"
     runtimeOnly "com.github.calimero:calimero-rxtx:${version}"
-    provided("${swtGroupId}:${swtArtifact}:${swtVersion}") {
-		exclude group: "${swtGroupId}", module: 'org.eclipse.swt' 
-    }
     implementation 'org.slf4j:slf4j-api:1.7.30'
     runtimeOnly 'org.slf4j:slf4j-simple:1.7.30'
 }
@@ -75,7 +81,7 @@ java {
 }
 
 jar {
-  dependsOn configurations.runtime
+  dependsOn configurations.runtimeClasspath
   manifest {
     attributes(
       'Class-Path': (configurations.runtimeClasspath - configurations.provided + files('swt.jar')).collect { it.getName() }.join(' '),
