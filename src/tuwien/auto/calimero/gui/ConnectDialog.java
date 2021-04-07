@@ -504,6 +504,10 @@ class ConnectDialog
 		memory.setText("KNX device memory editor");
 		memory.setToolTipText("Uses Remote Property Services");
 
+		final Button baos = new Button(mode, SWT.RADIO);
+		baos.setText("BAOS view");
+		baos.setToolTipText("Connection to a BAOS device");
+
 		usb.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(final SelectionEvent e)
@@ -611,8 +615,10 @@ class ConnectDialog
 					}
 					new MemoryEditor(tf, args);
 				}
-				else
+				else if (tunnel.getSelection())
 					new TunnelTab(tf, args);
+				else if (baos.getSelection())
+					new BaosTab(tf, args);
 
 				shell.dispose();
 			}
