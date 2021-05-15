@@ -1,5 +1,7 @@
 plugins {
   id "com.github.ben-manes.versions" version "0.38.0"
+  id 'maven-publish'
+  id 'signing'
 }
 
 repositories {
@@ -13,6 +15,7 @@ apply plugin:'application'
 apply plugin:'com.github.ben-manes.versions'
 apply plugin:'eclipse'
 
+group = 'com.github.calimero'
 version = '2.5-M1'
 
 def date() {
@@ -80,6 +83,18 @@ java {
     withSourcesJar()
 }
 
+tasks.withType(Jar) {
+	from("${projectDir}") {
+        include 'LICENSE.txt'
+        into "META-INF"
+    }
+    if (name.equals('sourcesJar')) {
+    	from("${projectDir}") {
+		    include 'README.md'
+        }
+    }
+}
+
 jar {
   dependsOn configurations.runtimeClasspath
   manifest {
@@ -118,4 +133,48 @@ run {
     if (os.contains("mac")) { 
         jvmArgs '-XstartOnFirstThread' 
     }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = rootProject.name
+            from components.java
+            pom {
+                name = 'Calimero GUI'
+                description = 'A graphical user interface for the Calimero tools collection'
+                url = 'https://github.com/calimero-project/calimero-gui'
+                inceptionYear = '2006'
+                licenses {
+                    license {
+                        name = "GNU General Public License, version 2, with the Classpath Exception"
+                        url = 'LICENSE.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        name = "Boris Malinowsky"
+                        email = "b.malinowsky@gmail.com"
+                    }
+                }
+                scm {
+                    connection = 'scm:git:git://github.com:calimero-project/calimero-gui.git'
+                    url = 'https://github.com/calimero-project/calimero-gui.git'
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            name 'maven'
+            def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+            credentials(PasswordCredentials)
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.mavenJava
 }
