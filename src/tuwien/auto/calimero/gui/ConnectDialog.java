@@ -70,6 +70,7 @@ import tuwien.auto.calimero.IndividualAddress;
 import tuwien.auto.calimero.KNXFormatException;
 import tuwien.auto.calimero.SerialNumber;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
+import tuwien.auto.calimero.knxnetip.Discoverer;
 import tuwien.auto.calimero.knxnetip.KNXnetIPConnection;
 import tuwien.auto.calimero.knxnetip.SecureConnection;
 import tuwien.auto.calimero.knxnetip.util.ServiceFamiliesDIB.ServiceFamily;
@@ -451,9 +452,13 @@ class ConnectDialog
 			@Override
 			public void widgetSelected(final SelectionEvent e)
 			{
-				if (routing.getSelection() && mcast != null)
-					hostData.setText(mcast);
-				if (!routing.getSelection() && host != null)
+				if (routing.getSelection()) {
+					if (mcast != null)
+						hostData.setText(mcast);
+					else if (hostData.getText().isEmpty())
+						hostData.setText(Discoverer.SEARCH_MULTICAST);
+				}
+				if (!routing.getSelection() && host != null && !host.isEmpty())
 					hostData.setText(host);
 			}
 		});
