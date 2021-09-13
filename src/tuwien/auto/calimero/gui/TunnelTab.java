@@ -84,6 +84,7 @@ import tuwien.auto.calimero.dptxlator.DPT;
 import tuwien.auto.calimero.dptxlator.TranslatorTypes;
 import tuwien.auto.calimero.dptxlator.TranslatorTypes.MainType;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
+import tuwien.auto.calimero.process.LteProcessEvent;
 import tuwien.auto.calimero.process.ProcessEvent;
 import tuwien.auto.calimero.process.ProcessListener;
 import tuwien.auto.calimero.tools.ProcComm;
@@ -138,8 +139,7 @@ class TunnelTab extends BaseTabLayout
 				if (asdu.length > 0) {
 					if ((sc & 0b1111111100) == 0b1111101000) {
 						// group property service
-						final LteProcessEvent lteEvent = (LteProcessEvent) e;
-						value = decodeLteFrame(lteEvent.extFrameFormat(), e.getDestination(), lteEvent.tpdu());
+						value = decodeLteFrame((LteProcessEvent) e);
 					}
 					else {
 						final Datapoint dp = model.get(e.getDestination());
