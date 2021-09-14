@@ -74,7 +74,7 @@ Or, assuming all dependencies (of any compliant version) are in the current work
 Or, as example of using the JRE `-classpath`/`-cp` option to qualify all dependencies
 
 	java -cp "calimero-gui-2.5-rc1.jar:calimero-core-2.5-rc1.jar\
-	:calimero-tools-2.5-rc1.jar:org.eclipse.swt.gtk.linux.x86_64-4.6.1.jar\
+	:calimero-tools-2.5-rc1.jar:org.eclipse.swt.gtk.linux.x86_64-3.116.100.jar\
 	:slf4j-api-1.7.30.jar:slf4j-simple-1.7.30.jar" tuwien.auto.calimero.gui.Main
 
 ### Run As Standalone Application
