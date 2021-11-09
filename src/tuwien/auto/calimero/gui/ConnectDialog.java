@@ -327,7 +327,7 @@ class ConnectDialog
 			if ("group.key".equals(key)) {
 				final InetAddress remote = InetAddress.getByName(value);
 				final var backbone = keyring.backbone().filter(bb -> bb.multicastGroup().equals(remote)).orElseThrow();
-				return toHex(keyring.decryptKey(backbone.groupKey(), keyringPassword), "");
+				return toHex(keyring.decryptKey(backbone.groupKey().orElseThrow(), keyringPassword), "");
 			}
 
 			if (key.startsWith("device")) {
