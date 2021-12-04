@@ -366,6 +366,9 @@ class DiscoverTab extends BaseTabLayout
 					try {
 						return SerialNumber.of(Long.parseLong(d.getSerialNumberString(), 16));
 					}
+					catch (final NumberFormatException e) {
+						return SerialNumber.Zero;
+					}
 					catch (UnsupportedEncodingException | UsbDisconnectedException | UsbException e) {
 						final Device device = UsbConnection.findDeviceLowLevel(vendorId, productId);
 						final DeviceDescriptor dd = new DeviceDescriptor();
