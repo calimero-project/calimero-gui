@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2021 B. Malinowsky
+    Copyright (c) 2006, 2022 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -462,7 +462,10 @@ class ConnectDialog
 					hostData.setText(host);
 			}
 		});
-		routing.setSelection(preferRouting);
+		if (protocol == Protocol.Routing)
+			routing.setSelection(true);
+		else
+			routing.setSelection(preferRouting);
 		routing.notifyListeners(SWT.Selection, new Event());
 
 		final Label configKNXAddress = new Label(c, SWT.NONE);
