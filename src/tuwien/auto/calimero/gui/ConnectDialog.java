@@ -68,6 +68,7 @@ import org.eclipse.swt.widgets.Text;
 
 import tuwien.auto.calimero.IndividualAddress;
 import tuwien.auto.calimero.KNXFormatException;
+import tuwien.auto.calimero.KnxRuntimeException;
 import tuwien.auto.calimero.SerialNumber;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 import tuwien.auto.calimero.knxnetip.Discoverer;
@@ -209,6 +210,8 @@ class ConnectDialog
 							if (dlg.show())
 								tempKey[0] = dlg.groupKey();
 						});
+						if (tempKey[0] == null) // canceled
+							throw new KnxRuntimeException("no group key entered");
 						key = tempKey[0];
 					}
 					args.add("--group-key");
