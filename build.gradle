@@ -38,7 +38,7 @@ mainClassName = 'tuwien.auto.calimero.gui.SwtChecker'
 
 // SWT is platform dependent
 def swtGroupId = 'org.eclipse.platform'
-def swtVersion = '3.120.0'
+def swtVersion = '3.121.0'
 def swtArtifact = 'org.eclipse.swt.'
 
 def os = System.getProperty("os.name").toLowerCase()
@@ -77,8 +77,8 @@ dependencies {
     implementation "com.github.calimero:calimero-tools:${version}"
     implementation "${swtGroupId}:${swtArtifact}:${swtVersion}"
     runtimeOnly "com.github.calimero:calimero-rxtx:${version}"
-    implementation 'org.slf4j:slf4j-api:1.7.30'
-    runtimeOnly 'org.slf4j:slf4j-simple:1.7.30'
+    implementation 'org.slf4j:slf4j-api:1.7.36'
+    runtimeOnly 'org.slf4j:slf4j-simple:1.7.36'
 }
 
 java {
