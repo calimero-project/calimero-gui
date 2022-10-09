@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2021 B. Malinowsky
+    Copyright (c) 2006, 2022 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -77,6 +77,7 @@ import tuwien.auto.calimero.KNXException;
 import tuwien.auto.calimero.SerialNumber;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
+import tuwien.auto.calimero.internal.Executor;
 import tuwien.auto.calimero.knxnetip.Discoverer.Result;
 import tuwien.auto.calimero.knxnetip.servicetype.SearchResponse;
 import tuwien.auto.calimero.knxnetip.util.DIB;
@@ -245,7 +246,7 @@ class DiscoverTab extends BaseTabLayout
 					asyncAddLog("KNXnet/IP discovery finished");
 				}
 			};
-			new Thread(r).start();
+			Executor.execute(r, "KNXnet/IP discovery");
 
 			final Runnable usb = new Runnable() {
 				@Override
@@ -395,7 +396,7 @@ class DiscoverTab extends BaseTabLayout
 					return end > -1 ? s.substring(0, end) : s;
 				}
 			};
-			new Thread(usb).start();
+			Executor.execute(usb, "USB discovery");
 		}
 		catch (final Exception e) {
 			log.add("error: " + e.getMessage());

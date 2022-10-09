@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2015, 2021 B. Malinowsky
+    Copyright (c) 2015, 2022 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -53,6 +53,7 @@ import tuwien.auto.calimero.DeviceDescriptor.DD0;
 import tuwien.auto.calimero.IndividualAddress;
 import tuwien.auto.calimero.KNXIllegalArgumentException;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
+import tuwien.auto.calimero.internal.Executor;
 import tuwien.auto.calimero.tools.ScanDevices;
 
 /**
@@ -175,8 +176,7 @@ class ScanDevicesTab extends BaseTabLayout
 					});
 				}
 			};
-			worker = new Thread(config, "Calimero device scan");
-			worker.start();
+			worker = Executor.execute(config, "Calimero device scan");
 		}
 		catch (final KNXIllegalArgumentException e) {
 			asyncAddLog("error: " + e.getMessage());

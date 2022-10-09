@@ -26,8 +26,8 @@ def buildClassifier = date()
 distZip.classifier = buildClassifier
 distTar.classifier = buildClassifier
 
-sourceCompatibility = 11
-targetCompatibility = 11
+sourceCompatibility = 19
+targetCompatibility = 19
 
 compileJava.options.encoding = 'UTF-8'
 compileTestJava.options.encoding = 'UTF-8'
@@ -54,9 +54,12 @@ sourceSets {
     }
 }
 
+tasks.withType(JavaExec) { jvmArgs += "--enable-preview" }
+
 compileJava.options*.compilerArgs = [
     '-Xlint:all',
 //    '-Werror'
+    '--enable-preview',
 ]
 
 configurations {
@@ -73,8 +76,8 @@ configurations.all {
 }
 
 dependencies {
-    implementation "com.github.calimero:calimero-core:${version}"
-    implementation "com.github.calimero:calimero-tools:${version}"
+    implementation "com.github.calimero:calimero-core-loom:${version}"
+    implementation "com.github.calimero:calimero-tools-loom:${version}"
     implementation "${swtGroupId}:${swtArtifact}:${swtVersion}"
     runtimeOnly "com.github.calimero:calimero-rxtx:${version}"
     implementation 'org.slf4j:slf4j-api:1.7.36'
@@ -143,7 +146,7 @@ publishing {
             artifactId = rootProject.name
             from components.java
             pom {
-                name = 'Calimero GUI'
+                name = 'Calimero GUI (Loom)'
                 description = 'A graphical user interface for the Calimero tools collection'
                 url = 'https://github.com/calimero-project/calimero-gui'
                 inceptionYear = '2006'

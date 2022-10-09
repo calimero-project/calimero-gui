@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2015, 2020 B. Malinowsky
+    Copyright (c) 2015, 2022 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -48,6 +48,7 @@ import org.eclipse.swt.widgets.TableItem;
 import tuwien.auto.calimero.DataUnitBuilder;
 import tuwien.auto.calimero.KNXIllegalArgumentException;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
+import tuwien.auto.calimero.internal.Executor;
 import tuwien.auto.calimero.tools.DeviceInfo;
 
 /**
@@ -130,8 +131,7 @@ class DeviceInfoTab extends BaseTabLayout
 					i.setText(new String[] { "\t" + param, item.value(), rawString });
 				}
 			};
-			worker = new Thread(config, "Info reader " + uniqueId(connect));
-			worker.start();
+			worker = Executor.execute(config, "Info reader " + uniqueId(connect));
 		}
 		catch (final KNXIllegalArgumentException e) {
 			asyncAddLog("error: " + e.getMessage());

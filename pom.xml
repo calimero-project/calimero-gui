@@ -3,11 +3,11 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>com.github.calimero</groupId>
-		<artifactId>calimero-parent</artifactId>
+		<artifactId>calimero-parent-loom</artifactId>
 		<version>2.6-SNAPSHOT</version>
 	</parent>
-	<artifactId>calimero-gui</artifactId>
-	<name>Calimero GUI</name>
+	<artifactId>calimero-gui-loom</artifactId>
+	<name>Calimero GUI (Loom)</name>
 	<description>A simple graphical user interface for the Calimero tool collection</description>
 	<scm>
 		<url>https://github.com/calimero-project/calimero-gui.git</url>
@@ -45,7 +45,7 @@
 					<plugin>
 						<groupId>org.codehaus.mojo</groupId>
 						<artifactId>exec-maven-plugin</artifactId>
-						<version>1.6.0</version>
+						<version>3.1.0</version>
 						<executions>
 							<execution>
 								<goals>
@@ -58,6 +58,7 @@
 							<executable>java</executable>
 							<longClasspath>true</longClasspath>
 							<arguments>
+								<argument>--enable-preview</argument>
 								<argument>-XstartOnFirstThread</argument>
 								<argument>-classpath</argument>
 								<classpath />
@@ -134,7 +135,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>exec-maven-plugin</artifactId>
-				<version>1.6.0</version>
+				<version>3.1.0</version>
 				<executions>
 					<execution>
 						<goals>
@@ -143,6 +144,9 @@
 					</execution>
 				</executions>
 				<configuration>
+					<arguments>
+						<argument>--enable-preview</argument>
+					</arguments>
 					<executable>java</executable>
 					<longClasspath>true</longClasspath>
 					<mainClass>tuwien.auto.calimero.gui.Main</mainClass>
@@ -153,12 +157,12 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.github.calimero</groupId>
-			<artifactId>calimero-core</artifactId>
+			<artifactId>calimero-core-loom</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.calimero</groupId>
-			<artifactId>calimero-tools</artifactId>
+			<artifactId>calimero-tools-loom</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
