@@ -1,6 +1,6 @@
 /*
-    Calimero 2 - A library for KNX network access
-    Copyright (c) 2022, 2023 B. Malinowsky
+    Calimero GUI - A graphical user interface for the Calimero 2 tools
+    Copyright (c) 2022, 2022 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,13 +34,54 @@
     version.
 */
 
-@SuppressWarnings({ "requires-automatic" })
-module io.calimero.gui {
-	requires io.calimero.core;
-	requires io.calimero.tools;
+package io.calimero.gui.logging;
 
-	requires org.eclipse.swt; // automatic module
+import java.text.MessageFormat;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
+import java.util.Set;
 
-	provides java.lang.System.LoggerFinder
-	    with io.calimero.gui.logging.LoggerFinder;
+final class GuiLogger implements System.Logger {
+	private final String name;
+	private final Set<LogNotifier> subscribers;
+
+	GuiLogger(final String name, final Set<LogNotifier> subscribers) {
+		this.name = name;
+		this.subscribers = Set.copyOf(subscribers);
+	}
+
+	@Override
+	public String getName() { return name; }
+
+	@Override
+	public boolean isLoggable(final Level level) { return true; }
+
+	@Override
+	public void log(final Level level, final ResourceBundle bundle, final String msg, final Throwable thrown) {
+		subscribers.forEach(s -> s.log(name, level, msg, thrown));
+	}
+
+	@Override
+	public void log(final Level level, final ResourceBundle bundle, final String format, final Object... params) {
+		subscribers.forEach(s -> s.log(name, level, format(bundle, format, params), null));
+	}
+
+	private static String format(final ResourceBundle bundle, final String msg, final Object... params) {
+		final var s = resourceString(bundle, msg);
+		return MessageFormat.format(s, params);
+	}
+
+	private static String resourceString(final ResourceBundle bundle, final String key) {
+		if (bundle == null || key == null)
+			return key;
+		try {
+			return bundle.getString(key);
+		}
+		catch (final MissingResourceException e) {
+			return key;
+		}
+		catch (final ClassCastException e) {
+			return bundle.getObject(key).toString();
+		}
+	}
 }

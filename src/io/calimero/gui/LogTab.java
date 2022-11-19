@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2020 B. Malinowsky
+    Copyright (c) 2006, 2022 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -36,11 +36,23 @@
 
 package io.calimero.gui;
 
+import static java.lang.System.Logger.Level.DEBUG;
+import static java.lang.System.Logger.Level.ERROR;
+import static java.lang.System.Logger.Level.TRACE;
+
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.lang.System.Logger.Level;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.FormAttachment;
@@ -52,42 +64,108 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Sash;
 import org.eclipse.swt.widgets.Scale;
+import org.eclipse.swt.widgets.TableColumn;
 
-import io.calimero.log.LogService.LogLevel;
+import io.calimero.gui.logging.LogNotifier;
+import io.calimero.gui.logging.LoggerFinder;
+
 
 /**
  * @author B. Malinowsky
  */
 class LogTab extends BaseTabLayout
 {
-	private static final String[] levels = new String[] { "Error", "Warn", "Info", "Debug", "Trace" };
+	private static class StreamRedirector extends PrintStream {
+		private final String name;
+		private final Level level;
+
+		StreamRedirector(final String name, final Level level, final OutputStream out) {
+			super(out, true);
+			this.name = name;
+			this.level = level;
+		}
+
+		@Override
+		public void println(final String s) {
+			print(s);
+		}
+
+		@Override
+		public void print(final String s) {
+			if (s != null)
+				addToLogBuffer(name, level, s);
+		}
+
+		@Override
+		public void write(final byte[] buf, final int off, final int len) {
+			if (len == 1 && buf[off] == 0x0a)
+				return;
+			final String s = new String(buf, off, len);
+			addToLogBuffer(name, level, s);
+		}
+	}
+
+	static PrintStream oldSystemErr;
+	static {
+		final PrintStream oldSystemOut = System.out;
+		final PrintStream redirector = new StreamRedirector("System.out", DEBUG, oldSystemOut);
+		System.setOut(redirector);
+
+		oldSystemErr = System.err;
+		System.setErr(new StreamRedirector("System.err", ERROR, oldSystemErr));
+
+	}
+
+	private static final String[] levels = new String[] { "All", "Trace", "Debug", "Info", "Warn", "Error", "Off" };
 
 	private static final int maxHistorySize = 1000;
-	private static final List<String> logHistory = new ArrayList<>(maxHistorySize);
+	private static final List<Object[]> logHistory = new ArrayList<>(maxHistorySize);
+
+	private static Map<LogTab, java.util.List<Object[]>> logBuffer = new ConcurrentHashMap<>();
+
+	private static LogNotifier notifier = LogTab::addToLogBuffer;
 
 	private Button clear;
 	private Label loglevel;
 	private Scale scale;
 
-	static void log(final String s) {
-		synchronized (logHistory) {
-			if (logHistory.size() >= maxHistorySize)
-				logHistory.remove(0);
-			logHistory.add(s);
-		}
+
+	static void initLogging() {
+		LoggerFinder.addLogNotifier(LogTab.notifier);
 	}
 
 	LogTab(final CTabFolder tf)
 	{
 		super(tf, "Logging", "Shows log output of all open tabs");
+		logBuffer.put(this, Collections.synchronizedList(new ArrayList<>()));
+
+		log.dispose();
+		list.setLinesVisible(true);
+		final var date = new TableColumn(list, SWT.RIGHT);
+		date.setText("Date");
+		date.setWidth(35);
+		final var time = new TableColumn(list, SWT.RIGHT);
+		time.setText("Time");
+		time.setWidth(35);
+		final var level = new TableColumn(list, SWT.LEFT);
+		level.setText("Level");
+		level.setWidth(25);
+		final var logger = new TableColumn(list, SWT.LEFT);
+		logger.setText("Logger");
+		logger.setWidth(85);
+		final var msg = new TableColumn(list, SWT.LEFT);
+		msg.setText("Message");
+		msg.setWidth(250);
+		enableColumnAdjusting();
+
 		populateHistory();
 	}
 
 	@Override
 	protected void initTableBottom(final Composite parent, final Sash sash)
 	{
-		list.dispose();
-		((FormData) sash.getLayoutData()).top = new FormAttachment(0);
+		((FormData) sash.getLayoutData()).top = new FormAttachment(100);
+		((FormData) sash.getLayoutData()).bottom = new FormAttachment(100);
 		sash.setEnabled(false);
 	}
 
@@ -106,8 +184,8 @@ class LogTab extends BaseTabLayout
 			@Override
 			public void widgetSelected(final SelectionEvent e)
 			{
-				log.removeAll();
-				log.redraw();
+				list.removeAll();
+				list.redraw();
 			}
 		});
 		loglevel = new Label(top, SWT.NONE);
@@ -119,23 +197,60 @@ class LogTab extends BaseTabLayout
 		scaleArea.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
 		final Label logMin = new Label(scaleArea, SWT.NONE);
-		logMin.setText(levels[0]);
+		logMin.setText(levels[1]);
 
 		scale = new Scale(scaleArea, SWT.HORIZONTAL);
 		scale.setLayoutData(new GridData(SWT.FILL, SWT.DEFAULT, true, false));
 		// trace, debug, info, warn, error
-		scale.setMinimum(LogLevel.ERROR.ordinal());
-		scale.setMaximum(LogLevel.TRACE.ordinal());
+		scale.setMinimum(TRACE.ordinal());
+		scale.setMaximum(ERROR.ordinal());
 		scale.setIncrement(1);
 		scale.setPageIncrement(1);
 		scale.addListener(SWT.Selection, event -> adjustLogLevel(scale.getSelection()));
 
 		final Label logMax = new Label(scaleArea, SWT.NONE);
-		logMax.setText(levels[levels.length - 1]);
+		logMax.setText(levels[levels.length - 2]);
 
-		scale.setSelection(LogLevel.TRACE.ordinal());
-		adjustLogLevel(LogLevel.TRACE.ordinal());
+		scale.setSelection(TRACE.ordinal());
+		adjustLogLevel(TRACE.ordinal());
 		scaleArea.layout(true);
+	}
+
+	@Override
+	protected void onDispose(final DisposeEvent e) {
+		logBuffer.remove(this);
+	}
+
+	@Override
+	void asyncAddLog() {
+		Main.asyncExec(() -> {
+			if (list.isDisposed())
+				return;
+
+			final List<Object[]> buf = logBuffer.get(this);
+			synchronized (buf) {
+				for (final var entry : buf) {
+					if (matches((Level) entry[2]))
+						addListItem(logItemText(entry), new String[0], new String[0]);
+				}
+				buf.clear();
+			}
+		});
+	}
+
+	private boolean matches(final Level msgLevel) {
+		return msgLevel.getSeverity() >= logLevel().getSeverity();
+	}
+
+	private String[] logItemText(final Object[] logEntry) {
+		final var instant = (Instant) logEntry[0];
+		final String date = dateFormatter.format(instant);
+		final String time = timeFormatter.format(instant);
+
+		var msg = expandTabs((String) logEntry[3]);
+		final Throwable t = (Throwable) logEntry[4];
+		msg += t != null ? ": " + t.getMessage() : "";
+		return new String[] { date, time, logEntry[2].toString(), logEntry[1].toString(), msg };
 	}
 
 	private void adjustLogLevel(final int level)
@@ -143,14 +258,39 @@ class LogTab extends BaseTabLayout
 		final String name = levels[level];
 		loglevel.setText("Verbosity: " + name);
 		scale.setToolTipText(name);
-		setLogLevel(LogLevel.values()[level]);
+		setLogLevel(Level.values()[level]);
 		top.layout();
 	}
 
-	private void populateHistory()
-	{
+	private void populateHistory() {
+		Main.asyncExec(() -> {
+			synchronized (logHistory) {
+				for (final var entry : logHistory) {
+					addListItem(logItemText(entry), new String[0], new String[0]);
+				}
+			}
+		});
+	}
+
+	private static void addToLogBuffer(final String name, final Level level, final String msg) {
+		addToLogBuffer(name, level, expandTabs(msg), null);
+	}
+
+	private static void addToLogBuffer(final String name, final Level level, final String msg, final Throwable thrown) {
+		final var now = Instant.now();
+		addToLogHistory(now, name, level, msg, thrown);
+		logBuffer.forEach((k, v) -> {
+			v.add(new Object[] { now, name, level, msg, thrown });
+			k.asyncAddLog();
+		});
+	}
+
+	private static void addToLogHistory(final Instant now, final String name, final Level level,
+			final String msg, final Throwable thrown) {
 		synchronized (logHistory) {
-			asyncLogAddAll(logHistory);
+			if (logHistory.size() >= maxHistorySize)
+				logHistory.remove(0);
+			logHistory.add(new Object[] { now, name, level, msg, thrown });
 		}
 	}
 }

@@ -36,6 +36,8 @@
 
 package io.calimero.gui;
 
+import static java.lang.System.Logger.Level.DEBUG;
+
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -85,7 +87,6 @@ import io.calimero.knxnetip.util.DIB;
 import io.calimero.knxnetip.util.ServiceFamiliesDIB;
 import io.calimero.knxnetip.util.ServiceFamiliesDIB.ServiceFamily;
 import io.calimero.link.medium.KNXMediumSettings;
-import io.calimero.log.LogService.LogLevel;
 import io.calimero.serial.SerialConnectionFactory;
 import io.calimero.serial.usb.UsbConnection;
 import io.calimero.serial.usb.UsbConnectionFactory;
@@ -138,8 +139,7 @@ class DiscoverTab extends BaseTabLayout
 		setListBanner("KNXnet/IP servers and USB interfaces "
 				+ "are listed here.\nSelect an interface to open the connection dialog.");
 		enableColumnAdjusting();
-		setLogLevel(LogLevel.DEBUG);
-		addLogIncludeFilter(".*calimero\\.(knxnetip\\.Discoverer|usb).*");
+		setLogLevel(DEBUG);
 		discover();
 	}
 

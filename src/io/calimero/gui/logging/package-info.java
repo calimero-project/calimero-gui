@@ -1,6 +1,6 @@
 /*
-    Calimero 2 - A library for KNX network access
-    Copyright (c) 2022, 2023 B. Malinowsky
+    Calimero GUI - A graphical user interface for the Calimero 2 tools
+    Copyright (c) 2022, 2022 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,13 +34,7 @@
     version.
 */
 
-@SuppressWarnings({ "requires-automatic" })
-module io.calimero.gui {
-	requires io.calimero.core;
-	requires io.calimero.tools;
-
-	requires org.eclipse.swt; // automatic module
-
-	provides java.lang.System.LoggerFinder
-	    with io.calimero.gui.logging.LoggerFinder;
-}
+/**
+ * Pipes logging output into the GUI's log views.
+ */
+package io.calimero.gui.logging;

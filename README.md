@@ -54,8 +54,8 @@ On Linux/Windows
 
 The graphical user interface has the following 
 
-* _mandatory_ dependencies: calimero-core, calimero-tools, calimero-rxtx, SWT, slf4j-api
-* _optional_ dependencies: serial-native, slf4j-simple (strongly recommended to view log output in the GUI)
+* _mandatory_ dependencies: calimero-core, calimero-tools, calimero-rxtx, SWT
+* _optional_ dependencies: serial-native
 
 In the following commands, use your specific library versions.
 
@@ -74,8 +74,8 @@ Or, assuming all dependencies (of any compliant version) are in the current work
 Or, as example of using the JRE `-classpath`/`-cp` option to qualify all dependencies
 
 	java -cp "calimero-gui-3.0-SNAPSHOT.jar:calimero-core-3.0-SNAPSHOT.jar\
-	:calimero-tools-3.0-SNAPSHOT.jar:org.eclipse.swt.gtk.linux.x86_64-3.122.0.jar\
-	:slf4j-api-1.7.36.jar:slf4j-simple-1.7.36.jar" io.calimero.gui.Main
+	:calimero-tools-3.0-SNAPSHOT.jar:org.eclipse.swt.gtk.linux.x86_64-3.122.0.jar"\
+	io.calimero.gui.Main
 
 ### Run As Standalone Application
 * Run `gradlew build`

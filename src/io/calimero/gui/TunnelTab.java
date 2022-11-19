@@ -36,21 +36,14 @@
 
 package io.calimero.gui;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Map;
-import java.util.Optional;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -183,8 +176,6 @@ class TunnelTab extends BaseTabLayout
 	private long eventCounterFiltered = 1;
 	private final ConnectArguments connect;
 
-	private final DateTimeFormatter dateFormatter;
-	private final DateTimeFormatter timeFormatter;
 
 	TunnelTab(final CTabFolder tf, final ConnectArguments args)
 	{
@@ -220,28 +211,6 @@ class TunnelTab extends BaseTabLayout
 		decoded.setText("Decoded ASDU");
 		decoded.setWidth(100);
 		enableColumnAdjusting();
-
-		final String filter = args.remote == null ? args.port : args.remote;
-		addLogIncludeFilter(".*" + Pattern.quote(filter) + ".*");
-		addLogExcludeFilter(".*Discoverer.*", ".*DevMgmt.*", ".*calimero\\.mgmt\\..*");
-
-		DateTimeFormatter dfmt = DateTimeFormatter.ISO_LOCAL_DATE;
-		DateTimeFormatter tfmt = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
-		// check optional config file for user-specific date/time formats
-		try {
-			final Path config = Paths.get(".calimero-gui.config");
-			if (Files.exists(config)) {
-				final Map<String, String> formats = Files.lines(config).filter(s -> s.startsWith("monitor")).collect(Collectors
-						.toMap((final String s) -> s.substring(0, s.indexOf("=")), (final String s) -> s.substring(s.indexOf("=") + 1)));
-				dfmt = Optional.ofNullable(formats.get("monitor.dateFormat")).map(DateTimeFormatter::ofPattern).orElse(dfmt);
-				tfmt = Optional.ofNullable(formats.get("monitor.timeFormat")).map(DateTimeFormatter::ofPattern).orElse(tfmt);
-			}
-		}
-		catch (IOException | RuntimeException e) {
-			asyncAddLog(e);
-		}
-		dateFormatter = dfmt.withZone(ZoneId.systemDefault());
-		timeFormatter = tfmt.withZone(ZoneId.systemDefault());
 
 		initFilterMenu();
 		openGroupMonitor();

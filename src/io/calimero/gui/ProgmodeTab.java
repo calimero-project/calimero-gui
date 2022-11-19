@@ -40,7 +40,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.TreeSet;
-import java.util.regex.Pattern;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -70,11 +69,6 @@ class ProgmodeTab extends BaseTabLayout
 		device.setText("Device Address");
 		device.setWidth(100);
 		enableColumnAdjusting();
-
-		final String filter = args.remote == null ? args.port : args.remote;
-		addLogIncludeFilter(".*" + Pattern.quote(filter) + ".*", ".*calimero\\.mgmt\\.MgmtProc.*",
-				".*calimero\\.mgmt\\.MC.*", ".*calimero\\.tools.*");
-		addLogExcludeFilter(".*Discoverer.*");
 
 		runProgmode();
 	}

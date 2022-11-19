@@ -1,6 +1,6 @@
 /*
-    Calimero 2 - A library for KNX network access
-    Copyright (c) 2022, 2023 B. Malinowsky
+    Calimero GUI - A graphical user interface for the Calimero 2 tools
+    Copyright (c) 2022, 2022 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,13 +34,20 @@
     version.
 */
 
-@SuppressWarnings({ "requires-automatic" })
-module io.calimero.gui {
-	requires io.calimero.core;
-	requires io.calimero.tools;
+package io.calimero.gui.logging;
 
-	requires org.eclipse.swt; // automatic module
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
-	provides java.lang.System.LoggerFinder
-	    with io.calimero.gui.logging.LoggerFinder;
+public final class LoggerFinder extends System.LoggerFinder {
+	private static final Set<LogNotifier> logNotifiers = ConcurrentHashMap.newKeySet();
+
+	@Override
+	public System.Logger getLogger(final String name, final Module module) {
+		return new GuiLogger(name, logNotifiers);
+	}
+
+	public static void addLogNotifier(final LogNotifier n) { logNotifiers.add(n); }
+
+	public static void removeLogNotifier(final LogNotifier n) { logNotifiers.remove(n); }
 }

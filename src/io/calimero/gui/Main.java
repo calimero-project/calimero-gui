@@ -146,6 +146,8 @@ public class Main
 				new Color[] { display.getSystemColor(SWT.COLOR_WHITE),
 					display.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND), }, new int[] { 75 }, true);
 
+		LogTab.initLogging();
+
 		discoverTab = new DiscoverTab(tf);
 		shell.pack();
 		shell.setSize(shell.getSize().x + 150, shell.getSize().y + 100);
@@ -169,8 +171,8 @@ public class Main
 	{
 		// use current system theme on macOS, i.e., light/dark appearance
 		System.setProperty("org.eclipse.swt.display.useSystemTheme", "true");
-		display = new Display();
 		try {
+			display = new Display();
 			shell = new Shell(display);
 			final FontData[] fontData = shell.getFont().getFontData();
 			final String os = System.getProperty("os.name", "generic").toLowerCase(Locale.ENGLISH);
@@ -183,11 +185,11 @@ public class Main
 			new Main();
 		}
 		catch (final Throwable e) {
-			System.setErr(BaseTabLayout.oldSystemErr);
+			System.setErr(LogTab.oldSystemErr);
 			e.printStackTrace();
 		}
 		finally {
-			System.setErr(BaseTabLayout.oldSystemErr);
+			System.setErr(LogTab.oldSystemErr);
 			display.dispose();
 		}
 	}
