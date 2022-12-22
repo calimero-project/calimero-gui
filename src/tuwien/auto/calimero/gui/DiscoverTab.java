@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2021 B. Malinowsky
+    Copyright (c) 2006, 2022 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -84,7 +84,7 @@ import tuwien.auto.calimero.knxnetip.util.ServiceFamiliesDIB;
 import tuwien.auto.calimero.knxnetip.util.ServiceFamiliesDIB.ServiceFamily;
 import tuwien.auto.calimero.link.medium.KNXMediumSettings;
 import tuwien.auto.calimero.log.LogService.LogLevel;
-import tuwien.auto.calimero.serial.LibraryAdapter;
+import tuwien.auto.calimero.serial.SerialConnectionFactory;
 import tuwien.auto.calimero.serial.usb.UsbConnection;
 import tuwien.auto.calimero.tools.Discover;
 
@@ -325,8 +325,8 @@ class DiscoverTab extends BaseTabLayout
 							}
 						});
 						if (!vserialKnxDevices.isEmpty()) {
-							final List<String> l = LibraryAdapter.getPortIdentifiers();
-							asyncAddLog(l.stream().collect(Collectors.joining(", ", "Available serial ports: ", "")));
+							final Set<String> ports = SerialConnectionFactory.portIdentifiers();
+							asyncAddLog(ports.stream().collect(Collectors.joining(", ", "Available serial ports: ", "")));
 						}
 					}
 					catch (final RuntimeException e) {
