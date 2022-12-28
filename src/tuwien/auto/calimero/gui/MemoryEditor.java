@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2017, 2021 B. Malinowsky
+    Copyright (c) 2017, 2022 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -539,14 +539,8 @@ class MemoryEditor extends BaseTabLayout
 				? KNXMediumSettings.BackboneRouter : new IndividualAddress(connect.localKnxAddress);
 		final KNXMediumSettings medium = KNXMediumSettings.create(connect.knxMedium, localKnxAddress);
 
-		if (connect.protocol == Protocol.FT12) {
-			try {
-				return new KNXNetworkLinkFT12(Integer.parseInt(connect.port), medium);
-			}
-			catch (final NumberFormatException e) {
-				return new KNXNetworkLinkFT12(connect.port, medium);
-			}
-		}
+		if (connect.protocol == Protocol.FT12)
+			return new KNXNetworkLinkFT12(connect.port, medium);
 		if (connect.protocol == Protocol.USB)
 			return new KNXNetworkLinkUsb(connect.port, medium);
 		if (connect.protocol == Protocol.Tpuart)
