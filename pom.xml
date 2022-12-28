@@ -165,6 +165,13 @@
 			<groupId>com.github.calimero</groupId>
 			<artifactId>calimero-rxtx</artifactId>
 			<version>${project.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.calimero</groupId>
+			<artifactId>calimero-usb</artifactId>
+			<version>${project.version}</version>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>${swt.groupId}</groupId>
