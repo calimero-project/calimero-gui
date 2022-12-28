@@ -34,7 +34,7 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
+package io.calimero.gui;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -54,23 +54,23 @@ import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.widgets.TableColumn;
 
-import tuwien.auto.calimero.DataUnitBuilder;
-import tuwien.auto.calimero.FrameEvent;
-import tuwien.auto.calimero.GroupAddress;
-import tuwien.auto.calimero.KNXException;
-import tuwien.auto.calimero.KNXIllegalArgumentException;
-import tuwien.auto.calimero.cemi.CEMIBusMon;
-import tuwien.auto.calimero.datapoint.DatapointMap;
-import tuwien.auto.calimero.dptxlator.TranslatorTypes;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
-import tuwien.auto.calimero.link.MonitorFrameEvent;
-import tuwien.auto.calimero.link.medium.RFLData;
-import tuwien.auto.calimero.link.medium.RawFrame;
-import tuwien.auto.calimero.link.medium.RawFrameBase;
-import tuwien.auto.calimero.tools.NetworkMonitor;
-import tuwien.auto.calimero.xml.KNXMLException;
-import tuwien.auto.calimero.xml.XmlInputFactory;
-import tuwien.auto.calimero.xml.XmlReader;
+import io.calimero.DataUnitBuilder;
+import io.calimero.FrameEvent;
+import io.calimero.GroupAddress;
+import io.calimero.KNXException;
+import io.calimero.KNXIllegalArgumentException;
+import io.calimero.cemi.CEMIBusMon;
+import io.calimero.datapoint.DatapointMap;
+import io.calimero.dptxlator.TranslatorTypes;
+import io.calimero.gui.ConnectDialog.ConnectArguments;
+import io.calimero.link.MonitorFrameEvent;
+import io.calimero.link.medium.RFLData;
+import io.calimero.link.medium.RawFrame;
+import io.calimero.link.medium.RawFrameBase;
+import io.calimero.tools.NetworkMonitor;
+import io.calimero.xml.KNXMLException;
+import io.calimero.xml.XmlInputFactory;
+import io.calimero.xml.XmlReader;
 
 /**
  * @author B. Malinowsky

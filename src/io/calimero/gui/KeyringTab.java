@@ -34,7 +34,7 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
+package io.calimero.gui;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -64,11 +64,11 @@ import org.eclipse.swt.widgets.Sash;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
-import tuwien.auto.calimero.GroupAddress;
-import tuwien.auto.calimero.IndividualAddress;
-import tuwien.auto.calimero.KNXFormatException;
-import tuwien.auto.calimero.secure.Keyring;
-import tuwien.auto.calimero.secure.Security;
+import io.calimero.GroupAddress;
+import io.calimero.IndividualAddress;
+import io.calimero.KNXFormatException;
+import io.calimero.secure.Keyring;
+import io.calimero.secure.Security;
 
 class KeyringTab extends BaseTabLayout {
 	private Button load;

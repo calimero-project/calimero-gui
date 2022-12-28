@@ -34,7 +34,7 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
+package io.calimero.gui;
 
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -94,26 +94,26 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 
-import tuwien.auto.calimero.DataUnitBuilder;
-import tuwien.auto.calimero.IndividualAddress;
-import tuwien.auto.calimero.KNXException;
-import tuwien.auto.calimero.KNXTimeoutException;
-import tuwien.auto.calimero.dptxlator.DPT;
-import tuwien.auto.calimero.dptxlator.DPTXlator;
-import tuwien.auto.calimero.dptxlator.PropertyTypes;
-import tuwien.auto.calimero.dptxlator.TranslatorTypes;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
-import tuwien.auto.calimero.knxnetip.SecureConnection;
-import tuwien.auto.calimero.link.KNXNetworkLink;
-import tuwien.auto.calimero.mgmt.Description;
-import tuwien.auto.calimero.mgmt.Destination;
-import tuwien.auto.calimero.mgmt.ManagementClientImpl;
-import tuwien.auto.calimero.mgmt.PropertyClient;
-import tuwien.auto.calimero.mgmt.PropertyClient.PropertyKey;
-import tuwien.auto.calimero.tools.Property;
-import tuwien.auto.calimero.xml.KNXMLException;
-import tuwien.auto.calimero.xml.XmlInputFactory;
-import tuwien.auto.calimero.xml.XmlReader;
+import io.calimero.DataUnitBuilder;
+import io.calimero.IndividualAddress;
+import io.calimero.KNXException;
+import io.calimero.KNXTimeoutException;
+import io.calimero.dptxlator.DPT;
+import io.calimero.dptxlator.DPTXlator;
+import io.calimero.dptxlator.PropertyTypes;
+import io.calimero.dptxlator.TranslatorTypes;
+import io.calimero.gui.ConnectDialog.ConnectArguments;
+import io.calimero.knxnetip.SecureConnection;
+import io.calimero.link.KNXNetworkLink;
+import io.calimero.mgmt.Description;
+import io.calimero.mgmt.Destination;
+import io.calimero.mgmt.ManagementClientImpl;
+import io.calimero.mgmt.PropertyClient;
+import io.calimero.mgmt.PropertyClient.PropertyKey;
+import io.calimero.tools.Property;
+import io.calimero.xml.KNXMLException;
+import io.calimero.xml.XmlInputFactory;
+import io.calimero.xml.XmlReader;
 
 /**
  * @author B. Malinowsky

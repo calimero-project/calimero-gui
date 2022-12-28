@@ -34,7 +34,7 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
+package io.calimero.gui;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,10 +45,10 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
-import tuwien.auto.calimero.DataUnitBuilder;
-import tuwien.auto.calimero.KNXIllegalArgumentException;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
-import tuwien.auto.calimero.tools.DeviceInfo;
+import io.calimero.DataUnitBuilder;
+import io.calimero.KNXIllegalArgumentException;
+import io.calimero.gui.ConnectDialog.ConnectArguments;
+import io.calimero.tools.DeviceInfo;
 
 /**
  * @author B. Malinowsky

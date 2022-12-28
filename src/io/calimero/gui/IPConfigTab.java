@@ -34,7 +34,7 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
+package io.calimero.gui;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,9 +45,9 @@ import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
-import tuwien.auto.calimero.KNXIllegalArgumentException;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
-import tuwien.auto.calimero.tools.IPConfig;
+import io.calimero.KNXIllegalArgumentException;
+import io.calimero.gui.ConnectDialog.ConnectArguments;
+import io.calimero.tools.IPConfig;
 
 /**
  * @author B. Malinowsky

@@ -34,7 +34,7 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
+package io.calimero.gui;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -71,28 +71,28 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Sash;
 import org.eclipse.swt.widgets.TableColumn;
 
-import tuwien.auto.calimero.DataUnitBuilder;
-import tuwien.auto.calimero.DetachEvent;
-import tuwien.auto.calimero.GroupAddress;
-import tuwien.auto.calimero.KNXAddress;
-import tuwien.auto.calimero.KNXException;
-import tuwien.auto.calimero.KNXFormatException;
-import tuwien.auto.calimero.datapoint.Datapoint;
-import tuwien.auto.calimero.datapoint.DatapointMap;
-import tuwien.auto.calimero.datapoint.StateDP;
-import tuwien.auto.calimero.dptxlator.DPT;
-import tuwien.auto.calimero.dptxlator.TranslatorTypes;
-import tuwien.auto.calimero.dptxlator.TranslatorTypes.MainType;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
-import tuwien.auto.calimero.process.LteProcessEvent;
-import tuwien.auto.calimero.process.ProcessEvent;
-import tuwien.auto.calimero.process.ProcessListener;
-import tuwien.auto.calimero.tools.ProcComm;
-import tuwien.auto.calimero.xml.KNXMLException;
-import tuwien.auto.calimero.xml.XmlInputFactory;
-import tuwien.auto.calimero.xml.XmlOutputFactory;
-import tuwien.auto.calimero.xml.XmlReader;
-import tuwien.auto.calimero.xml.XmlWriter;
+import io.calimero.DataUnitBuilder;
+import io.calimero.DetachEvent;
+import io.calimero.GroupAddress;
+import io.calimero.KNXAddress;
+import io.calimero.KNXException;
+import io.calimero.KNXFormatException;
+import io.calimero.datapoint.Datapoint;
+import io.calimero.datapoint.DatapointMap;
+import io.calimero.datapoint.StateDP;
+import io.calimero.dptxlator.DPT;
+import io.calimero.dptxlator.TranslatorTypes;
+import io.calimero.dptxlator.TranslatorTypes.MainType;
+import io.calimero.gui.ConnectDialog.ConnectArguments;
+import io.calimero.process.LteProcessEvent;
+import io.calimero.process.ProcessEvent;
+import io.calimero.process.ProcessListener;
+import io.calimero.tools.ProcComm;
+import io.calimero.xml.KNXMLException;
+import io.calimero.xml.XmlInputFactory;
+import io.calimero.xml.XmlOutputFactory;
+import io.calimero.xml.XmlReader;
+import io.calimero.xml.XmlWriter;
 
 /**
  * @author B. Malinowsky

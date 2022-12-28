@@ -34,7 +34,7 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
+package io.calimero.gui;
 
 import java.util.Locale;
 import java.util.Map;
@@ -60,11 +60,11 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 
-import tuwien.auto.calimero.GroupAddress;
-import tuwien.auto.calimero.GroupAddress.Presentation;
-import tuwien.auto.calimero.SerialNumber;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
+import io.calimero.GroupAddress;
+import io.calimero.GroupAddress.Presentation;
+import io.calimero.SerialNumber;
+import io.calimero.gui.ConnectDialog.ConnectArguments;
+import io.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 
 /**
  * @author B. Malinowsky

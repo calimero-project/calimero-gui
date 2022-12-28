@@ -34,7 +34,7 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
+package io.calimero.gui;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -62,9 +62,9 @@ import org.eclipse.swt.widgets.Sash;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
-import tuwien.auto.calimero.KNXFormatException;
-import tuwien.auto.calimero.tools.KnxProject;
-import tuwien.auto.calimero.xml.XmlOutputFactory;
+import io.calimero.KNXFormatException;
+import io.calimero.tools.KnxProject;
+import io.calimero.xml.XmlOutputFactory;
 
 class ProjectTab extends BaseTabLayout {
 	private static List<Path> projects;

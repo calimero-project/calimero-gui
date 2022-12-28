@@ -34,7 +34,7 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
+package io.calimero.gui;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,7 +58,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Shell;
 
-import tuwien.auto.calimero.Settings;
+import io.calimero.Settings;
 
 /**
  * @author B. Malinowsky

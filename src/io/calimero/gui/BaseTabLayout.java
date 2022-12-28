@@ -34,7 +34,7 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
+package io.calimero.gui;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -90,9 +90,9 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
-import tuwien.auto.calimero.log.LogService.LogLevel;
+import io.calimero.gui.ConnectDialog.ConnectArguments;
+import io.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
+import io.calimero.log.LogService.LogLevel;
 
 /**
  * @author B. Malinowsky
@@ -524,7 +524,7 @@ class BaseTabLayout
 	{
 		asyncAddLog("Error: " + t.toString());
 		final java.util.List<StackTraceElement> trace = Arrays.asList(t.getStackTrace());
-		trace.stream().filter(e -> e.getClassName().startsWith("tuwien")).limit(3).map(e -> "\t" + e).forEach(this::asyncAddLog);
+		trace.stream().filter(e -> e.getClassName().startsWith("io.calimero")).limit(3).map(e -> "\t" + e).forEach(this::asyncAddLog);
 		for (Throwable i = t; i.getCause() != null && i != i.getCause(); i = i.getCause())
 			asyncAddLog("\t" + i.getCause().toString());
 	}

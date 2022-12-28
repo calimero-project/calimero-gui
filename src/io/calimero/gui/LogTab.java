@@ -34,7 +34,7 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
+package io.calimero.gui;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,7 +53,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Sash;
 import org.eclipse.swt.widgets.Scale;
 
-import tuwien.auto.calimero.log.LogService.LogLevel;
+import io.calimero.log.LogService.LogLevel;
 
 /**
  * @author B. Malinowsky

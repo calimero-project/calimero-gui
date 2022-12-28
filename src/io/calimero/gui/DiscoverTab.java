@@ -34,7 +34,7 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
+package io.calimero.gui;
 
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
@@ -74,22 +74,22 @@ import org.usb4java.DeviceHandle;
 import org.usb4java.DeviceList;
 import org.usb4java.LibUsb;
 
-import tuwien.auto.calimero.IndividualAddress;
-import tuwien.auto.calimero.KNXException;
-import tuwien.auto.calimero.SerialNumber;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
-import tuwien.auto.calimero.knxnetip.Discoverer.Result;
-import tuwien.auto.calimero.knxnetip.servicetype.SearchResponse;
-import tuwien.auto.calimero.knxnetip.util.DIB;
-import tuwien.auto.calimero.knxnetip.util.ServiceFamiliesDIB;
-import tuwien.auto.calimero.knxnetip.util.ServiceFamiliesDIB.ServiceFamily;
-import tuwien.auto.calimero.link.medium.KNXMediumSettings;
-import tuwien.auto.calimero.log.LogService.LogLevel;
-import tuwien.auto.calimero.serial.SerialConnectionFactory;
-import tuwien.auto.calimero.serial.usb.UsbConnection;
-import tuwien.auto.calimero.serial.usb.UsbConnectionFactory;
-import tuwien.auto.calimero.tools.Discover;
+import io.calimero.IndividualAddress;
+import io.calimero.KNXException;
+import io.calimero.SerialNumber;
+import io.calimero.gui.ConnectDialog.ConnectArguments;
+import io.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
+import io.calimero.knxnetip.Discoverer.Result;
+import io.calimero.knxnetip.servicetype.SearchResponse;
+import io.calimero.knxnetip.util.DIB;
+import io.calimero.knxnetip.util.ServiceFamiliesDIB;
+import io.calimero.knxnetip.util.ServiceFamiliesDIB.ServiceFamily;
+import io.calimero.link.medium.KNXMediumSettings;
+import io.calimero.log.LogService.LogLevel;
+import io.calimero.serial.SerialConnectionFactory;
+import io.calimero.serial.usb.UsbConnection;
+import io.calimero.serial.usb.UsbConnectionFactory;
+import io.calimero.tools.Discover;
 
 /**
  * @author B. Malinowsky

@@ -34,9 +34,9 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
+package io.calimero.gui;
 
-import static tuwien.auto.calimero.DataUnitBuilder.toHex;
+import static io.calimero.DataUnitBuilder.toHex;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -88,19 +88,19 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
-import tuwien.auto.calimero.DataUnitBuilder;
-import tuwien.auto.calimero.IndividualAddress;
-import tuwien.auto.calimero.KNXException;
-import tuwien.auto.calimero.KNXFormatException;
-import tuwien.auto.calimero.baos.BaosService;
-import tuwien.auto.calimero.baos.BaosService.ErrorCode;
-import tuwien.auto.calimero.baos.BaosService.Item;
-import tuwien.auto.calimero.baos.BaosService.Property;
-import tuwien.auto.calimero.dptxlator.DPT;
-import tuwien.auto.calimero.dptxlator.TranslatorTypes;
-import tuwien.auto.calimero.dptxlator.TranslatorTypes.MainType;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
-import tuwien.auto.calimero.tools.BaosClient;
+import io.calimero.DataUnitBuilder;
+import io.calimero.IndividualAddress;
+import io.calimero.KNXException;
+import io.calimero.KNXFormatException;
+import io.calimero.baos.BaosService;
+import io.calimero.baos.BaosService.ErrorCode;
+import io.calimero.baos.BaosService.Item;
+import io.calimero.baos.BaosService.Property;
+import io.calimero.dptxlator.DPT;
+import io.calimero.dptxlator.TranslatorTypes;
+import io.calimero.dptxlator.TranslatorTypes.MainType;
+import io.calimero.gui.ConnectDialog.ConnectArguments;
+import io.calimero.tools.BaosClient;
 
 class BaosTab extends BaseTabLayout {
 	private final class BaosClientTool extends BaosClient {

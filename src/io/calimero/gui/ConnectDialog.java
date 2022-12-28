@@ -34,9 +34,9 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
+package io.calimero.gui;
 
-import static tuwien.auto.calimero.DataUnitBuilder.toHex;
+import static io.calimero.DataUnitBuilder.toHex;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -66,18 +66,18 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
-import tuwien.auto.calimero.IndividualAddress;
-import tuwien.auto.calimero.KNXFormatException;
-import tuwien.auto.calimero.KnxRuntimeException;
-import tuwien.auto.calimero.SerialNumber;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
-import tuwien.auto.calimero.knxnetip.Discoverer;
-import tuwien.auto.calimero.knxnetip.KNXnetIPConnection;
-import tuwien.auto.calimero.knxnetip.SecureConnection;
-import tuwien.auto.calimero.knxnetip.util.ServiceFamiliesDIB.ServiceFamily;
-import tuwien.auto.calimero.link.medium.KNXMediumSettings;
-import tuwien.auto.calimero.secure.Keyring;
-import tuwien.auto.calimero.secure.Keyring.Interface;
+import io.calimero.IndividualAddress;
+import io.calimero.KNXFormatException;
+import io.calimero.KnxRuntimeException;
+import io.calimero.SerialNumber;
+import io.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
+import io.calimero.knxnetip.Discoverer;
+import io.calimero.knxnetip.KNXnetIPConnection;
+import io.calimero.knxnetip.SecureConnection;
+import io.calimero.knxnetip.util.ServiceFamiliesDIB.ServiceFamily;
+import io.calimero.link.medium.KNXMediumSettings;
+import io.calimero.secure.Keyring;
+import io.calimero.secure.Keyring.Interface;
 
 /**
  * @author B. Malinowsky

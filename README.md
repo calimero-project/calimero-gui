@@ -69,13 +69,13 @@ If all dependencies are resolved, you can also directly start the GUI by opening
 
 Or, assuming all dependencies (of any compliant version) are in the current working directory (replacing `Main` with `SwtChecker` will automatically check and download the required SWT library for your platform during startup)
 
-	java -cp "./*" tuwien.auto.calimero.gui.Main
+	java -cp "./*" io.calimero.gui.Main
 
 Or, as example of using the JRE `-classpath`/`-cp` option to qualify all dependencies
 
 	java -cp "calimero-gui-2.6-SNAPSHOT.jar:calimero-core-2.6-SNAPSHOT.jar\
 	:calimero-tools-2.6-SNAPSHOT.jar:org.eclipse.swt.gtk.linux.x86_64-3.116.100.jar\
-	:slf4j-api-1.7.36.jar:slf4j-simple-1.7.36.jar" tuwien.auto.calimero.gui.Main
+	:slf4j-api-1.7.36.jar:slf4j-simple-1.7.36.jar" io.calimero.gui.Main
 
 ### Run As Standalone Application
 * Run `gradlew build`

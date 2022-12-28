@@ -14,7 +14,7 @@ repositories {
     maven { url 'https://s01.oss.sonatype.org/content/repositories/snapshots' }
 }
 
-group = 'com.github.calimero'
+group = 'io.calimero'
 version = '2.6-SNAPSHOT'
 
 def date() {
@@ -33,7 +33,7 @@ compileTestJava.options.encoding = 'UTF-8'
 javadoc.options.encoding = 'UTF-8'
 
 
-mainClassName = 'tuwien.auto.calimero.gui.SwtChecker'
+mainClassName = 'io.calimero.gui.SwtChecker'
 
 // SWT is platform dependent
 def swtGroupId = 'org.eclipse.platform'
@@ -72,16 +72,16 @@ configurations.all {
 }
 
 dependencies {
-    implementation "com.github.calimero:calimero-core:${version}"
-    implementation "com.github.calimero:calimero-tools:${version}"
-    runtimeOnly("com.github.calimero:calimero-tools:${version}") {
+    implementation "io.calimero:calimero-core:${version}"
+    implementation "io.calimero:calimero-tools:${version}"
+    runtimeOnly("io.calimero:calimero-tools:${version}") {
         capabilities {
-           requireCapability("com.github.calimero:calimero-tools:calimero-tools-serial")
+           requireCapability("io.calimero:calimero-tools:calimero-tools-serial")
         }
     }
-    runtimeOnly("com.github.calimero:calimero-tools:${version}") {
+    runtimeOnly("io.calimero:calimero-tools:${version}") {
         capabilities {
-           requireCapability("com.github.calimero:calimero-tools:calimero-tools-usb")
+           requireCapability("io.calimero:calimero-tools:calimero-tools-usb")
         }
     }
     implementation "${swtGroupId}:${swtArtifact}:${swtVersion}"

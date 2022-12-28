@@ -34,7 +34,7 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
+package io.calimero.gui;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,10 +48,10 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
-import tuwien.auto.calimero.IndividualAddress;
-import tuwien.auto.calimero.KNXIllegalArgumentException;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
-import tuwien.auto.calimero.tools.ProgMode;
+import io.calimero.IndividualAddress;
+import io.calimero.KNXIllegalArgumentException;
+import io.calimero.gui.ConnectDialog.ConnectArguments;
+import io.calimero.tools.ProgMode;
 
 /**
  * Lists the KNX devices currently in programming mode.

@@ -34,9 +34,9 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
+package io.calimero.gui;
 
-import static tuwien.auto.calimero.DataUnitBuilder.fromHex;
+import static io.calimero.DataUnitBuilder.fromHex;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -87,25 +87,25 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
-import tuwien.auto.calimero.DataUnitBuilder;
-import tuwien.auto.calimero.IndividualAddress;
-import tuwien.auto.calimero.KNXException;
-import tuwien.auto.calimero.KNXFormatException;
-import tuwien.auto.calimero.KNXIllegalArgumentException;
-import tuwien.auto.calimero.KNXTimeoutException;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
-import tuwien.auto.calimero.link.KNXNetworkLink;
-import tuwien.auto.calimero.link.KNXNetworkLinkFT12;
-import tuwien.auto.calimero.link.KNXNetworkLinkIP;
-import tuwien.auto.calimero.link.KNXNetworkLinkTpuart;
-import tuwien.auto.calimero.link.KNXNetworkLinkUsb;
-import tuwien.auto.calimero.link.medium.KNXMediumSettings;
-import tuwien.auto.calimero.mgmt.Destination;
-import tuwien.auto.calimero.mgmt.ManagementClient;
-import tuwien.auto.calimero.mgmt.ManagementClientImpl;
-import tuwien.auto.calimero.mgmt.ManagementProcedures;
-import tuwien.auto.calimero.mgmt.ManagementProceduresImpl;
+import io.calimero.DataUnitBuilder;
+import io.calimero.IndividualAddress;
+import io.calimero.KNXException;
+import io.calimero.KNXFormatException;
+import io.calimero.KNXIllegalArgumentException;
+import io.calimero.KNXTimeoutException;
+import io.calimero.gui.ConnectDialog.ConnectArguments;
+import io.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
+import io.calimero.link.KNXNetworkLink;
+import io.calimero.link.KNXNetworkLinkFT12;
+import io.calimero.link.KNXNetworkLinkIP;
+import io.calimero.link.KNXNetworkLinkTpuart;
+import io.calimero.link.KNXNetworkLinkUsb;
+import io.calimero.link.medium.KNXMediumSettings;
+import io.calimero.mgmt.Destination;
+import io.calimero.mgmt.ManagementClient;
+import io.calimero.mgmt.ManagementClientImpl;
+import io.calimero.mgmt.ManagementProcedures;
+import io.calimero.mgmt.ManagementProceduresImpl;
 
 /**
  * @author B. Malinowsky
