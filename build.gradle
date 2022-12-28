@@ -40,7 +40,7 @@ def swtGroupId = 'org.eclipse.platform'
 def swtVersion = '3.122.0'
 def swtArtifact = 'org.eclipse.swt.'
 
-def os = System.getProperty("os.name").toLowerCase()
+def os = System.getProperty("os.name").toLowerCase(Locale.ENGLISH)
 if (os.contains("windows")) { swtArtifact += 'win32.win32.x86_64' }
 else if (os.contains("linux")) { swtArtifact += 'gtk.linux.x86_64' }
 else if (os.contains("mac")) { swtArtifact += 'cocoa.macosx.x86_64' }
