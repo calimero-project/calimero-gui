@@ -33,7 +33,10 @@ compileTestJava.options.encoding = 'UTF-8'
 javadoc.options.encoding = 'UTF-8'
 
 
-mainClassName = 'io.calimero.gui.SwtChecker'
+application {
+    mainModule = 'io.calimero.gui' 
+    mainClass = 'io.calimero.gui.SwtChecker'
+}
 
 // SWT is platform dependent
 def swtGroupId = 'org.eclipse.platform'
@@ -56,6 +59,7 @@ sourceSets {
 compileJava.options*.compilerArgs = [
     '-Xlint:all',
 //    '-Werror'
+    "--add-reads", "io.calimero.gui=ALL-UNNAMED" // usb4java-javax
 ]
 
 configurations {
@@ -111,7 +115,7 @@ jar {
   manifest {
     attributes(
       'Class-Path': (configurations.runtimeClasspath - configurations.provided + files('swt.jar')).collect { it.getName() }.join(' '),
-      'Main-Class': mainClassName
+      'Main-Class': application.mainClass
     )
   }
 }
