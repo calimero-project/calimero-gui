@@ -197,6 +197,8 @@ class BaosTab extends BaseTabLayout {
 
 		workArea.layout(true, true);
 
+		if ("3671".equals(connect.port))
+			connect.port = "12004";
 		final List<String> toolArgs = connect.getArgs(false);
 		asyncAddLog("Using command line: " + String.join(" ", toolArgs));
 		tool = new BaosClientTool(toolArgs.toArray(String[]::new));
