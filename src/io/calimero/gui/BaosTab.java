@@ -726,6 +726,7 @@ class BaosTab extends BaseTabLayout {
 			}
 			catch (final Exception e) {
 				asyncAddLog(e);
+				Main.asyncExec(() -> setHeaderInfo(statusInfo(2)));
 			}
 			finally {
 				tool.quit();
