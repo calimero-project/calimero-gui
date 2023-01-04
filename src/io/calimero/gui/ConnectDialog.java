@@ -96,7 +96,7 @@ class ConnectDialog
 
 		Protocol protocol;
 		String remote;
-		final String port;
+		String port;
 		int knxMedium;
 
 		final String local;
@@ -260,7 +260,8 @@ class ConnectDialog
 			default:
 				throw new IllegalStateException();
 			}
-			args.add(port);
+			if (!port.isEmpty())
+				args.add(port);
 			if (knxMedium != 0) {
 				args.add("--medium");
 				args.add(KNXMediumSettings.getMediumString(knxMedium));
