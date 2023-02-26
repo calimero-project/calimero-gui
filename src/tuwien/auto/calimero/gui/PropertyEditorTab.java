@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2015, 2021 B. Malinowsky
+    Copyright (c) 2015, 2023 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -45,6 +45,7 @@ import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -98,6 +99,7 @@ import tuwien.auto.calimero.DataUnitBuilder;
 import tuwien.auto.calimero.IndividualAddress;
 import tuwien.auto.calimero.KNXException;
 import tuwien.auto.calimero.KNXTimeoutException;
+import tuwien.auto.calimero.Settings;
 import tuwien.auto.calimero.dptxlator.DPT;
 import tuwien.auto.calimero.dptxlator.DPTXlator;
 import tuwien.auto.calimero.dptxlator.PropertyTypes;
@@ -111,7 +113,7 @@ import tuwien.auto.calimero.mgmt.ManagementClientImpl;
 import tuwien.auto.calimero.mgmt.PropertyClient;
 import tuwien.auto.calimero.mgmt.PropertyClient.PropertyKey;
 import tuwien.auto.calimero.tools.Property;
-import tuwien.auto.calimero.xml.KNXMLException;
+
 import tuwien.auto.calimero.xml.XmlInputFactory;
 import tuwien.auto.calimero.xml.XmlReader;
 
@@ -128,7 +130,19 @@ class PropertyEditorTab extends BaseTabLayout
 		Count, Pid, Description, Values, RawValues, Elements, AccessLevel, Name,
 	}
 
-	private static final List<PropertyClient.Property> definitions = new ArrayList<>();
+	private static final Collection<PropertyClient.Property> definitions;
+	static {
+		Collection<PropertyClient.Property> c = List.of();
+		try (InputStream is = Settings.class.getResourceAsStream("/properties.xml");
+				XmlReader r = XmlInputFactory.newInstance().createXMLStreamReader(is)) {
+			c = new PropertyClient.XmlPropertyDefinitions().load(r);
+		}
+		catch (final IOException | RuntimeException e) {
+			e.printStackTrace();
+		}
+		definitions = c;
+	}
+
 	private static final Map<PropertyKey, PropertyClient.Property> map = new HashMap<>();
 	private static final PropertyClient.Property unknown = new PropertyClient.Property(-1, "[Unknown Property]", "n/a",
 			-1, -1, null);
@@ -159,9 +173,6 @@ class PropertyEditorTab extends BaseTabLayout
 	private static final String showTree = "Use tree view for interface objects and properties";
 	private static final String hideTree = "Use table view for interface objects and properties";
 
-	static {
-		loadDefinitions();
-	}
 
 	PropertyEditorTab(final CTabFolder tf, final ConnectArguments args)
 	{
@@ -862,17 +873,6 @@ class PropertyEditorTab extends BaseTabLayout
 	private void noDptBounds() {
 		bounds.add("n/a");
 		bounds.select(0);
-	}
-
-	private static void loadDefinitions()
-	{
-		try (InputStream is = PropertyEditorTab.class.getResourceAsStream("/properties.xml");
-				XmlReader r = XmlInputFactory.newInstance().createXMLStreamReader(is)) {
-			definitions.addAll(new PropertyClient.XmlPropertyDefinitions().load(r));
-		}
-		catch (final IOException | KNXMLException e) {
-			e.printStackTrace();
-		}
 	}
 
 	private static Optional<PropertyClient.Property> getDefinition(final int objType, final int pid)
