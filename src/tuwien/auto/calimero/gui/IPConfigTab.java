@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2019 B. Malinowsky
+    Copyright (c) 2006, 2023 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -81,7 +81,7 @@ class IPConfigTab extends BaseTabLayout
 
 	private void readConfig()
 	{
-		final List<String> args = new ArrayList<String>();
+		final List<String> args = new ArrayList<>();
 		args.addAll(connect.getArgs(true));
 		asyncAddLog("Using command line: " + String.join(" ", args));
 

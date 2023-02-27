@@ -63,7 +63,7 @@ configurations {
     compile.extendsFrom provided    
 }
 
-configurations.all {
+configurations.configureEach {
     resolutionStrategy {
         dependencySubstitution {
             substitute module('org.eclipse.platform:org.eclipse.swt.${osgi.platform}') with module("${swtGroupId}:${swtArtifact}:${swtVersion}")
@@ -94,14 +94,14 @@ java {
     withSourcesJar()
 }
 
-tasks.withType(Jar) {
-	from("${projectDir}") {
+tasks.withType(Jar).configureEach {
+    from("${projectDir}") {
         include 'LICENSE.txt'
         into "META-INF"
     }
     if (name.equals('sourcesJar')) {
-    	from("${projectDir}") {
-		    include 'README.md'
+        from("${projectDir}") {
+            include 'README.md'
         }
     }
 }

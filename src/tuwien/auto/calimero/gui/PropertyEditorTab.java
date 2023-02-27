@@ -216,7 +216,7 @@ class PropertyEditorTab extends BaseTabLayout
 		addTreeView();
 		addTableEditor(list);
 
-		final Listener paintListener = (e) -> onItemPaint(e);
+		final Listener paintListener = this::onItemPaint;
 		list.addListener(SWT.MeasureItem, paintListener);
 		list.addListener(SWT.PaintItem, paintListener);
 
@@ -339,7 +339,7 @@ class PropertyEditorTab extends BaseTabLayout
 
 		tree.addSelectionListener(adapt(this::updateDetailPane));
 
-		sashForm.setWeights(new int[] { 1, 4, 4 });
+		sashForm.setWeights(1, 4, 4);
 	}
 
 	private void addTreeViewOption()
@@ -710,7 +710,7 @@ class PropertyEditorTab extends BaseTabLayout
 	private static String altFormatted(final String input, final String onError)
 	{
 		try {
-			final List<BigInteger> values = Arrays.asList(input.split(", ")).stream().map(s -> new BigInteger(s))
+			final List<BigInteger> values = Arrays.stream(input.split(", ")).map(BigInteger::new)
 					.collect(toList());
 			return altFormatted(values);
 		}
@@ -796,28 +796,24 @@ class PropertyEditorTab extends BaseTabLayout
 				final int column = Columns.Values.ordinal();
 				final Text text = new Text(table, SWT.NONE);
 				@SuppressWarnings("fallthrough")
-				final Listener textListener = new Listener() {
-					@Override
-					public void handleEvent(final Event e)
-					{
-						if (e.type == SWT.FocusOut) {
-							item.setText(column, text.getText());
+				final Listener textListener = e -> {
+					if (e.type == SWT.FocusOut) {
+						item.setText(column, text.getText());
+						text.dispose();
+					}
+					else if (e.type == SWT.Traverse) {
+						switch (e.detail) {
+						case SWT.TRAVERSE_RETURN:
+							final int objectIndex = Integer.parseInt((String) item.getData(ObjectIndex));
+							final int objectType = Integer.parseInt((String) item.getData(ObjectType));
+							final int pid = Integer.parseInt(item.getText(Columns.Pid.ordinal()));
+							final var definition = getDefinition(objectType, pid).orElse(unknown);
+							writeValues(objectIndex, pid, text.getText(), -1, definition);
+							// fall through
+						case SWT.TRAVERSE_ESCAPE:
 							text.dispose();
-						}
-						else if (e.type == SWT.Traverse) {
-							switch (e.detail) {
-							case SWT.TRAVERSE_RETURN:
-								final int objectIndex = Integer.parseInt((String) item.getData(ObjectIndex));
-								final int objectType = Integer.parseInt((String) item.getData(ObjectType));
-								final int pid = Integer.parseInt(item.getText(Columns.Pid.ordinal()));
-								final var definition = getDefinition(objectType, pid).orElse(unknown);
-								writeValues(objectIndex, pid, text.getText(), -1, definition);
-								// fall through
-							case SWT.TRAVERSE_ESCAPE:
-								text.dispose();
-								e.doit = false;
-							default: // nop
-							}
+							e.doit = false;
+						default: // nop
 						}
 					}
 				};
@@ -832,7 +828,7 @@ class PropertyEditorTab extends BaseTabLayout
 				updateDptBounds((String) item.getData(ObjectType), item.getText(Columns.Pid.ordinal()));
 				return;
 			}
-			if (!visible && rect.intersects(clientArea))
+			if (rect.intersects(clientArea))
 				visible = true;
 			if (!visible)
 				return;
@@ -924,7 +920,7 @@ class PropertyEditorTab extends BaseTabLayout
 
 			toolThread.interrupt();
 			joinUninterruptibly(toolThread);
-			runProperties(Arrays.asList("reset"), false);
+			runProperties(List.of("reset"), false);
 			// TODO after M_Reset.req, we need to wait for reset to complete and restart our property tool
 			return;
 		}
@@ -996,13 +992,13 @@ class PropertyEditorTab extends BaseTabLayout
 	private void runProperties(final List<String> cmd, final boolean init)
 	{
 		// setup tool argument array
-		final List<String> args = new ArrayList<String>();
+		final List<String> args = new ArrayList<>();
 		args.addAll(connect.getArgs(true));
 		args.addAll(cmd);
 		setHeaderInfo(statusInfo(0));
 
 		// ensure user 1 if we're using local device management
-		if (args.indexOf("-r") == -1) {
+		if (!args.contains("-r")) {
 			final int userIdx = args.indexOf("--user");
 			if (userIdx != -1 && !"1".equals(args.get(userIdx + 1))) {
 				args.set(userIdx + 1, "1");
@@ -1024,7 +1020,7 @@ class PropertyEditorTab extends BaseTabLayout
 			public void run()
 			{
 				try {
-					final Property tool = new Property(args.toArray(new String[args.size()])) {
+					final Property tool = new Property(args.toArray(new String[0])) {
 						@Override
 						protected void runCommand(final String... cmd) throws InterruptedException
 						{

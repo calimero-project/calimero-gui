@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2015, 2020 B. Malinowsky
+    Copyright (c) 2015, 2023 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -87,7 +87,7 @@ class DeviceInfoTab extends BaseTabLayout
 	{
 		list.removeAll();
 		log.removeAll();
-		final List<String> args = new ArrayList<String>();
+		final List<String> args = new ArrayList<>();
 		// remove knx medium if we do local device info
 		if (connect.knxAddress.isEmpty())
 			connect.knxMedium = 0;

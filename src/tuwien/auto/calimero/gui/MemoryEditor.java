@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2017, 2022 B. Malinowsky
+    Copyright (c) 2017, 2023 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -170,7 +170,7 @@ class MemoryEditor extends BaseTabLayout
 		addAsciiView();
 		addTableEditor(list);
 
-		list.addListener(SWT.PaintItem, e -> onItemPaint(e));
+		list.addListener(SWT.PaintItem, this::onItemPaint);
 		list.addListener(SWT.EraseItem, e -> {
 			if ((e.detail & SWT.SELECTED) != 0)
 				e.detail &= ~SWT.SELECTED;
@@ -690,7 +690,7 @@ class MemoryEditor extends BaseTabLayout
 					setHeaderInfo(statusInfo(2));
 					editArea.setEnabled(true);
 					for (final Control c : editArea.getChildren()) {
-						if (c != write || (c == write && !modified.isEmpty()))
+						if (c != write || !modified.isEmpty())
 							c.setEnabled(true);
 					}
 				});

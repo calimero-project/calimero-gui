@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2019, 2020 B. Malinowsky
+    Copyright (c) 2019, 2023 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -144,7 +144,7 @@ class ProjectTab extends BaseTabLayout {
 
 		((GridLayout) top.getLayout()).numColumns = 3;
 		((GridLayout) top.getLayout()).makeColumnsEqualWidth = false;
-		((GridLayout) top.getLayout()).horizontalSpacing = 1 * ((GridLayout) top.getLayout()).horizontalSpacing;
+		((GridLayout) top.getLayout()).horizontalSpacing = ((GridLayout) top.getLayout()).horizontalSpacing;
 
 		final var open = new Button(top, SWT.NONE);
 		open.setText("Add project ...");
