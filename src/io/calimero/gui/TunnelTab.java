@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2020 B. Malinowsky
+    Copyright (c) 2006, 2023 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -44,6 +44,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
@@ -413,7 +414,7 @@ class TunnelTab extends BaseTabLayout
 	private void openGroupMonitor()
 	{
 		// setup tool argument array
-		final java.util.List<String> args = new ArrayList<String>();
+		final java.util.List<String> args = new ArrayList<>();
 		args.addAll(connect.getArgs(true));
 		args.add("--lte");
 		args.add("monitor");
@@ -425,7 +426,7 @@ class TunnelTab extends BaseTabLayout
 			public void run()
 			{
 				try {
-					pc = new ProcCommWrapper(args.toArray(new String[args.size()]));
+					pc = new ProcCommWrapper(args.toArray(new String[0]));
 					final var listener = new ProcessListener() {
 						@Override
 						public void groupWrite(final ProcessEvent e) {}
@@ -494,7 +495,7 @@ class TunnelTab extends BaseTabLayout
 		points.setToolTipText("");
 
 		final TreeSet<Datapoint> set = new TreeSet<>(
-				(dp1, dp2) -> dp1.getMainAddress().getRawAddress() - dp2.getMainAddress().getRawAddress());
+				Comparator.comparingInt(dp -> dp.getMainAddress().getRawAddress()));
 		set.addAll(model.getDatapoints());
 		for (final Datapoint dp : set)
 			points.add(dp.getMainAddress().toString() + "\t" + dp.getName());

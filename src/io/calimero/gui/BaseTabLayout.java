@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2020 B. Malinowsky
+    Copyright (c) 2006, 2023 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -53,7 +53,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -137,12 +136,12 @@ class BaseTabLayout
 		System.setErr(new StreamRedirector(oldSystemErr));
 	}
 
-	private static Map<BaseTabLayout, java.util.List<String>> logBuffer = Collections
+	private static final Map<BaseTabLayout, java.util.List<String>> logBuffer = Collections
 			.synchronizedMap(new WeakHashMap<>());
-	private static Map<BaseTabLayout, LogLevel> logLevel = Collections.synchronizedMap(new WeakHashMap<>());
-	private static Map<BaseTabLayout, java.util.List<String>> logIncludeFilters = Collections
+	private static final Map<BaseTabLayout, LogLevel> logLevel = Collections.synchronizedMap(new WeakHashMap<>());
+	private static final Map<BaseTabLayout, java.util.List<String>> logIncludeFilters = Collections
 			.synchronizedMap(new WeakHashMap<>());
-	private static Map<BaseTabLayout, java.util.List<String>> logExcludeFilters = Collections
+	private static final Map<BaseTabLayout, java.util.List<String>> logExcludeFilters = Collections
 			.synchronizedMap(new WeakHashMap<>());
 
 	final CTabItem tab;
@@ -299,7 +298,7 @@ class BaseTabLayout
 						else if (e.widget == mi2) {
 							ArrayList<String> patterns = excludeFilter.get(col);
 							if (patterns == null) {
-								patterns = new ArrayList<String>();
+								patterns = new ArrayList<>();
 								excludeFilter.put(col, patterns);
 							}
 							patterns.add(pattern);
@@ -716,7 +715,7 @@ class BaseTabLayout
 				if (prevFilename != null)
 					filename = prevFilename;
 				else {
-					// ISO 8601 would be yyyyMMddTHHmmss, but its not really readable.
+					// ISO 8601 would be yyyyMMddTHHmmss, but it's not really readable.
 					final String timestamp = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
 					filename = filenamePrefix + timestamp + filenameSuffix;
 				}
@@ -818,7 +817,7 @@ class BaseTabLayout
 			{
 				if ((e.stateMask == SWT.COMMAND || e.stateMask == SWT.CTRL) && e.keyCode == 'c') {
 					final String[] selection = ((List) e.widget).getSelection();
-					final String textData = Arrays.asList(selection).stream().collect(Collectors.joining("\n"));
+					final String textData = String.join("\n", selection);
 					if (textData.length() > 0) {
 						final TextTransfer textTransfer = TextTransfer.getInstance();
 						final Clipboard cb = new Clipboard(Main.display);

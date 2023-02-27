@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2022 B. Malinowsky
+    Copyright (c) 2006, 2023 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -190,7 +190,7 @@ class ConnectDialog
 				}
 			}
 
-			final List<String> args = new ArrayList<String>();
+			final List<String> args = new ArrayList<>();
 			switch (protocol) {
 			case Routing:
 			case Tunneling:
@@ -478,12 +478,12 @@ class ConnectDialog
 		knxAddr.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		knxAddr.setMessage("area.line.device");
 		knxAddr.setToolTipText("Specify device address for\n"
-				+ "  \u2022 reading remote device info\n"
-				+ "  \u2022 opening remote property/memory editor\n"
+				+ "  • reading remote device info\n"
+				+ "  • opening remote property/memory editor\n"
 				+ "Scan devices:\n"
-				+ "  \u2022 specify area for scanning an area\n"
-				+ "  \u2022 specify area.line for scanning a line\n"
-				+ "  \u2022 specify area.line.device to scan a single device");
+				+ "  • specify area for scanning an area\n"
+				+ "  • specify area.line for scanning a line\n"
+				+ "  • specify area.line.device to scan a single device");
 
 		final Composite mode = new Composite(shell, SWT.NONE);
 		final RowLayout col = new RowLayout(SWT.VERTICAL);

@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2020, 2021 B. Malinowsky
+    Copyright (c) 2020, 2023 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -375,7 +375,7 @@ class BaosTab extends BaseTabLayout {
 
 		list.setParent(sashForm);
 
-		sashForm.setWeights(new int[] { 1, 2 });
+		sashForm.setWeights(1, 2);
 	}
 
 	private void addPropertyViewOption() {

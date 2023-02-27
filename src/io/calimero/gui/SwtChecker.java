@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2016, 2022 B. Malinowsky
+    Copyright (c) 2016, 2023 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -140,11 +140,11 @@ public class SwtChecker
 
 		final boolean is64bit = "64".equals(arch) || "amd64".equals(arch) || "x86_64".equals(arch);
 		logger.info("Architecture {}", arch);
-		if (os.indexOf("win") >= 0)
+		if (os.contains("win"))
 			return is64bit ? Platform.Win_x86_64 : Platform.Win_x86;
-		if (os.indexOf("mac") >= 0)
+		if (os.contains("mac"))
 			return Platform.MacOS;
-		if (os.indexOf("linux") >= 0)
+		if (os.contains("linux"))
 			return is64bit ? Platform.Linux_x86_64 : Platform.Linux_x86;
 		return Platform.Unknown;
 	}

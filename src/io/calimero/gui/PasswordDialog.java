@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2018, 2020 B. Malinowsky
+    Copyright (c) 2018, 2023 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -162,7 +162,7 @@ class PasswordDialog {
 		final FontData fontData = connection.getFont().getFontData()[0];
 		final Font bold = new Font(Main.display, new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD));
 		connection.setFont(bold);
-		connection.setText("Password for \'" + keyringResource.getFileName() + "\'");
+		connection.setText("Password for '" + keyringResource.getFileName() + "'");
 
 		passwordLabel = new Label(shell, SWT.NONE);
 		passwordLabel.setFont(Main.font);
@@ -191,7 +191,7 @@ class PasswordDialog {
 		final FontData fontData = connection.getFont().getFontData()[0];
 		final Font bold = new Font(Main.display, new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD));
 		connection.setFont(bold);
-		connection.setText("Secure communication with \'" + interfaceName + "\'");
+		connection.setText("Secure communication with '" + interfaceName + "'");
 
 		passwordLabel = new Label(shell, SWT.NONE);
 		passwordLabel.setFont(Main.font);

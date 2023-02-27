@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2021 B. Malinowsky
+    Copyright (c) 2006, 2023 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -174,7 +174,7 @@ public class Main
 			shell = new Shell(display);
 			final FontData[] fontData = shell.getFont().getFontData();
 			final String os = System.getProperty("os.name", "generic").toLowerCase(Locale.ENGLISH);
-			if (os.indexOf("windows") == -1) {
+			if (!os.contains("windows")) {
 				int height = fontData[0].getHeight();
 				height -= (int) (0.15 * height);
 				fontData[0].setHeight(height);
@@ -213,12 +213,12 @@ public class Main
 		address = new Text(functions, SWT.CENTER);
 		address.setMessage("area.line.dev");
 		address.setToolTipText("Specify device address for\n"
-				+ "  \u2022 reading remote device info\n"
-				+ "  \u2022 opening remote property/memory editor\n"
+				+ "  • reading remote device info\n"
+				+ "  • opening remote property/memory editor\n"
 				+ "Scan devices:\n"
-				+ "  \u2022 specify area for scanning an area\n"
-				+ "  \u2022 specify area.line for scanning a line\n"
-				+ "  \u2022 specify area.line.device to scan a single device");
+				+ "  • specify area for scanning an area\n"
+				+ "  • specify area.line for scanning a line\n"
+				+ "  • specify area.line.device to scan a single device");
 		address.setText("XXX.XXX.XXX");
 		final ToolItem item = addNonToolItem(functions, address);
 		item.setWidth(address.computeSize(SWT.DEFAULT, SWT.DEFAULT, true).x);
