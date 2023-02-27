@@ -22,8 +22,8 @@ def date() {
 }
 
 def buildClassifier = date()
-distZip.classifier = buildClassifier
-distTar.classifier = buildClassifier
+distZip.archiveClassifier = buildClassifier
+distTar.archiveClassifier = buildClassifier
 
 sourceCompatibility = 11
 targetCompatibility = 11
@@ -66,7 +66,7 @@ configurations {
 configurations.configureEach {
     resolutionStrategy {
         dependencySubstitution {
-            substitute module('org.eclipse.platform:org.eclipse.swt.${osgi.platform}') with module("${swtGroupId}:${swtArtifact}:${swtVersion}")
+            substitute module('org.eclipse.platform:org.eclipse.swt.${osgi.platform}') using module("${swtGroupId}:${swtArtifact}:${swtVersion}")
         }
     }
 }
