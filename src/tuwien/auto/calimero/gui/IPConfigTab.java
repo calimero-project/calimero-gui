@@ -81,8 +81,7 @@ class IPConfigTab extends BaseTabLayout
 
 	private void readConfig()
 	{
-		final List<String> args = new ArrayList<>();
-		args.addAll(connect.getArgs(true));
+		final List<String> args = new ArrayList<>(connect.getArgs(true));
 		asyncAddLog("Using command line: " + String.join(" ", args));
 
 		try {

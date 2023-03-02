@@ -885,13 +885,13 @@ class BaosTab extends BaseTabLayout {
 	}
 
 	private static String timeSinceResetUnit(final byte[] data) {
-		switch (data[0] & 0xff) {
-		case 'x': return "ms";
-		case 's': return "seconds";
-		case 'm': return "minutes";
-		case 'h': return "hours";
-		default: return toHex(data, "") + " (unknown)";
-		}
+		return switch (data[0] & 0xff) {
+			case 'x' -> "ms";
+			case 's' -> "seconds";
+			case 'm' -> "minutes";
+			case 'h' -> "hours";
+			default -> toHex(data, "") + " (unknown)";
+		};
 	}
 
 	private static String baudRate(final byte[] data) {
@@ -900,12 +900,12 @@ class BaosTab extends BaseTabLayout {
 	}
 
 	private static String baudrate(final int v) {
-		switch (v) {
-		case 0:  return "unknown";
-		case 1:  return "19200 Bd";
-		case 2:  return "115200 Bd";
-		default: return "invalid";
-		}
+		return switch (v) {
+			case 0 -> "unknown";
+			case 1 -> "19200 Bd";
+			case 2 -> "115200 Bd";
+			default -> "invalid";
+		};
 	}
 
 	private String deviceName() {

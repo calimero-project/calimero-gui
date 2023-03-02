@@ -153,25 +153,16 @@ public class SwtChecker
 
 	private static String swtPlatformId(final Platform p)
 	{
-		switch (p) {
-		case Linux_x86:
-			return "gtk.linux.x86";
-		case Linux_x86_64:
-			return "gtk.linux.x86_64";
-		case Linux_AArch64:
-			return "gtk.linux.aarch64";
-		case macOS_x86_64:
-			return "cocoa.macosx.x86_64";
-		case macOS_AArch64:
-			return "cocoa.macosx.aarch64";
-		case Win_x86:
-			return "win32.win32.x86";
-		case Win_x86_64:
-			return "win32.win32.x86_64";
-		case Unknown:
-			return "";
-		}
-		return "";
+		return switch (p) {
+			case Linux_x86 -> "gtk.linux.x86";
+			case Linux_x86_64 -> "gtk.linux.x86_64";
+			case Linux_AArch64 ->"gtk.linux.aarch64";
+			case macOS_x86_64 -> "cocoa.macosx.x86_64";
+			case macOS_AArch64 -> "cocoa.macosx.aarch64";
+			case Win_x86 -> "win32.win32.x86";
+			case Win_x86_64 -> "win32.win32.x86_64";
+			case Unknown -> "";
+		};
 	}
 
 	private static String jarName(final Platform p)

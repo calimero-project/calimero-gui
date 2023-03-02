@@ -657,8 +657,7 @@ class PropertyEditorTab extends BaseTabLayout
 		final int elements;
 		// special case for KNXnet/IP friendly name: 30 chars
 		if (p.getObjectType() == 11 && pid == 76) {
-			byte[] bytes = new byte[0];
-			bytes = values.getBytes(StandardCharsets.ISO_8859_1);
+			final byte[] bytes = values.getBytes(StandardCharsets.ISO_8859_1);
 			final byte[] array = Arrays.copyOf(bytes, 30);
 			data = "0x" + DataUnitBuilder.toHex(array, "");
 			elements = array.length;
@@ -954,20 +953,12 @@ class PropertyEditorTab extends BaseTabLayout
 		dlg.setText(title);
 		dlg.setMessage(msg);
 		final int id = dlg.open();
-		final String response;
-		switch (id) {
-		case SWT.YES:
-			response = "yes";
-			break;
-		case SWT.NO:
-			response = "no";
-			break;
-		case SWT.CANCEL:
-			response = "canceled";
-			break;
-		default:
-			response = "button " + id;
-		}
+		final String response = switch (id) {
+			case SWT.YES -> "yes";
+			case SWT.NO -> "no";
+			case SWT.CANCEL -> "canceled";
+			default -> "button " + id;
+		};
 		asyncAddLog(title + ": " + response);
 		return id;
 	}

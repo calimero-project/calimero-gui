@@ -68,14 +68,16 @@ class About {
 
 	// @formatter:off
 	private static final String about =
-			  "• Process Communication\n"
-			+ "• Group && Network Monitoring\n"
-			+ "• Device Scan && Device Information\n"
-			+ "• KNX Property Editor\n"
-			+ "• KNX Device Memory Editor\n"
-			+ "• KNXnet/IP\n"
-			+ "• FT1.2 (BCU2), USB, TP-UART, KNX RF USB\n"
-			+ "• KNX IP Secure && KNX Data Secure\n";
+			"""
+			• Process Communication
+			• Group && Network Monitoring
+			• Device Scan && Device Information
+			• KNX Property Editor
+			• KNX Device Memory Editor
+			• KNXnet/IP
+			• FT1.2 (BCU2), USB, TP-UART, KNX RF USB
+			• KNX IP Secure && KNX Data Secure
+			""";
 	// @formatter:on
 	private static final String repositoryLink = "https://github.com/calimero-project/calimero-gui";
 

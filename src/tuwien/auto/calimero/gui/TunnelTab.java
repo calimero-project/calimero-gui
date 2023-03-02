@@ -414,8 +414,7 @@ class TunnelTab extends BaseTabLayout
 	private void openGroupMonitor()
 	{
 		// setup tool argument array
-		final java.util.List<String> args = new ArrayList<>();
-		args.addAll(connect.getArgs(true));
+		final java.util.List<String> args = new ArrayList<>(connect.getArgs(true));
 		args.add("--lte");
 		args.add("monitor");
 		asyncAddLog("Using command line: " + String.join(" ", args));

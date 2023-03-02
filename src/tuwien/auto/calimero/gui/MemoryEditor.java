@@ -605,20 +605,12 @@ class MemoryEditor extends BaseTabLayout
 		dlg.setText(title);
 		dlg.setMessage(msg);
 		final int id = dlg.open();
-		final String response;
-		switch (id) {
-		case SWT.YES:
-			response = "yes";
-			break;
-		case SWT.NO:
-			response = "no";
-			break;
-		case SWT.CANCEL:
-			response = "canceled";
-			break;
-		default:
-			response = "button " + id;
-		}
+		final String response = switch (id) {
+			case SWT.YES -> "yes";
+			case SWT.NO -> "no";
+			case SWT.CANCEL -> "canceled";
+			default -> "button " + id;
+		};
 		asyncAddLog(title + ": " + response);
 		return id;
 	}

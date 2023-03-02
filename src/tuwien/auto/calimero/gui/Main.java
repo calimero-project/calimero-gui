@@ -212,13 +212,14 @@ public class Main
 		addToolbarLabel(functions, "Device Address:");
 		address = new Text(functions, SWT.CENTER);
 		address.setMessage("area.line.dev");
-		address.setToolTipText("Specify device address for\n"
-				+ "  • reading remote device info\n"
-				+ "  • opening remote property/memory editor\n"
-				+ "Scan devices:\n"
-				+ "  • specify area for scanning an area\n"
-				+ "  • specify area.line for scanning a line\n"
-				+ "  • specify area.line.device to scan a single device");
+		address.setToolTipText("""
+				Specify device address for
+				  • reading remote device info
+				  • opening remote property/memory editor
+				Scan devices:
+				  • specify area for scanning an area
+				  • specify area.line for scanning a line
+				  • specify area.line.device to scan a single device""");
 		address.setText("XXX.XXX.XXX");
 		final ToolItem item = addNonToolItem(functions, address);
 		item.setWidth(address.computeSize(SWT.DEFAULT, SWT.DEFAULT, true).x);
