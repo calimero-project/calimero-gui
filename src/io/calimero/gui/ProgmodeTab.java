@@ -88,8 +88,7 @@ class ProgmodeTab extends BaseTabLayout
 
 	private void runProgmode()
 	{
-		final List<String> args = new ArrayList<>();
-		args.addAll(connect.getArgs(true));
+		final List<String> args = new ArrayList<>(connect.getArgs(true));
 		asyncAddLog("Using command line: " + String.join(" ", args));
 
 		try {

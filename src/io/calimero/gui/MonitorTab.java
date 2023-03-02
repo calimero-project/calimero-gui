@@ -159,8 +159,7 @@ class MonitorTab extends BaseTabLayout
 
 	private void startMonitor()
 	{
-		final java.util.List<String> args = new ArrayList<>();
-		args.addAll(connect.getArgs(true));
+		final java.util.List<String> args = new ArrayList<>(connect.getArgs(true));
 		asyncAddLog("Using command line: " + String.join(" ", args));
 
 		final class Monitor extends NetworkMonitor
@@ -209,8 +208,7 @@ class MonitorTab extends BaseTabLayout
 				if (raw != null) {
 					// decoded raw frame
 					item.add(raw.toString());
-					if (raw instanceof RawFrameBase) {
-						final RawFrameBase f = (RawFrameBase) raw;
+					if (raw instanceof final RawFrameBase f) {
 						// tpci, apci
 						item.add(DataUnitBuilder.decode(f.getTPDU(), f.getDestination()));
 						// asdu
@@ -228,8 +226,7 @@ class MonitorTab extends BaseTabLayout
 							catch (KNXIllegalArgumentException | KNXException ignore) {}
 						}
 					}
-					else if (raw instanceof RFLData) {
-						final RFLData rf = (RFLData) raw;
+					else if (raw instanceof final RFLData rf) {
 						try {
 							final String bibat = NetworkMonitor.decodeBibat(rf);
 							if (!bibat.isEmpty()) {

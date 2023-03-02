@@ -197,8 +197,7 @@ class ProjectTab extends BaseTabLayout {
 	}
 
 	private void dataDropped(final DropTargetEvent event) {
-		if (isSupportedType(event) && event.data instanceof String[]) {
-			final String[] paths = (String[]) event.data;
+		if (isSupportedType(event) && event.data instanceof final String[] paths) {
 			for (final String path : paths) {
 				if (path.endsWith(".knxproj"))
 					addProject(Path.of(path));

@@ -120,8 +120,7 @@ class ScanDevicesTab extends BaseTabLayout
 
 	private void scanDevices()
 	{
-		final List<String> args = new ArrayList<>();
-		args.addAll(connect.getArgs(false));
+		final List<String> args = new ArrayList<>(connect.getArgs(false));
 		asyncAddLog("Using command line: " + String.join(" ", args));
 
 		try {

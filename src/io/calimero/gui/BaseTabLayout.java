@@ -296,12 +296,7 @@ class BaseTabLayout
 						if (e.widget == mi1)
 							includeFilter.put(col, pattern);
 						else if (e.widget == mi2) {
-							ArrayList<String> patterns = excludeFilter.get(col);
-							if (patterns == null) {
-								patterns = new ArrayList<>();
-								excludeFilter.put(col, patterns);
-							}
-							patterns.add(pattern);
+							excludeFilter.computeIfAbsent(col, k -> new ArrayList<>()).add(pattern);
 						}
 						asyncAddLog("add filter on column " + list.getColumn(col).getText()
 								+ " for \"" + pattern + "\"");

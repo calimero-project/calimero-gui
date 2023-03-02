@@ -443,8 +443,7 @@ class DiscoverTab extends BaseTabLayout
 		String itemText = newItem;
 
 		for (final var d : r.description()) {
-			if (d instanceof ServiceFamiliesDIB) {
-				final var families = (ServiceFamiliesDIB) d;
+			if (d instanceof final ServiceFamiliesDIB families) {
 				if (families.getDescTypeCode() == DIB.SUPP_SVC_FAMILIES) {
 					for (final var entry : families.families().entrySet()) {
 						if (entry.getKey() == ServiceFamily.Core && entry.getValue() > 1)

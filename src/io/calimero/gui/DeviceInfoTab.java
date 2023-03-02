@@ -87,11 +87,10 @@ class DeviceInfoTab extends BaseTabLayout
 	{
 		list.removeAll();
 		log.removeAll();
-		final List<String> args = new ArrayList<>();
 		// remove knx medium if we do local device info
 		if (connect.knxAddress.isEmpty())
 			connect.knxMedium = 0;
-		args.addAll(connect.getArgs(false));
+		final List<String> args = new ArrayList<>(connect.getArgs(false));
 		asyncAddLog("Using command line: " + String.join(" ", args));
 
 		try {

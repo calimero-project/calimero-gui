@@ -10,7 +10,7 @@ A graphical user interface based on the [Standard Widget Toolkit](https://www.ec
 Supported Features
 ------------------
 
-* KNXnet/IP discovery & self description
+* KNXnet/IP discovery & self-description
 * KNX process communication, read or write KNX datapoints
 * Group monitor for KNX datapoints, decode datapoint values, filter KNX messages
 * Network monitor (busmonitor raw frames on the network, completely passive), filter KNX messages
@@ -42,7 +42,7 @@ Execution
 
 ### Using Maven
 
-On MacOS (takes care of the Cocoa thread restrictions)
+On macOS (takes care of the Cocoa thread restrictions)
 
 	mvn exec:exec
 
