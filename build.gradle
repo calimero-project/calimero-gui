@@ -80,12 +80,12 @@ dependencies {
     implementation "io.calimero:calimero-tools:${version}"
     runtimeOnly("io.calimero:calimero-tools:${version}") {
         capabilities {
-           requireCapability("io.calimero:calimero-tools:calimero-tools-serial")
+           requireCapability("io.calimero:calimero-tools-serial")
         }
     }
     runtimeOnly("io.calimero:calimero-tools:${version}") {
         capabilities {
-           requireCapability("io.calimero:calimero-tools:calimero-tools-usb")
+           requireCapability("io.calimero:calimero-tools-usb")
         }
     }
     implementation "${swtGroupId}:${swtArtifact}:${swtVersion}"
