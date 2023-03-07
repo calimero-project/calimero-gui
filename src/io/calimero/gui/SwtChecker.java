@@ -88,7 +88,9 @@ public class SwtChecker
 		Unknown,
 		Linux_x86,
 		Linux_x86_64,
-		MacOS,
+		Linux_AArch64,
+		macOS_x86_64,
+		macOS_AArch64,
 		Win_x86,
 		Win_x86_64,
 	}
@@ -133,19 +135,19 @@ public class SwtChecker
 	private Platform platform()
 	{
 		final String os = System.getProperty("os.name", "unknown").toLowerCase(Locale.ENGLISH);
-		// at first try to find out jvm bitness, fallback to OS bitness
-		String arch = System.getProperty("sun.arch.data.model");
-		if (arch == null)
-			arch = System.getProperty("os.arch");
+		// data model prop gives us the jvm bitness
+		final String model = System.getProperty("sun.arch.data.model");
+		final String arch = System.getProperty("os.arch");
 
-		final boolean is64bit = "64".equals(arch) || "amd64".equals(arch) || "x86_64".equals(arch);
+		final boolean is64bit = "64".equals(model) || "amd64".equals(arch) || "x86_64".equals(arch);
+		final boolean aarch64 = "aarch64".equals(arch);
 		logger.info("Architecture {}", arch);
 		if (os.contains("win"))
 			return is64bit ? Platform.Win_x86_64 : Platform.Win_x86;
 		if (os.contains("mac"))
-			return Platform.MacOS;
+			return aarch64 ? Platform.macOS_AArch64 : Platform.macOS_x86_64;
 		if (os.contains("linux"))
-			return is64bit ? Platform.Linux_x86_64 : Platform.Linux_x86;
+			return aarch64 ? Platform.Linux_AArch64 : is64bit ? Platform.Linux_x86_64 : Platform.Linux_x86;
 		return Platform.Unknown;
 	}
 
@@ -156,8 +158,12 @@ public class SwtChecker
 			return "gtk.linux.x86";
 		case Linux_x86_64:
 			return "gtk.linux.x86_64";
-		case MacOS:
+		case Linux_AArch64:
+			return "gtk.linux.aarch64";
+		case macOS_x86_64:
 			return "cocoa.macosx.x86_64";
+		case macOS_AArch64:
+			return "cocoa.macosx.aarch64";
 		case Win_x86:
 			return "win32.win32.x86";
 		case Win_x86_64:
