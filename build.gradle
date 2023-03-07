@@ -41,9 +41,14 @@ def swtVersion = '3.122.0'
 def swtArtifact = 'org.eclipse.swt.'
 
 def os = System.getProperty("os.name").toLowerCase(Locale.ENGLISH)
-if (os.contains("windows")) { swtArtifact += 'win32.win32.x86_64' }
-else if (os.contains("linux")) { swtArtifact += 'gtk.linux.x86_64' }
-else if (os.contains("mac")) { swtArtifact += 'cocoa.macosx.x86_64' }
+if (os.contains("windows")) { swtArtifact += 'win32.win32.' }
+else if (os.contains("linux")) { swtArtifact += 'gtk.linux.' }
+else if (os.contains("mac")) { swtArtifact += 'cocoa.macosx.' }
+
+def arch = System.getProperty("os.arch")
+if (arch == "aarch64") { swtArtifact += 'aarch64' }
+else if (arch == "amd64" || arch == "x86_64") { swtArtifact += 'x86_64' }
+else { swtArtifact += 'x86' }
 
 
 sourceSets {
