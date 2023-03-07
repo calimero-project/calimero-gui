@@ -76,12 +76,12 @@ dependencies {
     implementation "com.github.calimero:calimero-tools:${version}"
     runtimeOnly("com.github.calimero:calimero-tools:${version}") {
         capabilities {
-           requireCapability("com.github.calimero:calimero-tools:calimero-tools-serial")
+           requireCapability("com.github.calimero:calimero-tools-serial")
         }
     }
     runtimeOnly("com.github.calimero:calimero-tools:${version}") {
         capabilities {
-           requireCapability("com.github.calimero:calimero-tools:calimero-tools-usb")
+           requireCapability("com.github.calimero:calimero-tools-usb")
         }
     }
     implementation "${swtGroupId}:${swtArtifact}:${swtVersion}"
