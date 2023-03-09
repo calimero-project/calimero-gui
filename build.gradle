@@ -67,6 +67,10 @@ compileJava.options*.compilerArgs = [
     "--add-reads", "io.calimero.gui=ALL-UNNAMED" // usb4java-javax
 ]
 
+tasks.named('compileJava') {
+    options.javaModuleVersion = provider { project.version }
+}
+
 configurations {
     provided
     compile.extendsFrom provided    
