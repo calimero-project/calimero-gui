@@ -48,6 +48,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -95,7 +96,6 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 
-import io.calimero.DataUnitBuilder;
 import io.calimero.IndividualAddress;
 import io.calimero.KNXException;
 import io.calimero.KNXTimeoutException;
@@ -631,7 +631,7 @@ class PropertyEditorTab extends BaseTabLayout
 
 		final String value = formatted(d.getObjectType(), d.getPID(), values.getOrDefault(d, ""));
 		final List<byte[]> raw = rawValues.getOrDefault(d, Collections.emptyList());
-		final String rawText = raw.stream().map(bytes -> DataUnitBuilder.toHex(bytes, "")).collect(joining(", "));
+		final String rawText = raw.stream().map(bytes -> HexFormat.of().formatHex(bytes)).collect(joining(", "));
 		final String[] item = { "" + count++, "" + d.getPID(), desc, value, rawText, "" + d.getCurrentElements(), rw,
 			name };
 		asyncAddListItem(item, keys, data);
@@ -658,7 +658,7 @@ class PropertyEditorTab extends BaseTabLayout
 		if (p.getObjectType() == 11 && pid == 76) {
 			final byte[] bytes = values.getBytes(StandardCharsets.ISO_8859_1);
 			final byte[] array = Arrays.copyOf(bytes, 30);
-			data = "0x" + DataUnitBuilder.toHex(array, "");
+			data = "0x" + HexFormat.of().formatHex(array);
 			elements = array.length;
 		}
 		else {
@@ -996,7 +996,7 @@ class PropertyEditorTab extends BaseTabLayout
 				int userIndex = args.indexOf("--user-pwd");
 				if (userIndex == -1) {
 					userIndex = args.indexOf("--user-key");
-					userPwd = DataUnitBuilder.toHex(SecureConnection.hashUserPassword(userPwd.toCharArray()), "");
+					userPwd = HexFormat.of().formatHex(SecureConnection.hashUserPassword(userPwd.toCharArray()));
 				}
 				if (userIndex != -1)
 					args.set(userIndex + 1, userPwd);
@@ -1081,7 +1081,7 @@ class PropertyEditorTab extends BaseTabLayout
 							Main.asyncExec(() -> {
 								if (editArea.isDisposed())
 									return;
-								final String rawText = raw.stream().map(data -> DataUnitBuilder.toHex(data, ""))
+								final String rawText = raw.stream().map(data -> HexFormat.of().formatHex(data))
 										.collect(joining(", "));
 								find(idx, pid).ifPresent(i -> i.setText(Columns.RawValues.ordinal(), rawText));
 								final String text = formatted(d.getObjectType(), pid, value);

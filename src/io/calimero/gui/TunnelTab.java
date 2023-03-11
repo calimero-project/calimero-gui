@@ -41,6 +41,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HexFormat;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -65,7 +66,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Sash;
 import org.eclipse.swt.widgets.TableColumn;
 
-import io.calimero.DataUnitBuilder;
 import io.calimero.DetachEvent;
 import io.calimero.GroupAddress;
 import io.calimero.KNXAddress;
@@ -152,7 +152,7 @@ class TunnelTab extends BaseTabLayout
 					dst = e.getDestination().toString();
 
 				final String[] item = new String[] { "" + ++eventCounter, "" + eventCounterFiltered, date, time,
-					e.getSourceAddr().toString(), dst, svc, DataUnitBuilder.toHex(asdu, " "),
+					e.getSourceAddr().toString(), dst, svc, HexFormat.ofDelimiter(" ").formatHex(asdu),
 					value };
 				if (applyFilter(item))
 					return;

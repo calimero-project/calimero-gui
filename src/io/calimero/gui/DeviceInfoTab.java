@@ -37,6 +37,7 @@
 package io.calimero.gui;
 
 import java.util.ArrayList;
+import java.util.HexFormat;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
@@ -45,7 +46,6 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
-import io.calimero.DataUnitBuilder;
 import io.calimero.KNXIllegalArgumentException;
 import io.calimero.gui.ConnectDialog.ConnectArguments;
 import io.calimero.tools.DeviceInfo;
@@ -124,7 +124,7 @@ class DeviceInfoTab extends BaseTabLayout
 						i.setText(new String[] { currentCategory, "", "" });
 					}
 					final String param = item.parameter().friendlyName();
-					final String rawString = DataUnitBuilder.toHex(item.raw(), "");
+					final String rawString = HexFormat.of().formatHex(item.raw());
 					final TableItem i = new TableItem(list, SWT.NONE);
 					i.setText(new String[] { "\t" + param, item.value(), rawString });
 				}

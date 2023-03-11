@@ -40,6 +40,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HexFormat;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -181,7 +182,7 @@ class MonitorTab extends BaseTabLayout
 						item.add(DataUnitBuilder.decode(f.getTPDU(), f.getDestination()));
 						// asdu
 						final byte[] asdu = DataUnitBuilder.extractASDU(f.getTPDU());
-						item.add(DataUnitBuilder.toHex(asdu, " "));
+						item.add(HexFormat.ofDelimiter(" ").formatHex(asdu));
 
 						// let's see if we can decode a group-addressed asdu based on datapoint information
 						final var dst = f.getDestination();

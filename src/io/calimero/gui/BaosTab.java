@@ -36,8 +36,6 @@
 
 package io.calimero.gui;
 
-import static io.calimero.DataUnitBuilder.toHex;
-
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
@@ -46,6 +44,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -88,7 +87,6 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
-import io.calimero.DataUnitBuilder;
 import io.calimero.IndividualAddress;
 import io.calimero.KNXException;
 import io.calimero.KNXFormatException;
@@ -570,7 +568,7 @@ class BaosTab extends BaseTabLayout {
 			final var ia = textBox(properties, currentValue);
 			final Supplier<String> formatter = () -> {
 				try {
-					return toHex(new IndividualAddress(ia.getText()).toByteArray(), "");
+					return HexFormat.of().formatHex(new IndividualAddress(ia.getText()).toByteArray());
 				}
 				catch (final KNXFormatException e) {
 					asyncAddLog(e);
@@ -595,7 +593,7 @@ class BaosTab extends BaseTabLayout {
 			final var ip = textBox(properties, currentValue);
 			final Supplier<String> ipFormatter = () -> {
 				try {
-					return toHex(InetAddress.getByName(ip.getText()).getAddress(), "");
+					return HexFormat.of().formatHex(InetAddress.getByName(ip.getText()).getAddress());
 				}
 				catch (final UnknownHostException e) {
 					asyncAddLog(e);
@@ -643,7 +641,7 @@ class BaosTab extends BaseTabLayout {
 			final var localTime = LocalTime.of(dateTime.getHours(), dateTime.getMinutes(), dateTime.getSeconds());
 			final var localDateTime = LocalDateTime.of(LocalDate.now(), localTime);
 			final var formatted = DateTimeFormatter.ISO_DATE_TIME.format(localDateTime).replace('T', ' ');
-			return toHex(formatted.getBytes(StandardCharsets.ISO_8859_1), " ");
+			return HexFormat.ofDelimiter(" ").formatHex(formatted.getBytes(StandardCharsets.ISO_8859_1));
 		};
 		dateTime.setData(formatter);
 		return dateTime;
@@ -655,7 +653,7 @@ class BaosTab extends BaseTabLayout {
 		text.selectAll();
 		final Supplier<String> formatter = () -> {
 			final byte[] bytes = text.getText().getBytes(StandardCharsets.UTF_8);
-			return DataUnitBuilder.toHex(bytes, " ");
+			return HexFormat.ofDelimiter(" ").formatHex(bytes);
 		};
 		text.setData(formatter);
 		return text;
@@ -764,7 +762,7 @@ class BaosTab extends BaseTabLayout {
 		// hex values
 		case Invalid:
 		case HardwareType:
-			return toHex(data, " ");
+			return HexFormat.ofDelimiter(" ").formatHex(data);
 
 		// version
 		case HardwareVersion:
@@ -835,7 +833,7 @@ class BaosTab extends BaseTabLayout {
 			return new IndividualAddress(data).toString();
 
 		case MacAddress:
-			return toHex(data, ":");
+			return HexFormat.ofDelimiter(":").formatHex(data);
 
 		case DeviceFriendlyName:
 			return string(data);
@@ -857,11 +855,11 @@ class BaosTab extends BaseTabLayout {
 		case SystemTimezoneOffset:
 			return "" + data[0];
 		}
-		return toHex(data, " ");
+		return HexFormat.ofDelimiter(" ").formatHex(data);
 	}
 
 	private static String knxSerialNumber(final byte[] data) {
-		final var hex = toHex(data, "");
+		final var hex = HexFormat.of().formatHex(data);
 		return hex.substring(0, 4) + ":" + hex.substring(4);
 	}
 
@@ -890,7 +888,7 @@ class BaosTab extends BaseTabLayout {
 			case 's' -> "seconds";
 			case 'm' -> "minutes";
 			case 'h' -> "hours";
-			default -> toHex(data, "") + " (unknown)";
+			default -> HexFormat.of().formatHex(data) + " (unknown)";
 		};
 	}
 
