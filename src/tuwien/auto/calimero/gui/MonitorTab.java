@@ -44,6 +44,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HexFormat;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -213,7 +214,7 @@ class MonitorTab extends BaseTabLayout
 						item.add(DataUnitBuilder.decode(f.getTPDU(), f.getDestination()));
 						// asdu
 						final byte[] asdu = DataUnitBuilder.extractASDU(f.getTPDU());
-						item.add(DataUnitBuilder.toHex(asdu, " "));
+						item.add(HexFormat.ofDelimiter(" ").formatHex(asdu));
 
 						// let's see if we can decode a group-addressed asdu based on datapoint information
 						final var dst = f.getDestination();

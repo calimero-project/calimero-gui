@@ -51,6 +51,7 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HexFormat;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -651,7 +652,7 @@ class MemoryEditor extends BaseTabLayout
 					try {
 						asyncAddLog("read device memory range 0x" + address(addr) + " to 0x" + address(addr + min));
 						final byte[] memory = mgmt.readMemory(device, addr, min);
-						asyncAddLog(DataUnitBuilder.toHex(memory, " "));
+						asyncAddLog(HexFormat.ofDelimiter(" ").formatHex(memory));
 						final int start = (int) addr;
 						Main.asyncExec(() -> updateMemoryRange(start, memory));
 					}

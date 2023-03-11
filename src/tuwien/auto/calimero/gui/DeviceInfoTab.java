@@ -37,6 +37,7 @@
 package tuwien.auto.calimero.gui;
 
 import java.util.ArrayList;
+import java.util.HexFormat;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
@@ -124,7 +125,7 @@ class DeviceInfoTab extends BaseTabLayout
 						i.setText(new String[] { currentCategory, "", "" });
 					}
 					final String param = item.parameter().friendlyName();
-					final String rawString = DataUnitBuilder.toHex(item.raw(), "");
+					final String rawString = HexFormat.of().formatHex(item.raw());
 					final TableItem i = new TableItem(list, SWT.NONE);
 					i.setText(new String[] { "\t" + param, item.value(), rawString });
 				}

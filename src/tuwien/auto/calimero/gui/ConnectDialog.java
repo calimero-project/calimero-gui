@@ -45,6 +45,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -331,7 +332,7 @@ class ConnectDialog
 			if ("group.key".equals(key)) {
 				final InetAddress remote = InetAddress.getByName(value);
 				final var backbone = keyring.backbone().filter(bb -> bb.multicastGroup().equals(remote)).orElseThrow();
-				return toHex(keyring.decryptKey(backbone.groupKey().orElseThrow(), keyringPassword), "");
+				return HexFormat.of().formatHex(keyring.decryptKey(backbone.groupKey().orElseThrow(), keyringPassword));
 			}
 
 			if (key.startsWith("device")) {
@@ -343,7 +344,7 @@ class ConnectDialog
 				if ("device.pwd".equals(key))
 					return new String(pwd.get());
 				if ("device.key".equals(key))
-					return toHex(SecureConnection.hashDeviceAuthenticationPassword(pwd.get()), "");
+					return HexFormat.of().formatHex(SecureConnection.hashDeviceAuthenticationPassword(pwd.get()));
 			}
 
 			if (key.startsWith("user")) {
