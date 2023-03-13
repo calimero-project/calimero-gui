@@ -333,7 +333,7 @@ class DiscoverTab extends BaseTabLayout
 					}
 				}
 
-                private String productName(final UsbDevice d, final int vendorId, final int productId)
+				private String productName(final UsbDevice d, final int vendorId, final int productId)
 				{
 					Optional<String> product;
 					try {
