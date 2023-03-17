@@ -63,7 +63,7 @@ import io.calimero.log.LogService;
 public class SwtChecker
 {
 	private static final String swtArtifactId = "org.eclipse.swt.";
-	private static final String swtVersion = "3.122.0";
+	private static final String swtVersion = "3.123.0";
 	private static final String baseDownloadUrl = "https://repo.maven.apache.org/maven2/org/eclipse/platform";
 
 	private static final Logger logger = LogService.getLogger("io.calimero.gui.swt-checker");
