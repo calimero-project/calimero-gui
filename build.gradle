@@ -140,15 +140,28 @@ distributions {
     }
 }
 
+def addReads = [ '--add-reads', 'io.calimero.gui=ALL-UNNAMED', // usb4java
+                 '--add-reads', 'io.calimero.core=io.calimero.tools', // @LinkEvent
+                 '--add-reads', 'io.calimero.serial.provider.rxtx=ALL-UNNAMED',
+                 '--add-reads', 'io.calimero.usb.provider.javax=ALL-UNNAMED' ]
+
 startScripts {
+    defaultJvmOpts = addReads
     doLast {
         // on OS X, SWT needs to run on first thread
-        unixScript.text = unixScript.text.replace('DEFAULT_JVM_OPTS=""', 
-            'DEFAULT_JVM_OPTS=""\n' +
+        unixScript.text = unixScript.text.replace('DEFAULT_JVM_OPTS=\'', 
+            'MACOS_JVM_OPTS=""\n' +
             'if [ "`uname`" = Darwin ] ; then\n' +
-            '    DEFAULT_JVM_OPTS="-XstartOnFirstThread"\n' +
-            'fi')
+            '    MACOS_JVM_OPTS="-XstartOnFirstThread"\n' +
+            'fi\n' +
+            'DEFAULT_JVM_OPTS="${MACOS_JVM_OPTS}"\' ')
+        // add dependency on downloaded swt.jar (adding files('swt.jar') to classpath doesn't work)
+        unixScript.text = unixScript.text.replace('MODULE_PATH=$APP_HOME', 'MODULE_PATH=$APP_HOME/lib/swt.jar:$APP_HOME')
     }
+}
+
+tasks.withType(JavaExec).configureEach {
+    jvmArgs += addReads
 }
 
 run {
