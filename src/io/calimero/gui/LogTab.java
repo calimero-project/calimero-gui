@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2022 B. Malinowsky
+    Copyright (c) 2006, 2023 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -47,12 +47,19 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.TextTransfer;
+import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.FormAttachment;
@@ -61,6 +68,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Sash;
 import org.eclipse.swt.widgets.Scale;
@@ -140,7 +148,13 @@ class LogTab extends BaseTabLayout
 		logBuffer.put(this, Collections.synchronizedList(new ArrayList<>()));
 
 		log.dispose();
+
+		final Composite parent = list.getParent();
+		final Sash bottom = (Sash) ((FormData) list.getLayoutData()).bottom.control;
+		list.dispose();
+		list = newTable(parent, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI | SWT.V_SCROLL, bottom);
 		list.setLinesVisible(true);
+
 		final var date = new TableColumn(list, SWT.RIGHT);
 		date.setText("Date");
 		date.setWidth(35);
@@ -156,7 +170,21 @@ class LogTab extends BaseTabLayout
 		final var msg = new TableColumn(list, SWT.LEFT);
 		msg.setText("Message");
 		msg.setWidth(250);
+		workArea.layout(true, true);
 		enableColumnAdjusting();
+
+		final int cmd = System.getProperty("os.name").toLowerCase(Locale.ENGLISH).contains("mac") ? SWT.COMMAND : SWT.CTRL;
+		list.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(final KeyEvent e) {
+				if (e.stateMask == cmd && (e.keyCode == 'c' || e.keyCode == 'C')) {
+					final Clipboard clipboard = new Clipboard(Display.getDefault());
+					clipboard.setContents(new Object[] { tableSelection() },
+							new Transfer[] { TextTransfer.getInstance() });
+					clipboard.dispose();
+				}
+			}
+		});
 
 		populateHistory();
 	}
@@ -270,6 +298,17 @@ class LogTab extends BaseTabLayout
 				}
 			}
 		});
+	}
+
+	private String tableSelection() {
+		final var joiner = new StringJoiner("\n");
+		for (final var item : list.getSelection()) {
+			final var line = new StringJoiner(" ");
+			for (int i = 0; i < list.getColumnCount(); i++)
+				line.add(item.getText(i));
+			joiner.add(line.toString());
+		}
+		return joiner.toString();
 	}
 
 	private static void addToLogBuffer(final String name, final Level level, final String msg) {
