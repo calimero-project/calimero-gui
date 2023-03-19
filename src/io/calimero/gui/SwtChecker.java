@@ -43,6 +43,7 @@ import static java.lang.System.Logger.Level.WARNING;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
@@ -55,6 +56,7 @@ import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.Optional;
 
+import io.calimero.gui.logging.LoggerFinder;
 import io.calimero.log.LogService;
 
 /**
@@ -66,7 +68,7 @@ public class SwtChecker
 	private static final String swtVersion = "3.123.0";
 	private static final String baseDownloadUrl = "https://repo.maven.apache.org/maven2/org/eclipse/platform";
 
-	private static final Logger logger = LogService.getLogger("io.calimero.gui.swt-checker");
+	private final Logger logger;
 
 	public static void main(final String[] args)
 	{
@@ -78,7 +80,7 @@ public class SwtChecker
 				checker.downloadToLibDir();
 			}
 			catch (IOException | URISyntaxException | RuntimeException e) {
-				SwtChecker.logger.log(ERROR, "Failed to add SWT library", e);
+				checker.logger.log(ERROR, "Failed to add SWT library", e);
 			}
 		}
 	}
@@ -92,6 +94,17 @@ public class SwtChecker
 		macOS_AArch64,
 		Win_x86,
 		Win_x86_64,
+	}
+
+	public SwtChecker() {
+		LoggerFinder.addLogNotifier((name, level, msg, thrown) -> {
+			if (name.startsWith("io.calimero") || level.compareTo(Level.INFO) >= 0) {
+				System.out.println(msg);
+				if (thrown != null)
+					thrown.printStackTrace();
+			}
+		});
+		logger = LogService.getLogger("io.calimero.gui.swt-checker");
 	}
 
 	public static boolean isSwtOnClasspath()
