@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2022, 2022 B. Malinowsky
+    Copyright (c) 2022, 2023 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -68,6 +68,8 @@ final class GuiLogger implements System.Logger {
 
 	private static String format(final ResourceBundle bundle, final String msg, final Object... params) {
 		final var s = resourceString(bundle, msg);
+		if (params == null || params.length == 0)
+			return s;
 		return MessageFormat.format(s, params);
 	}
 
