@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2017, 2022 B. Malinowsky
+    Copyright (c) 2017, 2023 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,9 +34,9 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
+package io.calimero.gui;
 
-import static tuwien.auto.calimero.DataUnitBuilder.fromHex;
+import static io.calimero.DataUnitBuilder.fromHex;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -51,6 +51,7 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HexFormat;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -87,26 +88,24 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
-import tuwien.auto.calimero.DataUnitBuilder;
-import tuwien.auto.calimero.IndividualAddress;
-import tuwien.auto.calimero.KNXException;
-import tuwien.auto.calimero.KNXFormatException;
-import tuwien.auto.calimero.KNXIllegalArgumentException;
-import tuwien.auto.calimero.KNXTimeoutException;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
-import tuwien.auto.calimero.internal.Executor;
-import tuwien.auto.calimero.link.KNXNetworkLink;
-import tuwien.auto.calimero.link.KNXNetworkLinkFT12;
-import tuwien.auto.calimero.link.KNXNetworkLinkIP;
-import tuwien.auto.calimero.link.KNXNetworkLinkTpuart;
-import tuwien.auto.calimero.link.KNXNetworkLinkUsb;
-import tuwien.auto.calimero.link.medium.KNXMediumSettings;
-import tuwien.auto.calimero.mgmt.Destination;
-import tuwien.auto.calimero.mgmt.ManagementClient;
-import tuwien.auto.calimero.mgmt.ManagementClientImpl;
-import tuwien.auto.calimero.mgmt.ManagementProcedures;
-import tuwien.auto.calimero.mgmt.ManagementProceduresImpl;
+import io.calimero.IndividualAddress;
+import io.calimero.KNXException;
+import io.calimero.KNXFormatException;
+import io.calimero.KNXIllegalArgumentException;
+import io.calimero.KNXTimeoutException;
+import io.calimero.gui.ConnectDialog.ConnectArguments;
+import io.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
+import io.calimero.link.KNXNetworkLink;
+import io.calimero.link.KNXNetworkLinkFT12;
+import io.calimero.link.KNXNetworkLinkIP;
+import io.calimero.link.KNXNetworkLinkTpuart;
+import io.calimero.link.KNXNetworkLinkUsb;
+import io.calimero.link.medium.KNXMediumSettings;
+import io.calimero.mgmt.Destination;
+import io.calimero.mgmt.ManagementClient;
+import io.calimero.mgmt.ManagementClientImpl;
+import io.calimero.mgmt.ManagementProcedures;
+import io.calimero.mgmt.ManagementProceduresImpl;
 
 /**
  * @author B. Malinowsky
@@ -171,7 +170,7 @@ class MemoryEditor extends BaseTabLayout
 		addAsciiView();
 		addTableEditor(list);
 
-		list.addListener(SWT.PaintItem, e -> onItemPaint(e));
+		list.addListener(SWT.PaintItem, this::onItemPaint);
 		list.addListener(SWT.EraseItem, e -> {
 			if ((e.detail & SWT.SELECTED) != 0)
 				e.detail &= ~SWT.SELECTED;
@@ -540,14 +539,8 @@ class MemoryEditor extends BaseTabLayout
 				? KNXMediumSettings.BackboneRouter : new IndividualAddress(connect.localKnxAddress);
 		final KNXMediumSettings medium = KNXMediumSettings.create(connect.knxMedium, localKnxAddress);
 
-		if (connect.protocol == Protocol.FT12) {
-			try {
-				return new KNXNetworkLinkFT12(Integer.parseInt(connect.port), medium);
-			}
-			catch (final NumberFormatException e) {
-				return new KNXNetworkLinkFT12(connect.port, medium);
-			}
-		}
+		if (connect.protocol == Protocol.FT12)
+			return new KNXNetworkLinkFT12(connect.port, medium);
 		if (connect.protocol == Protocol.USB)
 			return new KNXNetworkLinkUsb(connect.port, medium);
 		if (connect.protocol == Protocol.Tpuart)
@@ -612,20 +605,12 @@ class MemoryEditor extends BaseTabLayout
 		dlg.setText(title);
 		dlg.setMessage(msg);
 		final int id = dlg.open();
-		final String response;
-		switch (id) {
-		case SWT.YES:
-			response = "yes";
-			break;
-		case SWT.NO:
-			response = "no";
-			break;
-		case SWT.CANCEL:
-			response = "canceled";
-			break;
-		default:
-			response = "button " + id;
-		}
+		final String response = switch (id) {
+			case SWT.YES -> "yes";
+			case SWT.NO -> "no";
+			case SWT.CANCEL -> "canceled";
+			default -> "button " + id;
+		};
 		asyncAddLog(title + ": " + response);
 		return id;
 	}
@@ -666,7 +651,7 @@ class MemoryEditor extends BaseTabLayout
 					try {
 						asyncAddLog("read device memory range 0x" + address(addr) + " to 0x" + address(addr + min));
 						final byte[] memory = mgmt.readMemory(device, addr, min);
-						asyncAddLog(DataUnitBuilder.toHex(memory, " "));
+						asyncAddLog(HexFormat.ofDelimiter(" ").formatHex(memory));
 						final int start = (int) addr;
 						Main.asyncExec(() -> updateMemoryRange(start, memory));
 					}
@@ -697,7 +682,7 @@ class MemoryEditor extends BaseTabLayout
 					setHeaderInfo(statusInfo(2));
 					editArea.setEnabled(true);
 					for (final Control c : editArea.getChildren()) {
-						if (c != write || (c == write && !modified.isEmpty()))
+						if (c != write || !modified.isEmpty())
 							c.setEnabled(true);
 					}
 				});

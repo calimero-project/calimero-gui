@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2022 B. Malinowsky
+    Copyright (c) 2006, 2023 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,22 +34,17 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
+package io.calimero.gui;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HexFormat;
 import java.util.Map;
-import java.util.Optional;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -71,29 +66,27 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Sash;
 import org.eclipse.swt.widgets.TableColumn;
 
-import tuwien.auto.calimero.DataUnitBuilder;
-import tuwien.auto.calimero.DetachEvent;
-import tuwien.auto.calimero.GroupAddress;
-import tuwien.auto.calimero.KNXAddress;
-import tuwien.auto.calimero.KNXException;
-import tuwien.auto.calimero.KNXFormatException;
-import tuwien.auto.calimero.datapoint.Datapoint;
-import tuwien.auto.calimero.datapoint.DatapointMap;
-import tuwien.auto.calimero.datapoint.StateDP;
-import tuwien.auto.calimero.dptxlator.DPT;
-import tuwien.auto.calimero.dptxlator.TranslatorTypes;
-import tuwien.auto.calimero.dptxlator.TranslatorTypes.MainType;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
-import tuwien.auto.calimero.internal.Executor;
-import tuwien.auto.calimero.process.LteProcessEvent;
-import tuwien.auto.calimero.process.ProcessEvent;
-import tuwien.auto.calimero.process.ProcessListener;
-import tuwien.auto.calimero.tools.ProcComm;
-import tuwien.auto.calimero.xml.KNXMLException;
-import tuwien.auto.calimero.xml.XmlInputFactory;
-import tuwien.auto.calimero.xml.XmlOutputFactory;
-import tuwien.auto.calimero.xml.XmlReader;
-import tuwien.auto.calimero.xml.XmlWriter;
+import io.calimero.DetachEvent;
+import io.calimero.GroupAddress;
+import io.calimero.KNXAddress;
+import io.calimero.KNXException;
+import io.calimero.KNXFormatException;
+import io.calimero.datapoint.Datapoint;
+import io.calimero.datapoint.DatapointMap;
+import io.calimero.datapoint.StateDP;
+import io.calimero.dptxlator.DPT;
+import io.calimero.dptxlator.TranslatorTypes;
+import io.calimero.dptxlator.TranslatorTypes.MainType;
+import io.calimero.gui.ConnectDialog.ConnectArguments;
+import io.calimero.process.LteProcessEvent;
+import io.calimero.process.ProcessEvent;
+import io.calimero.process.ProcessListener;
+import io.calimero.tools.ProcComm;
+import io.calimero.xml.KNXMLException;
+import io.calimero.xml.XmlInputFactory;
+import io.calimero.xml.XmlOutputFactory;
+import io.calimero.xml.XmlReader;
+import io.calimero.xml.XmlWriter;
 
 /**
  * @author B. Malinowsky
@@ -159,7 +152,7 @@ class TunnelTab extends BaseTabLayout
 					dst = e.getDestination().toString();
 
 				final String[] item = new String[] { "" + ++eventCounter, "" + eventCounterFiltered, date, time,
-					e.getSourceAddr().toString(), dst, svc, DataUnitBuilder.toHex(asdu, " "),
+					e.getSourceAddr().toString(), dst, svc, HexFormat.ofDelimiter(" ").formatHex(asdu),
 					value };
 				if (applyFilter(item))
 					return;
@@ -183,8 +176,6 @@ class TunnelTab extends BaseTabLayout
 	private long eventCounterFiltered = 1;
 	private final ConnectArguments connect;
 
-	private final DateTimeFormatter dateFormatter;
-	private final DateTimeFormatter timeFormatter;
 
 	TunnelTab(final CTabFolder tf, final ConnectArguments args)
 	{
@@ -220,28 +211,6 @@ class TunnelTab extends BaseTabLayout
 		decoded.setText("Decoded ASDU");
 		decoded.setWidth(100);
 		enableColumnAdjusting();
-
-		final String filter = args.remote == null ? args.port : args.remote;
-		addLogIncludeFilter(".*" + Pattern.quote(filter) + ".*");
-		addLogExcludeFilter(".*Discoverer.*", ".*DevMgmt.*", ".*calimero\\.mgmt\\..*");
-
-		DateTimeFormatter dfmt = DateTimeFormatter.ISO_LOCAL_DATE;
-		DateTimeFormatter tfmt = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
-		// check optional config file for user-specific date/time formats
-		try {
-			final Path config = Paths.get(".calimero-gui.config");
-			if (Files.exists(config)) {
-				final Map<String, String> formats = Files.lines(config).filter(s -> s.startsWith("monitor")).collect(Collectors
-						.toMap((final String s) -> s.substring(0, s.indexOf("=")), (final String s) -> s.substring(s.indexOf("=") + 1)));
-				dfmt = Optional.ofNullable(formats.get("monitor.dateFormat")).map(DateTimeFormatter::ofPattern).orElse(dfmt);
-				tfmt = Optional.ofNullable(formats.get("monitor.timeFormat")).map(DateTimeFormatter::ofPattern).orElse(tfmt);
-			}
-		}
-		catch (IOException | RuntimeException e) {
-			asyncAddLog(e);
-		}
-		dateFormatter = dfmt.withZone(ZoneId.systemDefault());
-		timeFormatter = tfmt.withZone(ZoneId.systemDefault());
 
 		initFilterMenu();
 		openGroupMonitor();
@@ -414,8 +383,7 @@ class TunnelTab extends BaseTabLayout
 	private void openGroupMonitor()
 	{
 		// setup tool argument array
-		final java.util.List<String> args = new ArrayList<String>();
-		args.addAll(connect.getArgs(true));
+		final java.util.List<String> args = new ArrayList<>(connect.getArgs(true));
 		args.add("--lte");
 		args.add("monitor");
 		asyncAddLog("Using command line: " + String.join(" ", args));
@@ -423,7 +391,7 @@ class TunnelTab extends BaseTabLayout
 		// thread for connecting, it quits as soon communicator is running
 		final Runnable connector = () -> {
 			try {
-				pc = new ProcCommWrapper(args.toArray(new String[args.size()]));
+				pc = new ProcCommWrapper(args.toArray(new String[0]));
 				final var listener = new ProcessListener() {
 					@Override
 					public void groupWrite(final ProcessEvent e) {}
@@ -493,7 +461,7 @@ class TunnelTab extends BaseTabLayout
 		points.setToolTipText("");
 
 		final TreeSet<Datapoint> set = new TreeSet<>(
-				(dp1, dp2) -> dp1.getMainAddress().getRawAddress() - dp2.getMainAddress().getRawAddress());
+				Comparator.comparingInt(dp -> dp.getMainAddress().getRawAddress()));
 		set.addAll(model.getDatapoints());
 		for (final Datapoint dp : set)
 			points.add(dp.getMainAddress().toString() + "\t" + dp.getName());

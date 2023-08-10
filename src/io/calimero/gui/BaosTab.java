@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2020, 2022 B. Malinowsky
+    Copyright (c) 2020, 2023 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,9 +34,7 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
-
-import static tuwien.auto.calimero.DataUnitBuilder.toHex;
+package io.calimero.gui;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -46,6 +44,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -88,20 +87,18 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
-import tuwien.auto.calimero.DataUnitBuilder;
-import tuwien.auto.calimero.IndividualAddress;
-import tuwien.auto.calimero.KNXException;
-import tuwien.auto.calimero.KNXFormatException;
-import tuwien.auto.calimero.baos.BaosService;
-import tuwien.auto.calimero.baos.BaosService.ErrorCode;
-import tuwien.auto.calimero.baos.BaosService.Item;
-import tuwien.auto.calimero.baos.BaosService.Property;
-import tuwien.auto.calimero.dptxlator.DPT;
-import tuwien.auto.calimero.dptxlator.TranslatorTypes;
-import tuwien.auto.calimero.dptxlator.TranslatorTypes.MainType;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
-import tuwien.auto.calimero.internal.Executor;
-import tuwien.auto.calimero.tools.BaosClient;
+import io.calimero.IndividualAddress;
+import io.calimero.KNXException;
+import io.calimero.KNXFormatException;
+import io.calimero.baos.BaosService;
+import io.calimero.baos.BaosService.ErrorCode;
+import io.calimero.baos.BaosService.Item;
+import io.calimero.baos.BaosService.Property;
+import io.calimero.dptxlator.DPT;
+import io.calimero.dptxlator.TranslatorTypes;
+import io.calimero.dptxlator.TranslatorTypes.MainType;
+import io.calimero.gui.ConnectDialog.ConnectArguments;
+import io.calimero.tools.BaosClient;
 
 class BaosTab extends BaseTabLayout {
 	private final class BaosClientTool extends BaosClient {
@@ -198,6 +195,8 @@ class BaosTab extends BaseTabLayout {
 
 		workArea.layout(true, true);
 
+		if ("3671".equals(connect.port))
+			connect.port = "12004";
 		final List<String> toolArgs = connect.getArgs(false);
 		asyncAddLog("Using command line: " + String.join(" ", toolArgs));
 		tool = new BaosClientTool(toolArgs.toArray(String[]::new));
@@ -374,7 +373,7 @@ class BaosTab extends BaseTabLayout {
 
 		list.setParent(sashForm);
 
-		sashForm.setWeights(new int[] { 1, 2 });
+		sashForm.setWeights(1, 2);
 	}
 
 	private void addPropertyViewOption() {
@@ -569,7 +568,7 @@ class BaosTab extends BaseTabLayout {
 			final var ia = textBox(properties, currentValue);
 			final Supplier<String> formatter = () -> {
 				try {
-					return toHex(new IndividualAddress(ia.getText()).toByteArray(), "");
+					return HexFormat.of().formatHex(new IndividualAddress(ia.getText()).toByteArray());
 				}
 				catch (final KNXFormatException e) {
 					asyncAddLog(e);
@@ -594,7 +593,7 @@ class BaosTab extends BaseTabLayout {
 			final var ip = textBox(properties, currentValue);
 			final Supplier<String> ipFormatter = () -> {
 				try {
-					return toHex(InetAddress.getByName(ip.getText()).getAddress(), "");
+					return HexFormat.of().formatHex(InetAddress.getByName(ip.getText()).getAddress());
 				}
 				catch (final UnknownHostException e) {
 					asyncAddLog(e);
@@ -642,7 +641,7 @@ class BaosTab extends BaseTabLayout {
 			final var localTime = LocalTime.of(dateTime.getHours(), dateTime.getMinutes(), dateTime.getSeconds());
 			final var localDateTime = LocalDateTime.of(LocalDate.now(), localTime);
 			final var formatted = DateTimeFormatter.ISO_DATE_TIME.format(localDateTime).replace('T', ' ');
-			return toHex(formatted.getBytes(StandardCharsets.ISO_8859_1), " ");
+			return HexFormat.ofDelimiter(" ").formatHex(formatted.getBytes(StandardCharsets.ISO_8859_1));
 		};
 		dateTime.setData(formatter);
 		return dateTime;
@@ -654,7 +653,7 @@ class BaosTab extends BaseTabLayout {
 		text.selectAll();
 		final Supplier<String> formatter = () -> {
 			final byte[] bytes = text.getText().getBytes(StandardCharsets.UTF_8);
-			return DataUnitBuilder.toHex(bytes, " ");
+			return HexFormat.ofDelimiter(" ").formatHex(bytes);
 		};
 		text.setData(formatter);
 		return text;
@@ -725,6 +724,7 @@ class BaosTab extends BaseTabLayout {
 			}
 			catch (final Exception e) {
 				asyncAddLog(e);
+				Main.asyncExec(() -> setHeaderInfo(statusInfo(2)));
 			}
 			finally {
 				tool.quit();
@@ -762,7 +762,7 @@ class BaosTab extends BaseTabLayout {
 		// hex values
 		case Invalid:
 		case HardwareType:
-			return toHex(data, " ");
+			return HexFormat.ofDelimiter(" ").formatHex(data);
 
 		// version
 		case HardwareVersion:
@@ -833,7 +833,7 @@ class BaosTab extends BaseTabLayout {
 			return new IndividualAddress(data).toString();
 
 		case MacAddress:
-			return toHex(data, ":");
+			return HexFormat.ofDelimiter(":").formatHex(data);
 
 		case DeviceFriendlyName:
 			return string(data);
@@ -855,11 +855,11 @@ class BaosTab extends BaseTabLayout {
 		case SystemTimezoneOffset:
 			return "" + data[0];
 		}
-		return toHex(data, " ");
+		return HexFormat.ofDelimiter(" ").formatHex(data);
 	}
 
 	private static String knxSerialNumber(final byte[] data) {
-		final var hex = toHex(data, "");
+		final var hex = HexFormat.of().formatHex(data);
 		return hex.substring(0, 4) + ":" + hex.substring(4);
 	}
 
@@ -883,13 +883,13 @@ class BaosTab extends BaseTabLayout {
 	}
 
 	private static String timeSinceResetUnit(final byte[] data) {
-		switch (data[0] & 0xff) {
-		case 'x': return "ms";
-		case 's': return "seconds";
-		case 'm': return "minutes";
-		case 'h': return "hours";
-		default: return toHex(data, "") + " (unknown)";
-		}
+		return switch (data[0] & 0xff) {
+			case 'x' -> "ms";
+			case 's' -> "seconds";
+			case 'm' -> "minutes";
+			case 'h' -> "hours";
+			default -> HexFormat.of().formatHex(data) + " (unknown)";
+		};
 	}
 
 	private static String baudRate(final byte[] data) {
@@ -898,12 +898,12 @@ class BaosTab extends BaseTabLayout {
 	}
 
 	private static String baudrate(final int v) {
-		switch (v) {
-		case 0:  return "unknown";
-		case 1:  return "19200 Bd";
-		case 2:  return "115200 Bd";
-		default: return "invalid";
-		}
+		return switch (v) {
+			case 0 -> "unknown";
+			case 1 -> "19200 Bd";
+			case 2 -> "115200 Bd";
+			default -> "invalid";
+		};
 	}
 
 	private String deviceName() {

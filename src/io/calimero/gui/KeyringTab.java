@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2019, 2021 B. Malinowsky
+    Copyright (c) 2019, 2023 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
+package io.calimero.gui;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -64,11 +64,10 @@ import org.eclipse.swt.widgets.Sash;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
-import tuwien.auto.calimero.GroupAddress;
-import tuwien.auto.calimero.IndividualAddress;
-import tuwien.auto.calimero.KNXFormatException;
-import tuwien.auto.calimero.secure.Keyring;
-import tuwien.auto.calimero.secure.Security;
+import io.calimero.IndividualAddress;
+import io.calimero.KNXFormatException;
+import io.calimero.secure.Keyring;
+import io.calimero.secure.Security;
 
 class KeyringTab extends BaseTabLayout {
 	private Button load;
@@ -165,7 +164,7 @@ class KeyringTab extends BaseTabLayout {
 
 		((GridLayout) top.getLayout()).numColumns = 3;
 		((GridLayout) top.getLayout()).makeColumnsEqualWidth = false;
-		((GridLayout) top.getLayout()).horizontalSpacing = 1 * ((GridLayout) top.getLayout()).horizontalSpacing;
+		((GridLayout) top.getLayout()).horizontalSpacing = ((GridLayout) top.getLayout()).horizontalSpacing;
 
 		keyringLabel = new Label(top, SWT.NONE);
 		keyringLabel.setText(keyringResource);
@@ -214,8 +213,7 @@ class KeyringTab extends BaseTabLayout {
 	}
 
 	private void dataDropped(final DropTargetEvent event) {
-		if (isSupportedType(event) && event.data instanceof String[]) {
-			final String[] paths = (String[]) event.data;
+		if (isSupportedType(event) && event.data instanceof final String[] paths) {
 			for (final String path : paths) {
 				if (path.endsWith(".knxkeys")) {
 					setKeyring(path);
@@ -252,7 +250,7 @@ class KeyringTab extends BaseTabLayout {
 			Arrays.sort(groups);
 			final var joiner = new StringJoiner(", ");
 			for (final Object group : groups)
-				joiner.add(((GroupAddress) group).toString());
+				joiner.add(group.toString());
 
 			final String[] item = { host.toString(), iface.address().toString(), "" + iface.user(), joiner.toString() };
 			addListItem(item, null, null);

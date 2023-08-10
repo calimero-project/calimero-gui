@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2016, 2022 B. Malinowsky
+    Copyright (c) 2016, 2023 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,10 +34,16 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
+package io.calimero.gui;
+
+import static java.lang.System.Logger.Level.ERROR;
+import static java.lang.System.Logger.Level.INFO;
+import static java.lang.System.Logger.Level.WARNING;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
@@ -50,8 +56,8 @@ import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.calimero.gui.logging.LoggerFinder;
+import io.calimero.log.LogService;
 
 /**
  * Checks for correct SWT library on classpath, if missing/mismatch try to download library.
@@ -59,7 +65,7 @@ import org.slf4j.LoggerFactory;
 public class SwtChecker
 {
 	private static final String swtArtifactId = "org.eclipse.swt.";
-	private static final String swtVersion = "3.121.0";
+	private static final String swtVersion = "3.123.0";
 	private static final String baseDownloadUrl = "https://repo.maven.apache.org/maven2/org/eclipse/platform";
 
 	private final Logger logger;
@@ -74,23 +80,31 @@ public class SwtChecker
 				checker.downloadToLibDir();
 			}
 			catch (IOException | URISyntaxException | RuntimeException e) {
-				checker.logger.error("Failed to add SWT library", e);
+				checker.logger.log(ERROR, "Failed to add SWT library", e);
 			}
 		}
-	}
-
-	public SwtChecker()
-	{
-		logger = LoggerFactory.getLogger("swt-checker");
 	}
 
 	private enum Platform {
 		Unknown,
 		Linux_x86,
 		Linux_x86_64,
-		MacOS,
+		Linux_AArch64,
+		macOS_x86_64,
+		macOS_AArch64,
 		Win_x86,
 		Win_x86_64,
+	}
+
+	public SwtChecker() {
+		LoggerFinder.addLogNotifier((name, level, msg, thrown) -> {
+			if (name.startsWith("io.calimero") || level.compareTo(Level.INFO) >= 0) {
+				System.out.println(msg);
+				if (thrown != null)
+					thrown.printStackTrace();
+			}
+		});
+		logger = LogService.getLogger("io.calimero.gui.swt-checker");
 	}
 
 	public static boolean isSwtOnClasspath()
@@ -114,58 +128,53 @@ public class SwtChecker
 
 	public void downloadToLibDir() throws IOException, URISyntaxException
 	{
-		logger.warn("No loadable SWT library on classpath (maybe first start?), trying to download SWT ...");
+		logger.log(WARNING, "No loadable SWT library on classpath (maybe first start?), trying to download SWT ...");
 		final Platform platform = platform();
-		logger.info("Detected OS: {}", platform);
+		logger.log(INFO, "Detected OS: {0}", platform);
 
 		final String folder = swtArtifactId + swtPlatformId(platform);
 		final String jarName = jarName(platform);
 		final String path = String.join("/", baseDownloadUrl, folder, swtVersion, jarName);
 		final URI link = new URI(path);
-		logger.info("Download {}", link);
+		logger.log(INFO, "Download {0}", link);
 
 		final Path dest = Paths.get(libDir(), "swt.jar");
 		download(link, dest);
-		logger.info("Saved to {}", dest.normalize().toAbsolutePath());
-		logger.info("Success, please restart the application!");
+		logger.log(INFO, "Saved to {0}", dest.normalize().toAbsolutePath());
+		logger.log(INFO, "Success, please restart the application!");
 	}
 
 	private Platform platform()
 	{
 		final String os = System.getProperty("os.name", "unknown").toLowerCase(Locale.ENGLISH);
-		// at first try to find out jvm bitness, fallback to OS bitness
-		String arch = System.getProperty("sun.arch.data.model");
-		if (arch == null)
-			arch = System.getProperty("os.arch");
+		// data model prop gives us the jvm bitness
+		final String model = System.getProperty("sun.arch.data.model");
+		final String arch = System.getProperty("os.arch");
 
-		final boolean is64bit = "64".equals(arch) || "amd64".equals(arch) || "x86_64".equals(arch);
-		logger.info("Architecture {}", arch);
-		if (os.indexOf("win") >= 0)
+		final boolean is64bit = "64".equals(model) || "amd64".equals(arch) || "x86_64".equals(arch);
+		final boolean aarch64 = "aarch64".equals(arch);
+		logger.log(INFO, "Architecture {0}", arch);
+		if (os.contains("win"))
 			return is64bit ? Platform.Win_x86_64 : Platform.Win_x86;
-		if (os.indexOf("mac") >= 0)
-			return Platform.MacOS;
-		if (os.indexOf("linux") >= 0)
-			return is64bit ? Platform.Linux_x86_64 : Platform.Linux_x86;
+		if (os.contains("mac"))
+			return aarch64 ? Platform.macOS_AArch64 : Platform.macOS_x86_64;
+		if (os.contains("linux"))
+			return aarch64 ? Platform.Linux_AArch64 : is64bit ? Platform.Linux_x86_64 : Platform.Linux_x86;
 		return Platform.Unknown;
 	}
 
 	private static String swtPlatformId(final Platform p)
 	{
-		switch (p) {
-		case Linux_x86:
-			return "gtk.linux.x86";
-		case Linux_x86_64:
-			return "gtk.linux.x86_64";
-		case MacOS:
-			return "cocoa.macosx.x86_64";
-		case Win_x86:
-			return "win32.win32.x86";
-		case Win_x86_64:
-			return "win32.win32.x86_64";
-		case Unknown:
-			return "";
-		}
-		return "";
+		return switch (p) {
+			case Linux_x86 -> "gtk.linux.x86";
+			case Linux_x86_64 -> "gtk.linux.x86_64";
+			case Linux_AArch64 ->"gtk.linux.aarch64";
+			case macOS_x86_64 -> "cocoa.macosx.x86_64";
+			case macOS_AArch64 -> "cocoa.macosx.aarch64";
+			case Win_x86 -> "win32.win32.x86";
+			case Win_x86_64 -> "win32.win32.x86_64";
+			case Unknown -> "";
+		};
 	}
 
 	private static String jarName(final Platform p)

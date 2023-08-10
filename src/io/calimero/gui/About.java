@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2022 B. Malinowsky
+    Copyright (c) 2006, 2023 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
+package io.calimero.gui;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,7 +58,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Shell;
 
-import tuwien.auto.calimero.Settings;
+import io.calimero.Settings;
 
 /**
  * @author B. Malinowsky
@@ -68,14 +68,16 @@ class About {
 
 	// @formatter:off
 	private static final String about =
-			  "\u2022 Process Communication\n"
-			+ "\u2022 Group && Network Monitoring\n"
-			+ "\u2022 Device Scan && Device Information\n"
-			+ "\u2022 KNX Property Editor\n"
-			+ "\u2022 KNX Device Memory Editor\n"
-			+ "\u2022 KNXnet/IP\n"
-			+ "\u2022 FT1.2 (BCU2), USB, TP-UART, KNX RF USB\n"
-			+ "\u2022 KNX IP Secure && KNX Data Secure\n";
+			"""
+			• Process Communication
+			• Group && Network Monitoring
+			• Device Scan && Device Information
+			• KNX Property Editor
+			• KNX Device Memory Editor
+			• KNXnet/IP
+			• FT1.2 (BCU2), USB, TP-UART, KNX RF USB
+			• KNX IP Secure && KNX Data Secure
+			""";
 	// @formatter:on
 	private static final String repositoryLink = "https://github.com/calimero-project/calimero-gui";
 
@@ -84,12 +86,12 @@ class About {
 	private static final String sfDiscussionLink = "https://sourceforge.net/p/calimero/discussion/";
 	private static final String projectEmail = "<A href=\"mailto:calimero.project@gmail.com\">calimero.project@gmail.com</A>";
 
-	private static final String contrib = "Issues/feature requests:\n        Github \u2013 <A>" + ghIssuesLink
-			+ "</A>\n        SourceForge \u2013 <A>" + sfDiscussionLink + "</A>" + "\n        Project email \u2013 " + projectEmail;
+	private static final String contrib = "Issues/feature requests:\n        Github – <A>" + ghIssuesLink
+			+ "</A>\n        SourceForge – <A>" + sfDiscussionLink + "</A>" + "\n        Project email – " + projectEmail;
 
 	private static final String license = "The Calimero library, tools, GUI, and documentation "
 			+ "are licensed under\nthe GPL, with the Classpath Exception.";
-	private static final String copyright = "\u00A9 2006, 2022.";
+	private static final String copyright = "© 2006, 2022.";
 
 	private static final String swtLink = "http://www.eclipse.org/swt/";
 	private static final String swtInfo = "This GUI uses the <A href=\"" + swtLink + "\">Standard Widget Toolkit (SWT)</A>";

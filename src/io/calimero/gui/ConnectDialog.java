@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2022 B. Malinowsky
+    Copyright (c) 2006, 2023 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,9 +34,7 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
-
-import static tuwien.auto.calimero.DataUnitBuilder.toHex;
+package io.calimero.gui;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -45,6 +43,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -66,18 +65,18 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
-import tuwien.auto.calimero.IndividualAddress;
-import tuwien.auto.calimero.KNXFormatException;
-import tuwien.auto.calimero.KnxRuntimeException;
-import tuwien.auto.calimero.SerialNumber;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
-import tuwien.auto.calimero.knxnetip.Discoverer;
-import tuwien.auto.calimero.knxnetip.KNXnetIPConnection;
-import tuwien.auto.calimero.knxnetip.SecureConnection;
-import tuwien.auto.calimero.knxnetip.util.ServiceFamiliesDIB.ServiceFamily;
-import tuwien.auto.calimero.link.medium.KNXMediumSettings;
-import tuwien.auto.calimero.secure.Keyring;
-import tuwien.auto.calimero.secure.Keyring.Interface;
+import io.calimero.IndividualAddress;
+import io.calimero.KNXFormatException;
+import io.calimero.KnxRuntimeException;
+import io.calimero.SerialNumber;
+import io.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
+import io.calimero.knxnetip.Discoverer;
+import io.calimero.knxnetip.KNXnetIPConnection;
+import io.calimero.knxnetip.SecureConnection;
+import io.calimero.knxnetip.util.ServiceFamiliesDIB.ServiceFamily;
+import io.calimero.link.medium.KNXMediumSettings;
+import io.calimero.secure.Keyring;
+import io.calimero.secure.Keyring.Interface;
 
 /**
  * @author B. Malinowsky
@@ -96,7 +95,7 @@ class ConnectDialog
 
 		Protocol protocol;
 		String remote;
-		final String port;
+		String port;
 		int knxMedium;
 
 		final String local;
@@ -190,7 +189,7 @@ class ConnectDialog
 				}
 			}
 
-			final List<String> args = new ArrayList<String>();
+			final List<String> args = new ArrayList<>();
 			switch (protocol) {
 			case Routing:
 			case Tunneling:
@@ -260,7 +259,8 @@ class ConnectDialog
 			default:
 				throw new IllegalStateException();
 			}
-			args.add(port);
+			if (!port.isEmpty())
+				args.add(port);
 			if (knxMedium != 0) {
 				args.add("--medium");
 				args.add(KNXMediumSettings.getMediumString(knxMedium));
@@ -305,7 +305,7 @@ class ConnectDialog
 				return value;
 			}
 			catch (IOException | RuntimeException e) {
-				System.out.println(String.format("Failed to get value for '%s' from file '%s' (error: %s)", key, p, e.getMessage()));
+				System.out.printf("Failed to get value for '%s' from file '%s' (error: %s)%n", key, p, e.getMessage());
 			}
 			return "";
 		}
@@ -330,7 +330,7 @@ class ConnectDialog
 			if ("group.key".equals(key)) {
 				final InetAddress remote = InetAddress.getByName(value);
 				final var backbone = keyring.backbone().filter(bb -> bb.multicastGroup().equals(remote)).orElseThrow();
-				return toHex(keyring.decryptKey(backbone.groupKey().orElseThrow(), keyringPassword), "");
+				return HexFormat.of().formatHex(keyring.decryptKey(backbone.groupKey().orElseThrow(), keyringPassword));
 			}
 
 			if (key.startsWith("device")) {
@@ -342,7 +342,7 @@ class ConnectDialog
 				if ("device.pwd".equals(key))
 					return new String(pwd.get());
 				if ("device.key".equals(key))
-					return toHex(SecureConnection.hashDeviceAuthenticationPassword(pwd.get()), "");
+					return HexFormat.of().formatHex(SecureConnection.hashDeviceAuthenticationPassword(pwd.get()));
 			}
 
 			if (key.startsWith("user")) {
@@ -476,13 +476,14 @@ class ConnectDialog
 		final Text knxAddr = new Text(c, SWT.BORDER);
 		knxAddr.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		knxAddr.setMessage("area.line.device");
-		knxAddr.setToolTipText("Specify device address for\n"
-				+ "  \u2022 reading remote device info\n"
-				+ "  \u2022 opening remote property/memory editor\n"
-				+ "Scan devices:\n"
-				+ "  \u2022 specify area for scanning an area\n"
-				+ "  \u2022 specify area.line for scanning a line\n"
-				+ "  \u2022 specify area.line.device to scan a single device");
+		knxAddr.setToolTipText("""
+				Specify device address for
+				  • reading remote device info
+				  • opening remote property/memory editor
+				Scan devices:
+				  • specify area for scanning an area
+				  • specify area.line for scanning a line
+				  • specify area.line.device to scan a single device""");
 
 		final Composite mode = new Composite(shell, SWT.NONE);
 		final RowLayout col = new RowLayout(SWT.VERTICAL);

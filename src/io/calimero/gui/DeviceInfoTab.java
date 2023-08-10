@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2022 B. Malinowsky
+    Copyright (c) 2015, 2023 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,86 +34,102 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
+package io.calimero.gui;
 
 import java.util.ArrayList;
+import java.util.HexFormat;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
-import tuwien.auto.calimero.KNXIllegalArgumentException;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
-import tuwien.auto.calimero.internal.Executor;
-import tuwien.auto.calimero.tools.IPConfig;
+import io.calimero.KNXIllegalArgumentException;
+import io.calimero.gui.ConnectDialog.ConnectArguments;
+import io.calimero.tools.DeviceInfo;
 
 /**
  * @author B. Malinowsky
  */
-class IPConfigTab extends BaseTabLayout
+class DeviceInfoTab extends BaseTabLayout
 {
 	private final ConnectArguments connect;
+	private Thread worker;
 
-	IPConfigTab(final CTabFolder tf, final ConnectArguments args)
+	DeviceInfoTab(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, "KNX IP configuration of " + args.name, headerInfo(adjustPreferRoutingConfig(args), "Connecting to"));
+		super(tf, "Device info of " + uniqueId(args), headerInfo(adjustPreferRoutingConfig(args), "Read info of") + " ...");
 		connect = args;
 
 		final TableColumn pid = new TableColumn(list, SWT.LEFT);
-		pid.setText("Property ID");
-		pid.setWidth(50);
+		pid.setText("Setting");
+		pid.setWidth(100);
 		final TableColumn pidName = new TableColumn(list, SWT.LEFT);
-		pidName.setText("Name");
-		pidName.setWidth(150);
-		final TableColumn value = new TableColumn(list, SWT.LEFT);
-		value.setText("Value");
-		value.setWidth(200);
+		pidName.setText("Value");
+		pidName.setWidth(200);
+		final TableColumn raw = new TableColumn(list, SWT.LEFT);
+		raw.setText("Unformatted");
+		raw.setWidth(80);
 		enableColumnAdjusting();
 
-		final String filter = args.remote == null ? args.port : args.remote;
-		addLogIncludeFilter(".*" + Pattern.quote(filter) + ".*", ".*calimero\\.mgmt\\.PC.*", ".*calimero\\.tools.*");
-		addLogExcludeFilter(".*Discoverer.*");
-
-		readConfig();
+		readDeviceInfo();
 	}
 
-	private void readConfig()
+	@Override
+	protected void onDispose(final DisposeEvent e) {
+		if (worker != null)
+			worker.interrupt();
+	}
+
+	private void readDeviceInfo()
 	{
-		final List<String> args = new ArrayList<String>();
-		args.addAll(connect.getArgs(true));
+		list.removeAll();
+		log.removeAll();
+		// remove knx medium if we do local device info
+		if (connect.knxAddress.isEmpty())
+			connect.knxMedium = 0;
+		final List<String> args = new ArrayList<>(connect.getArgs(false));
 		asyncAddLog("Using command line: " + String.join(" ", args));
 
 		try {
-			final IPConfig config = new IPConfig(args.toArray(new String[0])) {
+			final DeviceInfo config = new DeviceInfo(args.toArray(new String[0])) {
 				@Override
-				public void run() {
-					Main.asyncExec(() -> setHeaderInfo(headerInfo(connect, "Query configuration from")));
-					super.run();
+				protected void onDeviceInformation(final Item item) {
+					Main.asyncExec(() -> {
+						if (!list.isDisposed())
+							addItem(item);
+					});
 				}
 
 				@Override
-				protected void onConfigurationReceived(final List<String[]> config)
-				{
+				protected void onCompletion(final Exception thrown, final boolean canceled) {
 					Main.asyncExec(() -> {
 						if (list.isDisposed())
 							return;
-						list.setRedraw(false);
-						for (final String[] s : config) {
-							if (s[2].isEmpty())
-								s[2] = "--";
-							final TableItem i = new TableItem(list, SWT.NONE);
-							i.setText(s);
-						}
-						list.setRedraw(true);
-
-						setHeaderInfo(headerInfo(connect, "Configuration received from"));
+						final String status = canceled ? "canceled" : "completed";
+						setHeaderInfo(connect, "Device info " + status + " for");
 					});
+					if (thrown != null)
+						asyncAddLog(thrown);
+				}
+
+				private String currentCategory = "";
+
+				private void addItem(final Item item) {
+					if (!currentCategory.equals(item.category())) {
+						currentCategory = item.category();
+						final TableItem i = new TableItem(list, SWT.NONE);
+						i.setText(new String[] { currentCategory, "", "" });
+					}
+					final String param = item.parameter().friendlyName();
+					final String rawString = HexFormat.of().formatHex(item.raw());
+					final TableItem i = new TableItem(list, SWT.NONE);
+					i.setText(new String[] { "\t" + param, item.value(), rawString });
 				}
 			};
-			Executor.execute(config);
+			worker = Executor.execute(config, "Info reader " + uniqueId(connect));
 		}
 		catch (final KNXIllegalArgumentException e) {
 			asyncAddLog("error: " + e.getMessage());

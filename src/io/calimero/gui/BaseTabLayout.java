@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2020 B. Malinowsky
+    Copyright (c) 2006, 2023 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,16 +34,20 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
+package io.calimero.gui;
+
+import static java.lang.System.Logger.Level.INFO;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
 import java.io.Writer;
+import java.lang.System.Logger.Level;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -51,7 +55,9 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.WeakHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -90,60 +96,20 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
-import tuwien.auto.calimero.log.LogService.LogLevel;
+import io.calimero.gui.ConnectDialog.ConnectArguments;
+import io.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
+import io.calimero.gui.logging.LogNotifier;
+import io.calimero.gui.logging.LoggerFinder;
+import io.calimero.internal.Executor;
 
 /**
  * @author B. Malinowsky
  */
-class BaseTabLayout
+class BaseTabLayout implements LogNotifier
 {
-	private static class StreamRedirector extends PrintStream
-	{
-		StreamRedirector(final OutputStream out)
-		{
-			super(out, true);
-		}
+	private static final Map<BaseTabLayout, Level> logLevel = Collections.synchronizedMap(new WeakHashMap<>());
 
-		@Override
-		public void println(final String s)
-		{
-			print(s);
-		}
-
-		@Override
-		public void print(final String s)
-		{
-			if (s != null) {
-				logBuffer.forEach((k, v) -> { v.add(s); k.asyncAddLog(); });
-				LogTab.log(s);
-			}
-		}
-	}
-
-	static final PrintStream oldSystemErr;
-
-	static {
-		System.setProperty("org.slf4j.simpleLogger.logFile", "System.out");
-		System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "trace");
-		System.setProperty("org.slf4j.simpleLogger.showLogName", "true");
-
-		final PrintStream oldSystemOut = System.out;
-		final PrintStream redirector = new StreamRedirector(oldSystemOut);
-		System.setOut(redirector);
-
-		oldSystemErr = System.err;
-		System.setErr(new StreamRedirector(oldSystemErr));
-	}
-
-	private static Map<BaseTabLayout, java.util.List<String>> logBuffer = Collections
-			.synchronizedMap(new WeakHashMap<>());
-	private static Map<BaseTabLayout, LogLevel> logLevel = Collections.synchronizedMap(new WeakHashMap<>());
-	private static Map<BaseTabLayout, java.util.List<String>> logIncludeFilters = Collections
-			.synchronizedMap(new WeakHashMap<>());
-	private static Map<BaseTabLayout, java.util.List<String>> logExcludeFilters = Collections
-			.synchronizedMap(new WeakHashMap<>());
+	private final java.util.List<String> logBuffer = Collections.synchronizedList(new ArrayList<>());
 
 	final CTabItem tab;
 	final Composite workArea;
@@ -159,6 +125,9 @@ class BaseTabLayout
 	// debounce the menu right click on OS X
 	private static final long bounce = 50; //ms
 	private long timeLastMenu;
+
+	final DateTimeFormatter dateFormatter;
+	final DateTimeFormatter timeFormatter;
 
 	// filters for list output, column-based
 	final Map<Integer, String> includeFilter = Collections.synchronizedMap(new HashMap<>());
@@ -219,8 +188,29 @@ class BaseTabLayout
 		}));
 		initTableBottom(splitted, sash);
 		log = createLogView(splitted, sash);
-		logBuffer.put(this, Collections.synchronizedList(new ArrayList<>()));
 		workArea.layout();
+
+		DateTimeFormatter dfmt = DateTimeFormatter.ISO_LOCAL_DATE;
+		DateTimeFormatter tfmt = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
+		// check optional config file for user-specific date/time formats
+		try {
+			final Path config = Paths.get(".calimero-gui.config");
+			if (Files.exists(config)) {
+				final Map<String, String> formats = Files.lines(config).filter(s -> s.startsWith("monitor")).collect(Collectors
+						.toMap((final String s) -> s.substring(0, s.indexOf("=")), (final String s) -> s.substring(s.indexOf("=") + 1)));
+				dfmt = Optional.ofNullable(formats.get("monitor.dateFormat")).map(DateTimeFormatter::ofPattern).orElse(dfmt);
+				tfmt = Optional.ofNullable(formats.get("monitor.timeFormat")).map(DateTimeFormatter::ofPattern).orElse(tfmt);
+			}
+		}
+		catch (IOException | RuntimeException e) {
+			asyncAddLog(e);
+		}
+		dateFormatter = dfmt.withZone(ZoneId.systemDefault());
+		timeFormatter = tfmt.withZone(ZoneId.systemDefault());
+
+
+		LoggerFinder.addLogNotifier(this);
+		Executor.scheduledExecutor().schedule(() -> LoggerFinder.removeLogNotifier(this), 1, TimeUnit.SECONDS);
 	}
 
 	static Table newTable(final Composite parent, final int style, final Sash bottomSash)
@@ -255,8 +245,7 @@ class BaseTabLayout
 	 * @param parent parent composite
 	 * @param sash sash delimiter on bottom of table
 	 */
-	protected void initTableBottom(final Composite parent, final Sash sash)
-	{}
+	protected void initTableBottom(final Composite parent, final Sash sash) {}
 
 	protected void initFilterMenu()
 	{
@@ -297,12 +286,7 @@ class BaseTabLayout
 						if (e.widget == mi1)
 							includeFilter.put(col, pattern);
 						else if (e.widget == mi2) {
-							ArrayList<String> patterns = excludeFilter.get(col);
-							if (patterns == null) {
-								patterns = new ArrayList<String>();
-								excludeFilter.put(col, patterns);
-							}
-							patterns.add(pattern);
+							excludeFilter.computeIfAbsent(col, k -> new ArrayList<>()).add(pattern);
 						}
 						asyncAddLog("add filter on column " + list.getColumn(col).getText()
 								+ " for \"" + pattern + "\"");
@@ -349,8 +333,9 @@ class BaseTabLayout
 	 *
 	 * @param e dispose event
 	 */
-	protected void onDispose(final DisposeEvent e)
-	{}
+	protected void onDispose(final DisposeEvent e) {
+		LoggerFinder.removeLogNotifier(this);
+	}
 
 	/**
 	 * Sets some textual information (help) into the empty list control.
@@ -408,101 +393,97 @@ class BaseTabLayout
 	 *
 	 * @param e table selection event
 	 */
-	protected void onListItemSelected(final SelectionEvent e)
-	{}
+	protected void onListItemSelected(final SelectionEvent e) {}
 
-	protected final void setLogLevel(final LogLevel level)
+	@Override
+	public void log(final String name, final Level level, final String msg, final Throwable thrown) {
+		final String s = level + " - " + name + ": " + msg + (thrown != null ? ": " + thrown : "");
+		logBuffer.add(s);
+		asyncAddLog();
+	}
+
+	protected final void setLogLevel(final Level level)
 	{
 		logLevel.put(this, level);
 	}
 
-	protected final void addLogIncludeFilter(final String... regex)
-	{
-		logIncludeFilters.computeIfAbsent(this, k -> new ArrayList<>()).addAll(Arrays.asList(regex));
-	}
-
-	protected final void addLogExcludeFilter(final String... regex)
-	{
-		logExcludeFilters.computeIfAbsent(this, k -> new ArrayList<>()).addAll(Arrays.asList(regex));
+	protected final Level logLevel() {
+		return logLevel.getOrDefault(this, INFO);
 	}
 
 	/**
 	 * Adds a log strings of the log buffer asynchronously to the log list.
 	 */
-	private void asyncAddLog()
+	void asyncAddLog()
 	{
 		Main.asyncExec(() -> {
 			if (log.isDisposed())
 				return;
-			final java.util.List<String> buf = logBuffer.get(this);
-			final LogLevel level = logLevel.computeIfAbsent(this, k -> LogLevel.INFO);
-			final java.util.List<String> include = logIncludeFilters.getOrDefault(this, Collections.emptyList());
-			final java.util.List<String> exclude = logExcludeFilters.getOrDefault(this, Collections.emptyList());
-			if (buf != null) {
-				// we only scroll to show the newest item if the log is completely scrolled down
-				final int items = log.getItemCount();
-				final int first = log.getTopIndex();
-				final Rectangle area = log.getClientArea();
-				final int height = log.getItemHeight();
-				final int visible = (area.height + height - 1) / height;
-				final int last = first + visible;
-				final boolean atEnd = last >= items;
+			final Level level = logLevel.computeIfAbsent(this, k -> INFO);
 
-				synchronized (buf) {
-					final var entries = buf.stream().filter(s -> matches(s, level, include, exclude))
-							.map(BaseTabLayout::expandTabs).toArray(String[]::new);
-					buf.clear();
-					if (entries.length == 0)
-						return;
-					for (final String s : entries)
-						log.add(s);
-				}
-				if (log.getItemCount() > items && atEnd)
-					log.setTopIndex(log.getItemCount() - 1);
-				log.redraw();
+			// we only scroll to show the newest item if the log is completely scrolled down
+			final int items = log.getItemCount();
+			final int first = log.getTopIndex();
+			final Rectangle area = log.getClientArea();
+			final int height = log.getItemHeight();
+			final int visible = (area.height + height - 1) / height;
+			final int last = first + visible;
+			final boolean atEnd = last >= items;
+
+			synchronized (logBuffer) {
+				final var entries = logBuffer.stream().filter(s -> matches(s, level))
+						.map(BaseTabLayout::expandTabs).toArray(String[]::new);
+				logBuffer.clear();
+				if (entries.length == 0)
+					return;
+				for (final String s : entries)
+					log.add(s);
 			}
+			if (log.getItemCount() > items && atEnd)
+				log.setTopIndex(log.getItemCount() - 1);
+			log.redraw();
 		});
 	}
 
-	private static String expandTabs(final String s)
+	static String expandTabs(final String s)
 	{
 		return s.replace("\t", "    ");
 	}
 
 	@SuppressWarnings("fallthrough")
-	private static boolean matches(final String logMessage, final LogLevel level, final java.util.List<String> include,
-		final java.util.List<String> exclude)
+	private static boolean matches(final String logMessage, final Level level)
 	{
 		if (logMessage.startsWith("> "))
 			return true;
 		boolean match = false;
 		switch (level) {
+		case ALL:
+			match = true;
+			break;
 		case TRACE:
 			match = true;
 			break;
 		case DEBUG:
-			match |= logMessage.contains(LogLevel.DEBUG.name());
+			match |= logMessage.contains(Level.DEBUG.name());
 		case INFO:
-			match |= logMessage.contains(LogLevel.INFO.name());
-		case WARN:
-			match |= logMessage.contains(LogLevel.WARN.name());
+			match |= logMessage.contains(INFO.name());
+		case WARNING:
+			match |= logMessage.contains(Level.WARNING.name());
 		case ERROR:
-			match |= logMessage.contains(LogLevel.ERROR.name());
+			match |= logMessage.contains(Level.ERROR.name());
+		case OFF:
+			break;
 		}
-		if (!match)
-			return false;
+		return match;
+	}
 
-		final boolean included = include.isEmpty() || include.stream().anyMatch(logMessage::matches);
-		final boolean excluded = exclude.stream().anyMatch(logMessage::matches);
-		return included && !excluded;
+	void addToLogBuffer(final Collection<String> c) {
+		logBuffer.addAll(c);
 	}
 
 	void asyncLogAddAll(final Collection<String> c) {
-		final java.util.List<String> buf = logBuffer.get(this);
-		if (buf != null) {
-			buf.addAll(c);
-			asyncAddLog();
-		}
+		addToLogBuffer(c);
+		asyncAddLog();
 	}
 
 	/**
@@ -510,11 +491,8 @@ class BaseTabLayout
 	 */
 	protected final void asyncAddLog(final String s)
 	{
-		final java.util.List<String> buf = logBuffer.get(this);
-		if (buf != null) {
-			buf.add("> " + s);
-			asyncAddLog();
-		}
+		logBuffer.add("> " + s);
+		asyncAddLog();
 	}
 
 	/**
@@ -524,7 +502,7 @@ class BaseTabLayout
 	{
 		asyncAddLog("Error: " + t.toString());
 		final java.util.List<StackTraceElement> trace = Arrays.asList(t.getStackTrace());
-		trace.stream().filter(e -> e.getClassName().startsWith("tuwien")).limit(3).map(e -> "\t" + e).forEach(this::asyncAddLog);
+		trace.stream().filter(e -> e.getClassName().startsWith("io.calimero")).limit(3).map(e -> "\t" + e).forEach(this::asyncAddLog);
 		for (Throwable i = t; i.getCause() != null && i != i.getCause(); i = i.getCause())
 			asyncAddLog("\t" + i.getCause().toString());
 	}
@@ -716,7 +694,7 @@ class BaseTabLayout
 				if (prevFilename != null)
 					filename = prevFilename;
 				else {
-					// ISO 8601 would be yyyyMMddTHHmmss, but its not really readable.
+					// ISO 8601 would be yyyyMMddTHHmmss, but it's not really readable.
 					final String timestamp = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
 					filename = filenamePrefix + timestamp + filenameSuffix;
 				}
@@ -818,7 +796,7 @@ class BaseTabLayout
 			{
 				if ((e.stateMask == SWT.COMMAND || e.stateMask == SWT.CTRL) && e.keyCode == 'c') {
 					final String[] selection = ((List) e.widget).getSelection();
-					final String textData = Arrays.asList(selection).stream().collect(Collectors.joining("\n"));
+					final String textData = String.join("\n", selection);
 					if (textData.length() > 0) {
 						final TextTransfer textTransfer = TextTransfer.getInstance();
 						final Clipboard cb = new Clipboard(Main.display);

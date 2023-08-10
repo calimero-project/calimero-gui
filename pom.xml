@@ -2,9 +2,9 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>com.github.calimero</groupId>
+		<groupId>io.calimero</groupId>
 		<artifactId>calimero-parent-loom</artifactId>
-		<version>2.6-SNAPSHOT</version>
+		<version>3.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>calimero-gui-loom</artifactId>
 	<name>Calimero GUI (Loom)</name>
@@ -27,7 +27,7 @@
 	</developers>
 	<properties>
 		<swt.groupId>org.eclipse.platform</swt.groupId>
-		<swt.version>3.121.0</swt.version>
+		<swt.version>3.123.0</swt.version>
 	</properties>
 	<profiles>
 		<profile>
@@ -62,7 +62,7 @@
 								<argument>-XstartOnFirstThread</argument>
 								<argument>-classpath</argument>
 								<classpath />
-								<argument>tuwien.auto.calimero.gui.Main</argument>
+								<argument>io.calimero.gui.Main</argument>
 							</arguments>
 						</configuration>
 					</plugin>
@@ -127,7 +127,7 @@
 					<archive>
 						<manifest>
 							<addClasspath>true</addClasspath>
-							<mainClass>tuwien.auto.calimero.gui.Main</mainClass>
+							<mainClass>io.calimero.gui.Main</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
@@ -149,26 +149,33 @@
 					</arguments>
 					<executable>java</executable>
 					<longClasspath>true</longClasspath>
-					<mainClass>tuwien.auto.calimero.gui.Main</mainClass>
+					<mainClass>io.calimero.gui.Main</mainClass>
 				</configuration>
 			</plugin>
 		</plugins>
 	</build>
 	<dependencies>
 		<dependency>
-			<groupId>com.github.calimero</groupId>
+			<groupId>io.calimero</groupId>
 			<artifactId>calimero-core-loom</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.github.calimero</groupId>
+			<groupId>io.calimero</groupId>
 			<artifactId>calimero-tools-loom</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.github.calimero</groupId>
+			<groupId>io.calimero</groupId>
 			<artifactId>calimero-rxtx</artifactId>
 			<version>${project.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.calimero</groupId>
+			<artifactId>calimero-usb</artifactId>
+			<version>${project.version}</version>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>${swt.groupId}</groupId>
@@ -183,23 +190,9 @@
 			</exclusions>
 		</dependency>
 		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-simple</artifactId>
-			<version>${slf4j.version}</version>
-			<scope>runtime</scope>
+			<groupId>org.usb4java</groupId>
+			<artifactId>usb4java-javax</artifactId>
+			<version>1.3.0</version>
 		</dependency>
 	</dependencies>
-	<repositories>
-		<repository>
-			<id>snapshots</id>
-			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>daily</updatePolicy>
-			</snapshots>
-		</repository>
-	</repositories>
 </project>

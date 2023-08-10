@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2015, 2022 B. Malinowsky
+    Copyright (c) 2015, 2023 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
+package io.calimero.gui;
 
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -45,8 +45,10 @@ import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -94,27 +96,25 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 
-import tuwien.auto.calimero.DataUnitBuilder;
-import tuwien.auto.calimero.IndividualAddress;
-import tuwien.auto.calimero.KNXException;
-import tuwien.auto.calimero.KNXTimeoutException;
-import tuwien.auto.calimero.dptxlator.DPT;
-import tuwien.auto.calimero.dptxlator.DPTXlator;
-import tuwien.auto.calimero.dptxlator.PropertyTypes;
-import tuwien.auto.calimero.dptxlator.TranslatorTypes;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
-import tuwien.auto.calimero.internal.Executor;
-import tuwien.auto.calimero.knxnetip.SecureConnection;
-import tuwien.auto.calimero.link.KNXNetworkLink;
-import tuwien.auto.calimero.mgmt.Description;
-import tuwien.auto.calimero.mgmt.Destination;
-import tuwien.auto.calimero.mgmt.ManagementClientImpl;
-import tuwien.auto.calimero.mgmt.PropertyClient;
-import tuwien.auto.calimero.mgmt.PropertyClient.PropertyKey;
-import tuwien.auto.calimero.tools.Property;
-import tuwien.auto.calimero.xml.KNXMLException;
-import tuwien.auto.calimero.xml.XmlInputFactory;
-import tuwien.auto.calimero.xml.XmlReader;
+import io.calimero.IndividualAddress;
+import io.calimero.KNXException;
+import io.calimero.KNXTimeoutException;
+import io.calimero.Settings;
+import io.calimero.dptxlator.DPT;
+import io.calimero.dptxlator.DPTXlator;
+import io.calimero.dptxlator.PropertyTypes;
+import io.calimero.dptxlator.TranslatorTypes;
+import io.calimero.gui.ConnectDialog.ConnectArguments;
+import io.calimero.knxnetip.SecureConnection;
+import io.calimero.link.KNXNetworkLink;
+import io.calimero.mgmt.Description;
+import io.calimero.mgmt.Destination;
+import io.calimero.mgmt.ManagementClientImpl;
+import io.calimero.mgmt.PropertyClient;
+import io.calimero.mgmt.PropertyClient.PropertyKey;
+import io.calimero.tools.Property;
+import io.calimero.xml.XmlInputFactory;
+import io.calimero.xml.XmlReader;
 
 /**
  * @author B. Malinowsky
@@ -129,7 +129,19 @@ class PropertyEditorTab extends BaseTabLayout
 		Count, Pid, Description, Values, RawValues, Elements, AccessLevel, Name,
 	}
 
-	private static final List<PropertyClient.Property> definitions = new ArrayList<>();
+	private static final Collection<PropertyClient.Property> definitions;
+	static {
+		Collection<PropertyClient.Property> c = List.of();
+		try (InputStream is = Settings.class.getResourceAsStream("/properties.xml");
+				XmlReader r = XmlInputFactory.newInstance().createXMLStreamReader(is)) {
+			c = new PropertyClient.XmlPropertyDefinitions().load(r);
+		}
+		catch (final IOException | RuntimeException e) {
+			e.printStackTrace();
+		}
+		definitions = c;
+	}
+
 	private static final Map<PropertyKey, PropertyClient.Property> map = new HashMap<>();
 	private static final PropertyClient.Property unknown = new PropertyClient.Property(-1, "[Unknown Property]", "n/a",
 			-1, -1, null);
@@ -160,9 +172,6 @@ class PropertyEditorTab extends BaseTabLayout
 	private static final String showTree = "Use tree view for interface objects and properties";
 	private static final String hideTree = "Use table view for interface objects and properties";
 
-	static {
-		loadDefinitions();
-	}
 
 	PropertyEditorTab(final CTabFolder tf, final ConnectArguments args)
 	{
@@ -206,7 +215,7 @@ class PropertyEditorTab extends BaseTabLayout
 		addTreeView();
 		addTableEditor(list);
 
-		final Listener paintListener = (e) -> onItemPaint(e);
+		final Listener paintListener = this::onItemPaint;
 		list.addListener(SWT.MeasureItem, paintListener);
 		list.addListener(SWT.PaintItem, paintListener);
 
@@ -329,7 +338,7 @@ class PropertyEditorTab extends BaseTabLayout
 
 		tree.addSelectionListener(adapt(this::updateDetailPane));
 
-		sashForm.setWeights(new int[] { 1, 4, 4 });
+		sashForm.setWeights(1, 4, 4);
 	}
 
 	private void addTreeViewOption()
@@ -622,7 +631,7 @@ class PropertyEditorTab extends BaseTabLayout
 
 		final String value = formatted(d.getObjectType(), d.getPID(), values.getOrDefault(d, ""));
 		final List<byte[]> raw = rawValues.getOrDefault(d, Collections.emptyList());
-		final String rawText = raw.stream().map(bytes -> DataUnitBuilder.toHex(bytes, "")).collect(joining(", "));
+		final String rawText = raw.stream().map(bytes -> HexFormat.of().formatHex(bytes)).collect(joining(", "));
 		final String[] item = { "" + count++, "" + d.getPID(), desc, value, rawText, "" + d.getCurrentElements(), rw,
 			name };
 		asyncAddListItem(item, keys, data);
@@ -647,10 +656,9 @@ class PropertyEditorTab extends BaseTabLayout
 		final int elements;
 		// special case for KNXnet/IP friendly name: 30 chars
 		if (p.getObjectType() == 11 && pid == 76) {
-			byte[] bytes = new byte[0];
-			bytes = values.getBytes(StandardCharsets.ISO_8859_1);
+			final byte[] bytes = values.getBytes(StandardCharsets.ISO_8859_1);
 			final byte[] array = Arrays.copyOf(bytes, 30);
-			data = "0x" + DataUnitBuilder.toHex(array, "");
+			data = "0x" + HexFormat.of().formatHex(array);
 			elements = array.length;
 		}
 		else {
@@ -700,7 +708,7 @@ class PropertyEditorTab extends BaseTabLayout
 	private static String altFormatted(final String input, final String onError)
 	{
 		try {
-			final List<BigInteger> values = Arrays.asList(input.split(", ")).stream().map(s -> new BigInteger(s))
+			final List<BigInteger> values = Arrays.stream(input.split(", ")).map(BigInteger::new)
 					.collect(toList());
 			return altFormatted(values);
 		}
@@ -786,28 +794,24 @@ class PropertyEditorTab extends BaseTabLayout
 				final int column = Columns.Values.ordinal();
 				final Text text = new Text(table, SWT.NONE);
 				@SuppressWarnings("fallthrough")
-				final Listener textListener = new Listener() {
-					@Override
-					public void handleEvent(final Event e)
-					{
-						if (e.type == SWT.FocusOut) {
-							item.setText(column, text.getText());
+				final Listener textListener = e -> {
+					if (e.type == SWT.FocusOut) {
+						item.setText(column, text.getText());
+						text.dispose();
+					}
+					else if (e.type == SWT.Traverse) {
+						switch (e.detail) {
+						case SWT.TRAVERSE_RETURN:
+							final int objectIndex = Integer.parseInt((String) item.getData(ObjectIndex));
+							final int objectType = Integer.parseInt((String) item.getData(ObjectType));
+							final int pid = Integer.parseInt(item.getText(Columns.Pid.ordinal()));
+							final var definition = getDefinition(objectType, pid).orElse(unknown);
+							writeValues(objectIndex, pid, text.getText(), -1, definition);
+							// fall through
+						case SWT.TRAVERSE_ESCAPE:
 							text.dispose();
-						}
-						else if (e.type == SWT.Traverse) {
-							switch (e.detail) {
-							case SWT.TRAVERSE_RETURN:
-								final int objectIndex = Integer.parseInt((String) item.getData(ObjectIndex));
-								final int objectType = Integer.parseInt((String) item.getData(ObjectType));
-								final int pid = Integer.parseInt(item.getText(Columns.Pid.ordinal()));
-								final var definition = getDefinition(objectType, pid).orElse(unknown);
-								writeValues(objectIndex, pid, text.getText(), -1, definition);
-								// fall through
-							case SWT.TRAVERSE_ESCAPE:
-								text.dispose();
-								e.doit = false;
-							default: // nop
-							}
+							e.doit = false;
+						default: // nop
 						}
 					}
 				};
@@ -822,7 +826,7 @@ class PropertyEditorTab extends BaseTabLayout
 				updateDptBounds((String) item.getData(ObjectType), item.getText(Columns.Pid.ordinal()));
 				return;
 			}
-			if (!visible && rect.intersects(clientArea))
+			if (rect.intersects(clientArea))
 				visible = true;
 			if (!visible)
 				return;
@@ -863,17 +867,6 @@ class PropertyEditorTab extends BaseTabLayout
 	private void noDptBounds() {
 		bounds.add("n/a");
 		bounds.select(0);
-	}
-
-	private static void loadDefinitions()
-	{
-		try (InputStream is = PropertyEditorTab.class.getResourceAsStream("/properties.xml");
-				XmlReader r = XmlInputFactory.newInstance().createXMLStreamReader(is)) {
-			definitions.addAll(new PropertyClient.XmlPropertyDefinitions().load(r));
-		}
-		catch (final IOException | KNXMLException e) {
-			e.printStackTrace();
-		}
 	}
 
 	private static Optional<PropertyClient.Property> getDefinition(final int objType, final int pid)
@@ -925,7 +918,7 @@ class PropertyEditorTab extends BaseTabLayout
 
 			toolThread.interrupt();
 			joinUninterruptibly(toolThread);
-			runProperties(Arrays.asList("reset"), false);
+			runProperties(List.of("reset"), false);
 			// TODO after M_Reset.req, we need to wait for reset to complete and restart our property tool
 			return;
 		}
@@ -959,20 +952,12 @@ class PropertyEditorTab extends BaseTabLayout
 		dlg.setText(title);
 		dlg.setMessage(msg);
 		final int id = dlg.open();
-		final String response;
-		switch (id) {
-		case SWT.YES:
-			response = "yes";
-			break;
-		case SWT.NO:
-			response = "no";
-			break;
-		case SWT.CANCEL:
-			response = "canceled";
-			break;
-		default:
-			response = "button " + id;
-		}
+		final String response = switch (id) {
+			case SWT.YES -> "yes";
+			case SWT.NO -> "no";
+			case SWT.CANCEL -> "canceled";
+			default -> "button " + id;
+		};
 		asyncAddLog(title + ": " + response);
 		return id;
 	}
@@ -997,13 +982,13 @@ class PropertyEditorTab extends BaseTabLayout
 	private void runProperties(final List<String> cmd, final boolean init)
 	{
 		// setup tool argument array
-		final List<String> args = new ArrayList<String>();
+		final List<String> args = new ArrayList<>();
 		args.addAll(connect.getArgs(true));
 		args.addAll(cmd);
 		setHeaderInfo(statusInfo(0));
 
 		// ensure user 1 if we're using local device management
-		if (args.indexOf("-r") == -1) {
+		if (!args.contains("-r")) {
 			final int userIdx = args.indexOf("--user");
 			if (userIdx != -1 && !"1".equals(args.get(userIdx + 1))) {
 				args.set(userIdx + 1, "1");
@@ -1011,7 +996,7 @@ class PropertyEditorTab extends BaseTabLayout
 				int userIndex = args.indexOf("--user-pwd");
 				if (userIndex == -1) {
 					userIndex = args.indexOf("--user-key");
-					userPwd = DataUnitBuilder.toHex(SecureConnection.hashUserPassword(userPwd.toCharArray()), "");
+					userPwd = HexFormat.of().formatHex(SecureConnection.hashUserPassword(userPwd.toCharArray()));
 				}
 				if (userIndex != -1)
 					args.set(userIndex + 1, userPwd);
@@ -1022,7 +1007,7 @@ class PropertyEditorTab extends BaseTabLayout
 
 		final Runnable task = () -> {
 			try {
-				final Property tool = new Property(args.toArray(new String[args.size()])) {
+				final Property tool = new Property(args.toArray(new String[0])) {
 					@Override
 					protected void runCommand(final String... cmd) throws InterruptedException {
 						toolLink = link();
@@ -1081,26 +1066,27 @@ class PropertyEditorTab extends BaseTabLayout
 						addPropertyToTree(d.getObjectType(), d.getPID());
 					}
 
-					@Override
-					protected void onPropertyValue(final int idx, final int pid, final String value,
-						final List<byte[]> raw) {
-						final Description d = findDescription(idx, pid);
-						values.put(d, value);
-						rawValues.put(d, raw);
-						Main.asyncExec(() -> {
-							if (editArea.isDisposed())
-								return;
-							final String rawText = raw.stream().map(data -> DataUnitBuilder.toHex(data, ""))
-									.collect(joining(", "));
-							find(idx, pid).ifPresent(i -> i.setText(Columns.RawValues.ordinal(), rawText));
-							final String text = formatted(d.getObjectType(), pid, value);
-							find(idx, pid).ifPresent(i -> i.setText(Columns.Values.ordinal(), text));
-							findPropertyPageControl(idx, pid, "property-edit-field")
-									.ifPresent(c -> ((Text) c).setText(text));
-							findPropertyPageControl(idx, pid, "property-alt-formatted")
-									.ifPresent(c -> ((Text) c).setText(altFormatted(value, ((Text) c).getText())));
-						});
-					}
+						@Override
+						protected void onPropertyValue(final int idx, final int pid, final String value,
+							final List<byte[]> raw)
+						{
+							final Description d = findDescription(idx, pid);
+							values.put(d, value);
+							rawValues.put(d, raw);
+							Main.asyncExec(() -> {
+								if (editArea.isDisposed())
+									return;
+								final String rawText = raw.stream().map(data -> HexFormat.of().formatHex(data))
+										.collect(joining(", "));
+								find(idx, pid).ifPresent(i -> i.setText(Columns.RawValues.ordinal(), rawText));
+								final String text = formatted(d.getObjectType(), pid, value);
+								find(idx, pid).ifPresent(i -> i.setText(Columns.Values.ordinal(), text));
+								findPropertyPageControl(idx, pid, "property-edit-field")
+										.ifPresent(c -> ((Text) c).setText(text));
+								findPropertyPageControl(idx, pid, "property-alt-formatted")
+										.ifPresent(c -> ((Text) c).setText(altFormatted(value, ((Text) c).getText())));
+							});
+						}
 
 					@Override
 					protected void onCompletion(final Exception thrown, final boolean canceled) {

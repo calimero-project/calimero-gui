@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2021 B. Malinowsky
+    Copyright (c) 2006, 2023 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
+package io.calimero.gui;
 
 import java.util.Locale;
 import java.util.Map;
@@ -60,11 +60,11 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 
-import tuwien.auto.calimero.GroupAddress;
-import tuwien.auto.calimero.GroupAddress.Presentation;
-import tuwien.auto.calimero.SerialNumber;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
+import io.calimero.GroupAddress;
+import io.calimero.GroupAddress.Presentation;
+import io.calimero.SerialNumber;
+import io.calimero.gui.ConnectDialog.ConnectArguments;
+import io.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 
 /**
  * @author B. Malinowsky
@@ -146,6 +146,8 @@ public class Main
 				new Color[] { display.getSystemColor(SWT.COLOR_WHITE),
 					display.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND), }, new int[] { 75 }, true);
 
+		LogTab.initLogging();
+
 		discoverTab = new DiscoverTab(tf);
 		shell.pack();
 		shell.setSize(shell.getSize().x + 150, shell.getSize().y + 100);
@@ -169,12 +171,12 @@ public class Main
 	{
 		// use current system theme on macOS, i.e., light/dark appearance
 		System.setProperty("org.eclipse.swt.display.useSystemTheme", "true");
-		display = new Display();
 		try {
+			display = new Display();
 			shell = new Shell(display);
 			final FontData[] fontData = shell.getFont().getFontData();
 			final String os = System.getProperty("os.name", "generic").toLowerCase(Locale.ENGLISH);
-			if (os.indexOf("windows") == -1) {
+			if (!os.contains("windows")) {
 				int height = fontData[0].getHeight();
 				height -= (int) (0.15 * height);
 				fontData[0].setHeight(height);
@@ -183,11 +185,11 @@ public class Main
 			new Main();
 		}
 		catch (final Throwable e) {
-			System.setErr(BaseTabLayout.oldSystemErr);
+			System.setErr(LogTab.oldSystemErr);
 			e.printStackTrace();
 		}
 		finally {
-			System.setErr(BaseTabLayout.oldSystemErr);
+			System.setErr(LogTab.oldSystemErr);
 			display.dispose();
 		}
 	}
@@ -212,13 +214,14 @@ public class Main
 		addToolbarLabel(functions, "Device Address:");
 		address = new Text(functions, SWT.CENTER);
 		address.setMessage("area.line.dev");
-		address.setToolTipText("Specify device address for\n"
-				+ "  \u2022 reading remote device info\n"
-				+ "  \u2022 opening remote property/memory editor\n"
-				+ "Scan devices:\n"
-				+ "  \u2022 specify area for scanning an area\n"
-				+ "  \u2022 specify area.line for scanning a line\n"
-				+ "  \u2022 specify area.line.device to scan a single device");
+		address.setToolTipText("""
+				Specify device address for
+				  • reading remote device info
+				  • opening remote property/memory editor
+				Scan devices:
+				  • specify area for scanning an area
+				  • specify area.line for scanning a line
+				  • specify area.line.device to scan a single device""");
 		address.setText("XXX.XXX.XXX");
 		final ToolItem item = addNonToolItem(functions, address);
 		item.setWidth(address.computeSize(SWT.DEFAULT, SWT.DEFAULT, true).x);

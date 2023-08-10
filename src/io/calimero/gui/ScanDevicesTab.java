@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2015, 2022 B. Malinowsky
+    Copyright (c) 2015, 2023 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
+package io.calimero.gui;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,12 +49,11 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
-import tuwien.auto.calimero.DeviceDescriptor.DD0;
-import tuwien.auto.calimero.IndividualAddress;
-import tuwien.auto.calimero.KNXIllegalArgumentException;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
-import tuwien.auto.calimero.internal.Executor;
-import tuwien.auto.calimero.tools.ScanDevices;
+import io.calimero.DeviceDescriptor.DD0;
+import io.calimero.IndividualAddress;
+import io.calimero.KNXIllegalArgumentException;
+import io.calimero.gui.ConnectDialog.ConnectArguments;
+import io.calimero.tools.ScanDevices;
 
 /**
  * @author B. Malinowsky
@@ -121,8 +120,7 @@ class ScanDevicesTab extends BaseTabLayout
 
 	private void scanDevices()
 	{
-		final List<String> args = new ArrayList<String>();
-		args.addAll(connect.getArgs(false));
+		final List<String> args = new ArrayList<>(connect.getArgs(false));
 		asyncAddLog("Using command line: " + String.join(" ", args));
 
 		try {

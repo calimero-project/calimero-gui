@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2022 B. Malinowsky
+    Copyright (c) 2006, 2023 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,44 +34,36 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
+package io.calimero.gui;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Map;
-import java.util.Optional;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import java.util.HexFormat;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.widgets.TableColumn;
 
-import tuwien.auto.calimero.DataUnitBuilder;
-import tuwien.auto.calimero.FrameEvent;
-import tuwien.auto.calimero.GroupAddress;
-import tuwien.auto.calimero.KNXException;
-import tuwien.auto.calimero.KNXIllegalArgumentException;
-import tuwien.auto.calimero.cemi.CEMIBusMon;
-import tuwien.auto.calimero.datapoint.DatapointMap;
-import tuwien.auto.calimero.dptxlator.TranslatorTypes;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
-import tuwien.auto.calimero.internal.Executor;
-import tuwien.auto.calimero.link.MonitorFrameEvent;
-import tuwien.auto.calimero.link.medium.RFLData;
-import tuwien.auto.calimero.link.medium.RawFrame;
-import tuwien.auto.calimero.link.medium.RawFrameBase;
-import tuwien.auto.calimero.tools.NetworkMonitor;
-import tuwien.auto.calimero.xml.KNXMLException;
-import tuwien.auto.calimero.xml.XmlInputFactory;
-import tuwien.auto.calimero.xml.XmlReader;
+import io.calimero.DataUnitBuilder;
+import io.calimero.FrameEvent;
+import io.calimero.GroupAddress;
+import io.calimero.KNXException;
+import io.calimero.KNXIllegalArgumentException;
+import io.calimero.cemi.CEMIBusMon;
+import io.calimero.datapoint.DatapointMap;
+import io.calimero.dptxlator.TranslatorTypes;
+import io.calimero.gui.ConnectDialog.ConnectArguments;
+import io.calimero.link.MonitorFrameEvent;
+import io.calimero.link.medium.RFLData;
+import io.calimero.link.medium.RawFrame;
+import io.calimero.link.medium.RawFrameBase;
+import io.calimero.tools.NetworkMonitor;
+import io.calimero.xml.KNXMLException;
+import io.calimero.xml.XmlInputFactory;
+import io.calimero.xml.XmlReader;
 
 /**
  * @author B. Malinowsky
@@ -83,10 +75,8 @@ class MonitorTab extends BaseTabLayout
 	private long eventCounterFiltered = 1;
 	private final ConnectArguments connect;
 
-	private final DateTimeFormatter dateFormatter;
-	private final DateTimeFormatter timeFormatter;
-
 	private final DatapointMap<?> datapoints = new DatapointMap<>();
+
 
 	MonitorTab(final CTabFolder tf, final ConnectArguments args)
 	{
@@ -129,28 +119,6 @@ class MonitorTab extends BaseTabLayout
 
 		enableColumnAdjusting();
 
-		final String filter = args.remote == null ? args.port : args.remote;
-		addLogIncludeFilter(".*" + Pattern.quote(filter) + ".*");
-		addLogExcludeFilter(".*Discoverer.*", ".*DevMgmt.*", ".*calimero\\.mgmt\\..*");
-
-		DateTimeFormatter dfmt = DateTimeFormatter.ISO_LOCAL_DATE;
-		DateTimeFormatter tfmt = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
-		// check optional config file for user-specific date/time formats
-		try {
-			final Path config = Paths.get(".calimero-gui.config");
-			if (Files.exists(config)) {
-				final Map<String, String> formats = Files.lines(config).filter(s -> s.startsWith("monitor")).collect(Collectors
-						.toMap((final String s) -> s.substring(0, s.indexOf("=")), (final String s) -> s.substring(s.indexOf("=") + 1)));
-				dfmt = Optional.ofNullable(formats.get("monitor.dateFormat")).map(DateTimeFormatter::ofPattern).orElse(dfmt);
-				tfmt = Optional.ofNullable(formats.get("monitor.timeFormat")).map(DateTimeFormatter::ofPattern).orElse(tfmt);
-			}
-		}
-		catch (IOException | RuntimeException e) {
-			asyncAddLog(e);
-		}
-		dateFormatter = dfmt.withZone(ZoneId.systemDefault());
-		timeFormatter = tfmt.withZone(ZoneId.systemDefault());
-
 		initFilterMenu();
 		final String filename = defaultDatapointsFilename();
 		if (Files.isReadable(Path.of(filename)))
@@ -160,8 +128,7 @@ class MonitorTab extends BaseTabLayout
 
 	private void startMonitor()
 	{
-		final java.util.List<String> args = new ArrayList<String>();
-		args.addAll(connect.getArgs(true));
+		final java.util.List<String> args = new ArrayList<>(connect.getArgs(true));
 		asyncAddLog("Using command line: " + String.join(" ", args));
 
 		final class Monitor extends NetworkMonitor
@@ -189,7 +156,7 @@ class MonitorTab extends BaseTabLayout
 			@Override
 			public void onIndication(final FrameEvent e)
 			{
-				final java.util.List<String> item = new ArrayList<String>();
+				final java.util.List<String> item = new ArrayList<>();
 				// monitor event counters
 				item.add(Long.toString(++eventCounter));
 				item.add(Long.toString(eventCounterFiltered));
@@ -210,13 +177,12 @@ class MonitorTab extends BaseTabLayout
 				if (raw != null) {
 					// decoded raw frame
 					item.add(raw.toString());
-					if (raw instanceof RawFrameBase) {
-						final RawFrameBase f = (RawFrameBase) raw;
+					if (raw instanceof final RawFrameBase f) {
 						// tpci, apci
 						item.add(DataUnitBuilder.decode(f.getTPDU(), f.getDestination()));
 						// asdu
 						final byte[] asdu = DataUnitBuilder.extractASDU(f.getTPDU());
-						item.add(DataUnitBuilder.toHex(asdu, " "));
+						item.add(HexFormat.ofDelimiter(" ").formatHex(asdu));
 
 						// let's see if we can decode a group-addressed asdu based on datapoint information
 						final var dst = f.getDestination();
@@ -229,8 +195,7 @@ class MonitorTab extends BaseTabLayout
 							catch (KNXIllegalArgumentException | KNXException ignore) {}
 						}
 					}
-					else if (raw instanceof RFLData) {
-						final RFLData rf = (RFLData) raw;
+					else if (raw instanceof final RFLData rf) {
 						try {
 							final String bibat = NetworkMonitor.decodeBibat(rf);
 							if (!bibat.isEmpty()) {

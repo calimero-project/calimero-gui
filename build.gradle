@@ -1,30 +1,29 @@
 plugins {
-  id "com.github.ben-manes.versions" version "0.42.0"
+  id "com.github.ben-manes.versions" version "0.46.0"
+  id 'java'
+  id 'application'
   id 'maven-publish'
   id 'signing'
+  id 'eclipse'
 }
 
 repositories {
     mavenLocal()
     mavenCentral()
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+    maven { url 'https://s01.oss.sonatype.org/content/repositories/snapshots' }
 }
 
-apply plugin:'java'
-apply plugin:'application'
-apply plugin:'com.github.ben-manes.versions'
-apply plugin:'eclipse'
-
-group = 'com.github.calimero'
-version = '2.6-SNAPSHOT'
+group = 'io.calimero'
+version = '3.0-SNAPSHOT'
 
 def date() {
     new Date().format('yyyyMMdd')
 }
 
 def buildClassifier = date()
-distZip.classifier = buildClassifier
-distTar.classifier = buildClassifier
+distZip.archiveClassifier = buildClassifier
+distTar.archiveClassifier = buildClassifier
 
 sourceCompatibility = 19
 targetCompatibility = 19
@@ -34,17 +33,25 @@ compileTestJava.options.encoding = 'UTF-8'
 javadoc.options.encoding = 'UTF-8'
 
 
-mainClassName = 'tuwien.auto.calimero.gui.SwtChecker'
+application {
+    mainModule = 'io.calimero.gui' 
+    mainClass = 'io.calimero.gui.SwtChecker'
+}
 
 // SWT is platform dependent
 def swtGroupId = 'org.eclipse.platform'
-def swtVersion = '3.121.0'
+def swtVersion = '3.123.0'
 def swtArtifact = 'org.eclipse.swt.'
 
-def os = System.getProperty("os.name").toLowerCase()
-if (os.contains("windows")) { swtArtifact += 'win32.win32.x86_64' }
-else if (os.contains("linux")) { swtArtifact += 'gtk.linux.x86_64' }
-else if (os.contains("mac")) { swtArtifact += 'cocoa.macosx.x86_64' }
+def os = System.getProperty("os.name").toLowerCase(Locale.ENGLISH)
+if (os.contains("windows")) { swtArtifact += 'win32.win32.' }
+else if (os.contains("linux")) { swtArtifact += 'gtk.linux.' }
+else if (os.contains("mac")) { swtArtifact += 'cocoa.macosx.' }
+
+def arch = System.getProperty("os.arch")
+if (arch == "aarch64") { swtArtifact += 'aarch64' }
+else if (arch == "amd64" || arch == "x86_64") { swtArtifact += 'x86_64' }
+else { swtArtifact += 'x86' }
 
 
 sourceSets {
@@ -59,43 +66,55 @@ tasks.withType(JavaExec) { jvmArgs += "--enable-preview" }
 compileJava.options*.compilerArgs = [
     '-Xlint:all',
 //    '-Werror'
-    '--enable-preview',
+    "--add-reads", "io.calimero.gui=ALL-UNNAMED" // usb4java-javax
 ]
+
+tasks.named('compileJava') {
+    options.javaModuleVersion = provider { project.version }
+}
 
 configurations {
     provided
     compile.extendsFrom provided    
 }
 
-configurations.all {
+configurations.configureEach {
     resolutionStrategy {
         dependencySubstitution {
-            substitute module('org.eclipse.platform:org.eclipse.swt.${osgi.platform}') with module("${swtGroupId}:${swtArtifact}:${swtVersion}")
+            substitute module('org.eclipse.platform:org.eclipse.swt.${osgi.platform}') using module("${swtGroupId}:${swtArtifact}:${swtVersion}")
         }
     }
 }
 
 dependencies {
-    implementation "com.github.calimero:calimero-core-loom:${version}"
-    implementation "com.github.calimero:calimero-tools-loom:${version}"
+    implementation "io.calimero:calimero-core-loom:${version}"
+    implementation "io.calimero:calimero-tools-loom:${version}"
+    runtimeOnly("io.calimero:calimero-tools-loom:${version}") {
+        capabilities {
+           requireCapability("io.calimero:calimero-tools-serial")
+        }
+    }
+    runtimeOnly("io.calimero:calimero-tools-loom:${version}") {
+        capabilities {
+           requireCapability("io.calimero:calimero-tools-usb")
+        }
+    }
     implementation "${swtGroupId}:${swtArtifact}:${swtVersion}"
-    runtimeOnly "com.github.calimero:calimero-rxtx:${version}"
-    implementation 'org.slf4j:slf4j-api:1.7.36'
-    runtimeOnly 'org.slf4j:slf4j-simple:1.7.36'
+    implementation 'org.usb4java:usb4java-javax:1.3.0'
 }
 
 java {
     withSourcesJar()
 }
 
-tasks.withType(Jar) {
-	from("${projectDir}") {
+tasks.withType(Jar).configureEach {
+    from("${projectDir}") {
         include 'LICENSE.txt'
         into "META-INF"
     }
     if (name.equals('sourcesJar')) {
-    	from("${projectDir}") {
-		    include 'README.md'
+        from("${projectDir}") {
+            include 'README.md'
         }
     }
 }
@@ -105,7 +124,7 @@ jar {
   manifest {
     attributes(
       'Class-Path': (configurations.runtimeClasspath - configurations.provided + files('swt.jar')).collect { it.getName() }.join(' '),
-      'Main-Class': mainClassName
+      'Main-Class': application.mainClass
     )
   }
 }
@@ -123,15 +142,28 @@ distributions {
     }
 }
 
+def addReads = [ '--add-reads', 'io.calimero.gui=ALL-UNNAMED', // usb4java
+                 '--add-reads', 'io.calimero.core=io.calimero.tools', // @LinkEvent
+                 '--add-reads', 'io.calimero.serial.provider.rxtx=ALL-UNNAMED',
+                 '--add-reads', 'io.calimero.usb.provider.javax=ALL-UNNAMED' ]
+
 startScripts {
+    defaultJvmOpts = addReads
     doLast {
         // on OS X, SWT needs to run on first thread
-        unixScript.text = unixScript.text.replace('DEFAULT_JVM_OPTS=""', 
-            'DEFAULT_JVM_OPTS=""\n' +
+        unixScript.text = unixScript.text.replace('DEFAULT_JVM_OPTS=\'', 
+            'MACOS_JVM_OPTS=""\n' +
             'if [ "`uname`" = Darwin ] ; then\n' +
-            '    DEFAULT_JVM_OPTS="-XstartOnFirstThread"\n' +
-            'fi')
+            '    MACOS_JVM_OPTS="-XstartOnFirstThread"\n' +
+            'fi\n' +
+            'DEFAULT_JVM_OPTS="${MACOS_JVM_OPTS}"\' ')
+        // add dependency on downloaded swt.jar (adding files('swt.jar') to classpath doesn't work)
+        unixScript.text = unixScript.text.replace('MODULE_PATH=$APP_HOME', 'MODULE_PATH=$APP_HOME/lib/swt.jar:$APP_HOME')
     }
+}
+
+tasks.withType(JavaExec).configureEach {
+    jvmArgs += addReads
 }
 
 run {
@@ -163,7 +195,7 @@ publishing {
                     }
                 }
                 scm {
-                    connection = 'scm:git:git://github.com:calimero-project/calimero-gui.git'
+                    connection = 'scm:git:git://github.com/calimero-project/calimero-gui.git'
                     url = 'https://github.com/calimero-project/calimero-gui.git'
                 }
             }
@@ -172,8 +204,8 @@ publishing {
     repositories {
         maven {
             name 'maven'
-            def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-            def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+            def releasesRepoUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2"
+            def snapshotsRepoUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots"
             url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
             credentials(PasswordCredentials)
         }

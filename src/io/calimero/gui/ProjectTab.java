@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2019, 2020 B. Malinowsky
+    Copyright (c) 2019, 2023 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
+package io.calimero.gui;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -62,9 +62,9 @@ import org.eclipse.swt.widgets.Sash;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
-import tuwien.auto.calimero.KNXFormatException;
-import tuwien.auto.calimero.tools.KnxProject;
-import tuwien.auto.calimero.xml.XmlOutputFactory;
+import io.calimero.KNXFormatException;
+import io.calimero.tools.KnxProject;
+import io.calimero.xml.XmlOutputFactory;
 
 class ProjectTab extends BaseTabLayout {
 	private static List<Path> projects;
@@ -144,7 +144,7 @@ class ProjectTab extends BaseTabLayout {
 
 		((GridLayout) top.getLayout()).numColumns = 3;
 		((GridLayout) top.getLayout()).makeColumnsEqualWidth = false;
-		((GridLayout) top.getLayout()).horizontalSpacing = 1 * ((GridLayout) top.getLayout()).horizontalSpacing;
+		((GridLayout) top.getLayout()).horizontalSpacing = ((GridLayout) top.getLayout()).horizontalSpacing;
 
 		final var open = new Button(top, SWT.NONE);
 		open.setText("Add project ...");
@@ -197,8 +197,7 @@ class ProjectTab extends BaseTabLayout {
 	}
 
 	private void dataDropped(final DropTargetEvent event) {
-		if (isSupportedType(event) && event.data instanceof String[]) {
-			final String[] paths = (String[]) event.data;
+		if (isSupportedType(event) && event.data instanceof final String[] paths) {
 			for (final String path : paths) {
 				if (path.endsWith(".knxproj"))
 					addProject(Path.of(path));

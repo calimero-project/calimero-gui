@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2022 B. Malinowsky
+    Copyright (c) 2006, 2023 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,13 +34,12 @@
     version.
 */
 
-package tuwien.auto.calimero.gui;
+package io.calimero.gui;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.TreeSet;
-import java.util.regex.Pattern;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -48,11 +47,10 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
-import tuwien.auto.calimero.IndividualAddress;
-import tuwien.auto.calimero.KNXIllegalArgumentException;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
-import tuwien.auto.calimero.internal.Executor;
-import tuwien.auto.calimero.tools.ProgMode;
+import io.calimero.IndividualAddress;
+import io.calimero.KNXIllegalArgumentException;
+import io.calimero.gui.ConnectDialog.ConnectArguments;
+import io.calimero.tools.ProgMode;
 
 /**
  * Lists the KNX devices currently in programming mode.
@@ -72,11 +70,6 @@ class ProgmodeTab extends BaseTabLayout
 		device.setWidth(100);
 		enableColumnAdjusting();
 
-		final String filter = args.remote == null ? args.port : args.remote;
-		addLogIncludeFilter(".*" + Pattern.quote(filter) + ".*", ".*calimero\\.mgmt\\.MgmtProc.*",
-				".*calimero\\.mgmt\\.MC.*", ".*calimero\\.tools.*");
-		addLogExcludeFilter(".*Discoverer.*");
-
 		runProgmode();
 	}
 
@@ -89,8 +82,7 @@ class ProgmodeTab extends BaseTabLayout
 
 	private void runProgmode()
 	{
-		final List<String> args = new ArrayList<String>();
-		args.addAll(connect.getArgs(true));
+		final List<String> args = new ArrayList<>(connect.getArgs(true));
 		asyncAddLog("Using command line: " + String.join(" ", args));
 
 		try {
