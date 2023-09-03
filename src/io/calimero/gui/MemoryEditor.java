@@ -95,6 +95,7 @@ import io.calimero.KNXIllegalArgumentException;
 import io.calimero.KNXTimeoutException;
 import io.calimero.gui.ConnectDialog.ConnectArguments;
 import io.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
+import io.calimero.internal.Executor;
 import io.calimero.link.KNXNetworkLink;
 import io.calimero.link.KNXNetworkLinkFT12;
 import io.calimero.link.KNXNetworkLinkIP;

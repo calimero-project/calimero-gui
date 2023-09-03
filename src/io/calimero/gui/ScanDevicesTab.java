@@ -53,6 +53,7 @@ import io.calimero.DeviceDescriptor.DD0;
 import io.calimero.IndividualAddress;
 import io.calimero.KNXIllegalArgumentException;
 import io.calimero.gui.ConnectDialog.ConnectArguments;
+import io.calimero.internal.Executor;
 import io.calimero.tools.ScanDevices;
 
 /**

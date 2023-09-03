@@ -48,6 +48,7 @@ import org.eclipse.swt.widgets.TableItem;
 
 import io.calimero.KNXIllegalArgumentException;
 import io.calimero.gui.ConnectDialog.ConnectArguments;
+import io.calimero.internal.Executor;
 import io.calimero.tools.DeviceInfo;
 
 /**

@@ -78,6 +78,7 @@ import io.calimero.dptxlator.DPT;
 import io.calimero.dptxlator.TranslatorTypes;
 import io.calimero.dptxlator.TranslatorTypes.MainType;
 import io.calimero.gui.ConnectDialog.ConnectArguments;
+import io.calimero.internal.Executor;
 import io.calimero.process.LteProcessEvent;
 import io.calimero.process.ProcessEvent;
 import io.calimero.process.ProcessListener;

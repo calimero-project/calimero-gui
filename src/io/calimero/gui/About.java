@@ -91,7 +91,7 @@ class About {
 
 	private static final String license = "The Calimero library, tools, GUI, and documentation "
 			+ "are licensed under\nthe GPL, with the Classpath Exception.";
-	private static final String copyright = "© 2006, 2022.";
+	private static final String copyright = "© 2006, 2023.";
 
 	private static final String swtLink = "http://www.eclipse.org/swt/";
 	private static final String swtInfo = "This GUI uses the <A href=\"" + swtLink + "\">Standard Widget Toolkit (SWT)</A>";

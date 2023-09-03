@@ -58,7 +58,6 @@
 							<executable>java</executable>
 							<longClasspath>true</longClasspath>
 							<arguments>
-								<argument>--enable-preview</argument>
 								<argument>-XstartOnFirstThread</argument>
 								<argument>-classpath</argument>
 								<classpath />
@@ -144,9 +143,6 @@
 					</execution>
 				</executions>
 				<configuration>
-					<arguments>
-						<argument>--enable-preview</argument>
-					</arguments>
 					<executable>java</executable>
 					<longClasspath>true</longClasspath>
 					<mainClass>io.calimero.gui.Main</mainClass>

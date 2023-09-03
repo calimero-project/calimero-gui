@@ -25,9 +25,6 @@ def buildClassifier = date()
 distZip.archiveClassifier = buildClassifier
 distTar.archiveClassifier = buildClassifier
 
-sourceCompatibility = 19
-targetCompatibility = 19
-
 compileJava.options.encoding = 'UTF-8'
 compileTestJava.options.encoding = 'UTF-8'
 javadoc.options.encoding = 'UTF-8'
@@ -36,6 +33,11 @@ javadoc.options.encoding = 'UTF-8'
 application {
     mainModule = 'io.calimero.gui' 
     mainClass = 'io.calimero.gui.SwtChecker'
+    
+    applicationDistribution.from(project.getProjectDir()) {
+        include 'LICENSE.txt' 
+//        include 'README.md'
+    }
 }
 
 // SWT is platform dependent
@@ -60,8 +62,6 @@ sourceSets {
         resources.srcDir 'resources'
     }
 }
-
-tasks.withType(JavaExec) { jvmArgs += "--enable-preview" }
 
 compileJava.options*.compilerArgs = [
     '-Xlint:all',
@@ -91,12 +91,12 @@ dependencies {
     implementation "io.calimero:calimero-tools-loom:${version}"
     runtimeOnly("io.calimero:calimero-tools-loom:${version}") {
         capabilities {
-           requireCapability("io.calimero:calimero-tools-serial")
+           requireCapability("io.calimero:calimero-tools-loom-serial")
         }
     }
     runtimeOnly("io.calimero:calimero-tools-loom:${version}") {
         capabilities {
-           requireCapability("io.calimero:calimero-tools-usb")
+           requireCapability("io.calimero:calimero-tools-loom-usb")
         }
     }
     implementation "${swtGroupId}:${swtArtifact}:${swtVersion}"
@@ -104,6 +104,9 @@ dependencies {
 }
 
 java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
     withSourcesJar()
 }
 
@@ -127,11 +130,6 @@ jar {
       'Main-Class': application.mainClass
     )
   }
-}
-
-applicationDistribution.from(project.getProjectDir()) {
-    include 'LICENSE.txt' 
-//    include 'README.md'
 }
 
 distributions {

@@ -81,6 +81,7 @@ import io.calimero.KNXException;
 import io.calimero.SerialNumber;
 import io.calimero.gui.ConnectDialog.ConnectArguments;
 import io.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
+import io.calimero.internal.Executor;
 import io.calimero.knxnetip.Discoverer.Result;
 import io.calimero.knxnetip.servicetype.SearchResponse;
 import io.calimero.knxnetip.util.DIB;
