@@ -61,6 +61,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
@@ -102,6 +103,7 @@ class ConnectDialog
 
 		final String local;
 		private final boolean nat;
+		private final boolean tcp;
 		private final IndividualAddress host;
 		String serverIP;
 
@@ -111,31 +113,31 @@ class ConnectDialog
 		SerialNumber serialNumber = SerialNumber.Zero;
 
 		static ConnectArguments newKnxNetIP(final boolean routing, final String localHost, final String remoteHost,
-			final String port, final boolean nat, final String knxAddress, final IndividualAddress serverIA) {
+			final String port, final boolean nat, final boolean tcp, final String knxAddress, final IndividualAddress serverIA) {
 			final var config = new ConnectArguments(routing ? Protocol.Routing : Protocol.Tunneling, localHost,
-					remoteHost, port, nat, "", knxAddress);
+					remoteHost, port, nat, tcp, "", knxAddress);
 			config.serverIA = serverIA != null ? serverIA.toString() : "";
 			return config;
 		}
 
 		static ConnectArguments newUsb(final String port, final String knxAddress)
 		{
-			return new ConnectArguments(Protocol.USB, null, null, port, false, "", knxAddress);
+			return new ConnectArguments(Protocol.USB, null, null, port, false, false, "", knxAddress);
 		}
 
 		static ConnectArguments newTpuart(final String port, final String localKnxAddress,
 			final String remoteKnxAddress)
 		{
-			return new ConnectArguments(Protocol.Tpuart, null, null, port, false, localKnxAddress, remoteKnxAddress);
+			return new ConnectArguments(Protocol.Tpuart, null, null, port, false, false, localKnxAddress, remoteKnxAddress);
 		}
 
 		static ConnectArguments newFT12(final String port, final String knxAddress)
 		{
-			return new ConnectArguments(Protocol.FT12, null, null, port, false, "", knxAddress);
+			return new ConnectArguments(Protocol.FT12, null, null, port, false, false, "", knxAddress);
 		}
 
 		ConnectArguments(final Protocol p, final String local, final String remote,
-			final String port, final boolean nat, final String localKnxAddress,
+			final String port, final boolean nat, final boolean tcp, final String localKnxAddress,
 			final String remoteKnxAddress)
 		{
 			protocol = p;
@@ -143,19 +145,21 @@ class ConnectDialog
 			this.remote = remote;
 			this.port = port;
 			this.nat = nat;
+			this.tcp = tcp;
 			this.host = KNXMediumSettings.BackboneRouter;
 			this.localKnxAddress = localKnxAddress;
 			this.knxAddress = remoteKnxAddress;
 		}
 
 		ConnectArguments(final Protocol p, final String local, final String remote, final String port,
-			final boolean nat, final IndividualAddress host, final String localKnxAddress,
+			final boolean nat, final boolean tcp, final IndividualAddress host, final String localKnxAddress,
 			final String remoteKnxAddress) {
 			protocol = p;
 			this.local = local;
 			this.remote = remote;
 			this.port = port;
 			this.nat = nat;
+			this.tcp = tcp;
 			this.host = host;
 			this.localKnxAddress = localKnxAddress;
 			this.knxAddress = remoteKnxAddress;
@@ -200,8 +204,12 @@ class ConnectDialog
 					args.add(local);
 				}
 				args.add(remote);
-				if (useNat())
-					args.add("--nat");
+				if (protocol == Protocol.Tunneling) {
+					if (useNat())
+						args.add("--nat");
+					if (tcp)
+						args.add("--tcp");
+				}
 				if (protocol == Protocol.Routing && isSecure(Protocol.Routing)) {
 					String key = config("group.key", remote);
 					if (key.isEmpty()) {
@@ -303,8 +311,7 @@ class ConnectDialog
 				p = Files.exists(keyfile) ? keyfile : config;
 				final Map<String, String> map = Files.lines(p).filter(s -> s.startsWith(key)).collect(
 						Collectors.toMap(s -> s.substring(0, s.indexOf("=")), s -> s.substring(s.indexOf("=") + 1)));
-				final String value = map.getOrDefault(key, "");
-				return value;
+				return map.getOrDefault(key, "");
 			}
 			catch (IOException | RuntimeException e) {
 				System.out.printf("Failed to get value for '%s' from file '%s' (error: %s)%n", key, p, e.getMessage());
@@ -384,7 +391,7 @@ class ConnectDialog
 
 	ConnectDialog(final CTabFolder tf, final Protocol protocol, final String localEP, final String name,
 			final String host, final String port, final String mcast, final Integer medium, final boolean useNAT,
-			final Map<ServiceFamily, Integer> secureServices, final boolean preferRouting,
+			final Map<ServiceFamily, Integer> secureServices, final boolean preferRouting, final boolean preferTcp,
 			final IndividualAddress serverIA, final SerialNumber serialNumber) {
 		final Shell shell = new Shell(Main.shell, SWT.DIALOG_TRIM | SWT.RESIZE);
 		shell.setLayout(new GridLayout());
@@ -440,38 +447,49 @@ class ConnectDialog
 		localKnxAddress.setText("");
 		localKnxAddress.setToolTipText("Specify the KNX address of the local endpoint");
 
-		final Button nat = new Button(c, SWT.CHECK);
-		nat.setText("Use NAT aware connection");
-		nat.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		if (serial)
-			nat.setEnabled(false);
-		else {
-			nat.setToolTipText("Some KNXnet/IP devices do not support this connection mode");
-			nat.setSelection(useNAT);
+		// IP connection type
+
+		final var ipLabel = new Label(c, SWT.NONE);
+		ipLabel.setText("KNXnet/IP connection:");
+		final Combo ipType = new Combo(c, SWT.BORDER | SWT.READ_ONLY | SWT.DROP_DOWN);
+		ipType.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+
+		enum IpType { Udp("UDP"), UdpNat("UDP & NAT"), Tcp("TCP"), Routing("Routing");
+			String value;
+
+			IpType(final String value) { this.value = value; }
 		}
-		// spacer to the right of NAT checkbox
-		final Button routing = new Button(c, SWT.CHECK);
-		routing.setText("Use routing");
-		routing.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		routing.addSelectionListener(new SelectionAdapter() {
+		for (final var type : IpType.values())
+			ipType.add(type.value);
+
+		ipType.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(final SelectionEvent e)
 			{
-				if (routing.getSelection()) {
-					if (mcast != null)
-						hostData.setText(mcast);
-					else if (hostData.getText().isEmpty())
-						hostData.setText(Discoverer.SEARCH_MULTICAST);
+				switch (IpType.values()[ipType.getSelectionIndex()]) {
+					case Routing -> {
+						if (mcast != null)
+							hostData.setText(mcast);
+						else if (hostData.getText().isEmpty())
+							hostData.setText(Discoverer.SEARCH_MULTICAST);
+					}
+					default -> {
+						if (host != null && !host.isEmpty())
+							hostData.setText(host);
+					}
 				}
-				if (!routing.getSelection() && host != null && !host.isEmpty())
-					hostData.setText(host);
 			}
 		});
-		if (protocol == Protocol.Routing)
-			routing.setSelection(true);
-		else
-			routing.setSelection(preferRouting);
-		routing.notifyListeners(SWT.Selection, new Event());
+
+		if (protocol == Protocol.Routing || preferRouting) ipType.select(IpType.Routing.ordinal());
+		else if (preferTcp) ipType.select(IpType.Tcp.ordinal());
+		else if (useNAT) ipType.select(IpType.UdpNat.ordinal());
+		else ipType.select(IpType.Udp.ordinal());
+
+		ipType.notifyListeners(SWT.Selection, new Event());
+
+		if (serial)
+			ipType.setEnabled(false);
 
 		final Label configKNXAddress = new Label(c, SWT.NONE);
 		configKNXAddress.setText("KNX device address (optional): ");
@@ -529,9 +547,8 @@ class ConnectDialog
 				final boolean enabled = !usb.getSelection();
 				localhostData.setEnabled(enabled);
 				hostData.setEnabled(enabled);
-				nat.setEnabled(enabled);
 				tpuart.setEnabled(enabled);
-				routing.setEnabled(enabled);
+				ipType.setEnabled(enabled);
 				localKnxAddress.setEnabled(enabled);
 			}
 		});
@@ -543,9 +560,8 @@ class ConnectDialog
 				final boolean enabled = !tpuart.getSelection();
 				localhostData.setEnabled(enabled);
 				hostData.setEnabled(enabled);
-				nat.setEnabled(enabled);
 				usb.setEnabled(enabled);
-				routing.setEnabled(enabled);
+				ipType.setEnabled(enabled);
 			}
 		});
 
@@ -588,7 +604,7 @@ class ConnectDialog
 				// if no port is supplied for KNXnet/IP, we use default port
 				if (p.isEmpty())
 					p = Integer.toString(KNXnetIPConnection.DEFAULT_PORT);
-				final boolean natChecked = serial ? false : nat.getSelection();
+				final boolean natChecked = serial ? false : ipType.getSelectionIndex() == IpType.UdpNat.ordinal();
 
 				ConnectArguments args;
 				if (usb.getSelection())
@@ -599,7 +615,8 @@ class ConnectDialog
 					args = ConnectArguments.newTpuart(p, lka, knxAddr.getText());
 				}
 				else if (!h.isEmpty()) {
-					args = ConnectArguments.newKnxNetIP(useRouting(), local, h, p, natChecked, knxAddr.getText(), serverIA);
+					final boolean tcp = ipType.getSelectionIndex() == IpType.Tcp.ordinal();
+					args = ConnectArguments.newKnxNetIP(useRouting(), local, h, p, natChecked, tcp, knxAddr.getText(), serverIA);
 					if (!localKnxAddress.getText().isEmpty())
 						args.localKnxAddress = localKnxAddress.getText();
 					args.serverIP = host;
