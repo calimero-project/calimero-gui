@@ -99,6 +99,7 @@ class DiscoverTab extends BaseTabLayout
 {
 	private Button nat;
 	Button preferRouting;
+	Button preferTcp;
 
 	DiscoverTab(final CTabFolder tf)
 	{
@@ -167,10 +168,11 @@ class DiscoverTab extends BaseTabLayout
 				protocol = Protocol.Routing;
 			}
 		}
+
 		final IndividualAddress host = (IndividualAddress) defaultInterface.getData("hostIA");
 		final String remote = (String) (tunneling ? defaultInterface.getData("host") : defaultInterface.getData("mcast"));
 		final ConnectArguments args = new ConnectArguments(protocol, (String) defaultInterface.getData("localEP"), remote,
-				(String) defaultInterface.getData("port"), nat.getSelection(), host, "", "");
+				(String) defaultInterface.getData("port"), nat.getSelection(), preferTcp.getSelection(), host, "", "");
 		args.serverIP = (String) defaultInterface.getData("host");
 		args.name = (String) defaultInterface.getData("name");
 		args.serverIA = Optional.ofNullable(defaultInterface.getData("hostIA")).map(Objects::toString).orElse("");
@@ -189,7 +191,7 @@ class DiscoverTab extends BaseTabLayout
 	protected void initWorkAreaTop()
 	{
 		super.initWorkAreaTop();
-		((GridLayout) top.getLayout()).numColumns = 3;
+		((GridLayout) top.getLayout()).numColumns = 4;
 		final Button start = new Button(top, SWT.PUSH);
 		start.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		start.setText("Discover devices");
@@ -203,8 +205,13 @@ class DiscoverTab extends BaseTabLayout
 
 		preferRouting = new Button(top, SWT.CHECK);
 		preferRouting.setText("Prefer KNX IP Routing");
-		preferRouting.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false));
+		preferRouting.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		preferRouting.setToolTipText("If both Routing & Tunneling mode are supported, choose Routing");
+
+		preferTcp = new Button(top, SWT.CHECK);
+		preferTcp.setText("Prefer TCP");
+		preferTcp.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false));
+		preferTcp.setToolTipText("If UDP and TCP is supported, choose TCP");
 	}
 
 	private void discover()
@@ -409,7 +416,7 @@ class DiscoverTab extends BaseTabLayout
 		new ConnectDialog(getTabFolder(), (Protocol) i.getData("protocol"), (String) i.getData("localEP"),
 				(String) i.getData("name"), (String) i.getData("host"), (String) i.getData("port"),
 				(String) i.getData("mcast"), (Integer) i.getData("medium"), nat.getSelection(), secure,
-				preferRouting.getSelection(), (IndividualAddress) i.getData("hostIA"), (SerialNumber) i.getData("SN"));
+				preferRouting.getSelection(), preferTcp.getSelection(), (IndividualAddress) i.getData("hostIA"), (SerialNumber) i.getData("SN"));
 	}
 
 	private static final String secureSymbol = new String(Character.toChars(0x1F512));

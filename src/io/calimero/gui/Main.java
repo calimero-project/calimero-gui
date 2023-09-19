@@ -92,7 +92,7 @@ public class Main
 		tf = new CTabFolder(shell, SWT.NONE | SWT.BORDER);
 
 		addToolItem(header, "Connect ...", () -> new ConnectDialog(tf, Protocol.Unknown, null, null, "", "", null, null,
-				false, Map.of(), discoverTab().preferRouting.getSelection(), null, SerialNumber.Zero));
+				false, Map.of(), discoverTab().preferRouting.getSelection(), discoverTab().preferTcp.getSelection(), null, SerialNumber.Zero));
 		addToolItem(header, "Show log", () -> new LogTab(tf));
 		addToolItem(header, "Show keyring", () -> new KeyringTab(tf));
 		addToolItem(header, "Show projects", () -> new ProjectTab(tf));
