@@ -25,9 +25,6 @@ def buildClassifier = date()
 distZip.archiveClassifier = buildClassifier
 distTar.archiveClassifier = buildClassifier
 
-sourceCompatibility = 17
-targetCompatibility = 17
-
 compileJava.options.encoding = 'UTF-8'
 compileTestJava.options.encoding = 'UTF-8'
 javadoc.options.encoding = 'UTF-8'
@@ -96,6 +93,9 @@ dependencies {
 }
 
 java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
     withSourcesJar()
 }
 
