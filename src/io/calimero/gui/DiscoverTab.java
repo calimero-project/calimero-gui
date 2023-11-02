@@ -233,10 +233,10 @@ class DiscoverTab extends BaseTabLayout
 				protected void onEndpointReceived(final Result<SearchResponse> result)
 				{
 					final StringBuilder buf = new StringBuilder();
-					final SearchResponse r = result.getResponse();
+					final SearchResponse r = result.response();
 					buf.append("\"").append(r.getDevice().getName()).append("\"");
 					buf.append(" at ").append(r.getControlEndpoint());
-					buf.append(" -- using local interface ").append(result.getNetworkInterface().getName()).append(" ");
+					buf.append(" -- using local interface ").append(result.networkInterface().getName()).append(" ");
 					buf.append(result.localEndpoint().getAddress());
 					buf.append("      ").append(r.getDevice().toString().replaceAll("\".*\"", "")).append(sep);
 					for (int i = buf.indexOf(", "); i != -1; i = buf.indexOf(", "))
@@ -430,7 +430,7 @@ class DiscoverTab extends BaseTabLayout
 			if (item.getText().equals(newItem))
 				return;
 		}
-		final SearchResponse r = result.getResponse();
+		final SearchResponse r = result.response();
 
 		if (r.v2())
 			supportsSearchResponseV2.add(result.remoteEndpoint());
@@ -475,8 +475,8 @@ class DiscoverTab extends BaseTabLayout
 				new String[] { "protocol", "localEP", "name", "host", "port", "mcast", "medium", "secure", "supportsRouting", "hostIA", "SN" },
 				new Object[] { protocol, result.localEndpoint().getAddress().getHostAddress(), r.getDevice().getName(),
 					r.getControlEndpoint().getAddress().getHostAddress(), Integer.toString(r.getControlEndpoint().getPort()), mcast,
-					r.getDevice().getKNXMedium(), secureServices, routing, result.getResponse().getDevice().getAddress(),
-					result.getResponse().getDevice().serialNumber() });
+					r.getDevice().getKNXMedium(), secureServices, routing, result.response().getDevice().getAddress(),
+					result.response().getDevice().serialNumber() });
 	}
 
 	private Device findDeviceLowLevel(final int vendorId, final int productId) {
