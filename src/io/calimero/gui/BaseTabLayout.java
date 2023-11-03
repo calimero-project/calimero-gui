@@ -196,10 +196,14 @@ class BaseTabLayout implements LogNotifier
 		try {
 			final Path config = Paths.get(".calimero-gui.config");
 			if (Files.exists(config)) {
-				final Map<String, String> formats = Files.lines(config).filter(s -> s.startsWith("monitor")).collect(Collectors
-						.toMap((final String s) -> s.substring(0, s.indexOf("=")), (final String s) -> s.substring(s.indexOf("=") + 1)));
-				dfmt = Optional.ofNullable(formats.get("monitor.dateFormat")).map(DateTimeFormatter::ofPattern).orElse(dfmt);
-				tfmt = Optional.ofNullable(formats.get("monitor.timeFormat")).map(DateTimeFormatter::ofPattern).orElse(tfmt);
+				try (var lines = Files.lines(config)) {
+					final Map<String, String> formats = lines.filter(s -> s.startsWith("monitor"))
+							.collect(Collectors.toMap(
+									s -> s.substring(0, s.indexOf("=")),
+									s -> s.substring(s.indexOf("=") + 1)));
+					dfmt = Optional.ofNullable(formats.get("monitor.dateFormat")).map(DateTimeFormatter::ofPattern).orElse(dfmt);
+					tfmt = Optional.ofNullable(formats.get("monitor.timeFormat")).map(DateTimeFormatter::ofPattern).orElse(tfmt);
+				}
 			}
 		}
 		catch (IOException | RuntimeException e) {
@@ -457,10 +461,7 @@ class BaseTabLayout implements LogNotifier
 			return true;
 		boolean match = false;
 		switch (level) {
-		case ALL:
-			match = true;
-			break;
-		case TRACE:
+		case ALL, TRACE:
 			match = true;
 			break;
 		case DEBUG:

@@ -113,7 +113,7 @@ class LogTab extends BaseTabLayout
 		}
 	}
 
-	static PrintStream oldSystemErr;
+	static final PrintStream oldSystemErr;
 	static {
 		final PrintStream oldSystemOut = System.out;
 		final PrintStream redirector = new StreamRedirector("System.out", DEBUG, oldSystemOut);
@@ -129,11 +129,10 @@ class LogTab extends BaseTabLayout
 	private static final int maxHistorySize = 1000;
 	private static final List<Object[]> logHistory = new ArrayList<>(maxHistorySize);
 
-	private static Map<LogTab, java.util.List<Object[]>> logBuffer = new ConcurrentHashMap<>();
+	private static final Map<LogTab, java.util.List<Object[]>> logBuffer = new ConcurrentHashMap<>();
 
-	private static LogNotifier notifier = LogTab::addToLogBuffer;
+	private static final LogNotifier notifier = LogTab::addToLogBuffer;
 
-	private Button clear;
 	private Label loglevel;
 	private Scale scale;
 
@@ -206,7 +205,7 @@ class LogTab extends BaseTabLayout
 		((GridLayout) top.getLayout()).makeColumnsEqualWidth = false;
 		((GridLayout) top.getLayout()).horizontalSpacing = 10 * ((GridLayout) top.getLayout()).horizontalSpacing;
 
-		clear = new Button(top, SWT.NONE);
+		Button clear = new Button(top, SWT.NONE);
 		clear.setText("Clear log");
 		clear.addSelectionListener(new SelectionAdapter() {
 			@Override

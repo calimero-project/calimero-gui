@@ -529,7 +529,7 @@ class BaosTab extends BaseTabLayout {
 				editCtrl.setFocus();
 				return;
 			}
-			if (!visible && rect.intersects(clientArea))
+			if (rect.intersects(clientArea))
 				visible = true;
 			if (!visible)
 				return;
