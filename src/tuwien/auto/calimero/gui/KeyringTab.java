@@ -70,7 +70,6 @@ import tuwien.auto.calimero.secure.Keyring;
 import tuwien.auto.calimero.secure.Security;
 
 class KeyringTab extends BaseTabLayout {
-	private Button load;
 	private Label keyringLabel;
 
 	static String keyringResource = "";
@@ -82,9 +81,10 @@ class KeyringTab extends BaseTabLayout {
 
 	static Optional<Keyring> keyring() {
 		if (keyring == null) {
-			try {
-				Files.list(Path.of(".")).map(path -> path.toAbsolutePath().normalize().toString())
-						.filter(path -> path.endsWith(".knxkeys")).findFirst().ifPresent(KeyringTab::loadKeyring);
+			try (var entries = Files.list(Path.of("."))) {
+				entries.map(path -> path.toAbsolutePath().normalize().toString())
+						.filter(path -> path.endsWith(".knxkeys")).findFirst()
+						.ifPresent(KeyringTab::loadKeyring);
 			}
 			catch (final IOException | RuntimeException e) {
 				System.out.println("Keyring lookup: " + e.getMessage());
@@ -169,7 +169,7 @@ class KeyringTab extends BaseTabLayout {
 		keyringLabel = new Label(top, SWT.NONE);
 		keyringLabel.setText(keyringResource);
 
-		load = new Button(top, SWT.NONE);
+		Button load = new Button(top, SWT.NONE);
 		load.setText("Load keyring ...");
 		load.addSelectionListener(selected(this::loadKeyring));
 		load.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false));

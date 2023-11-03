@@ -309,9 +309,13 @@ class ConnectDialog
 				final Path keyfile = Paths.get("keyfile");
 				final Path config = Paths.get(".calimero-gui.config");
 				p = Files.exists(keyfile) ? keyfile : config;
-				final Map<String, String> map = Files.lines(p).filter(s -> s.startsWith(key)).collect(
-						Collectors.toMap(s -> s.substring(0, s.indexOf("=")), s -> s.substring(s.indexOf("=") + 1)));
-				return map.getOrDefault(key, "");
+				try (var lines = Files.lines(p)) {
+					final Map<String, String> map = lines.filter(s -> s.startsWith(key))
+							.collect(Collectors.toMap(
+									s -> s.substring(0, s.indexOf("=")),
+									s -> s.substring(s.indexOf("=") + 1)));
+					return map.getOrDefault(key, "");
+				}
 			}
 			catch (IOException | RuntimeException e) {
 				System.out.printf("Failed to get value for '%s' from file '%s' (error: %s)%n", key, p, e.getMessage());
@@ -455,7 +459,7 @@ class ConnectDialog
 		ipType.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
 		enum IpType { Udp("UDP"), UdpNat("UDP & NAT"), Tcp("TCP"), Routing("Routing");
-			String value;
+			final String value;
 
 			IpType(final String value) { this.value = value; }
 		}
@@ -466,18 +470,13 @@ class ConnectDialog
 			@Override
 			public void widgetSelected(final SelectionEvent e)
 			{
-				switch (IpType.values()[ipType.getSelectionIndex()]) {
-					case Routing -> {
-						if (mcast != null)
-							hostData.setText(mcast);
-						else if (hostData.getText().isEmpty())
-							hostData.setText(Discoverer.SEARCH_MULTICAST);
-					}
-					default -> {
-						if (host != null && !host.isEmpty())
-							hostData.setText(host);
-					}
-				}
+				if (IpType.values()[ipType.getSelectionIndex()] == IpType.Routing) {
+					if (mcast != null)
+						hostData.setText(mcast);
+					else if (hostData.getText().isEmpty())
+						hostData.setText(Discoverer.SEARCH_MULTICAST);
+				} else if (host != null && !host.isEmpty())
+					hostData.setText(host);
 			}
 		});
 
