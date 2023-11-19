@@ -36,7 +36,6 @@
 
 package tuwien.auto.calimero.gui;
 
-import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -50,11 +49,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.usb.UsbDevice;
-import javax.usb.UsbDeviceDescriptor;
-import javax.usb.UsbDisconnectedException;
-import javax.usb.UsbException;
-
+import io.calimero.serial.usb.Device;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.events.SelectionEvent;
@@ -67,12 +62,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Sash;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
-import org.usb4java.Context;
-import org.usb4java.Device;
-import org.usb4java.DeviceDescriptor;
-import org.usb4java.DeviceHandle;
-import org.usb4java.DeviceList;
-import org.usb4java.LibUsb;
 
 import tuwien.auto.calimero.IndividualAddress;
 import tuwien.auto.calimero.KNXException;
@@ -263,67 +252,39 @@ class DiscoverTab extends BaseTabLayout
 				{
 					try {
 						asyncAddLog("Search for KNX USB interfaces");
-						final List<UsbDevice> knxDevices = List.of(); // UsbConnection.getKnxDevices();
-						final List<UsbDevice> vserialKnxDevices = List.of(); // UsbConnection.getVirtualSerialKnxDevices();
+						final var knxUsbDevices = UsbConnectionFactory.attachedKnxUsbDevices();
+						final var vserialKnxDevices = List.<Device>of();
 
-						asyncAddLog("Found " + knxDevices.size() + " KNX USB interfaces");
+						asyncAddLog("Found " + knxUsbDevices.size() + " KNX USB interfaces");
 						asyncAddLog("Found " + vserialKnxDevices.size() + " USB serial KNX interfaces");
 
 						Main.syncExec(() -> {
-							for (final UsbDevice d : knxDevices) {
+							for (final var d : knxUsbDevices) {
 								try {
-									final String ind = "    ";
-									final StringBuilder sb = new StringBuilder();
-									sb.append("USB interface ").append(d).append(sep);
-
-									final UsbDeviceDescriptor dd = d.getUsbDeviceDescriptor();
-									final int vendorId = dd.idVendor() & 0xffff;
-									final int productId = dd.idProduct() & 0xffff;
-
-									final String product = productName(d, vendorId, productId);
-									sb.append(ind).append("Name: ").append(product).append(sep);
-									sb.append(ind).append(manufacturer(d, vendorId, productId));
-
-									final String vp = String.format("%04x:%04x", vendorId, productId);
-
 									// check knx medium, defaults to TP1
 									int medium = KNXMediumSettings.MEDIUM_TP1;
-									try (UsbConnection c = UsbConnectionFactory.open(vendorId, productId)) {
+									try (UsbConnection c = UsbConnectionFactory.open(d)) {
 										medium = c.deviceDescriptor().medium().getMedium();
 									}
 									catch (KNXException | InterruptedException | RuntimeException e) {
 										asyncAddLog("reading KNX device descriptor of " + d,  e);
 									}
 
-									final var serialNumber = serialNumber(d, vendorId, productId);
-									addListItem(new String[] { sb.toString() },
+									final String vp = String.format("%04x:%04x", d.vendorId(), d.productId());
+									addListItem(new String[] { "USB -- ID " + d },
 											new String[] { "protocol", "name", "port", "medium", "SN" },
-											new Object[] { Protocol.USB, product, vp, medium, serialNumber });
+											new Object[] { Protocol.USB, d.product(), vp, medium, SerialNumber.Zero });
 								}
 								catch (final RuntimeException e) {
 									asyncAddLog("error: " + e.getMessage());
 								}
 							}
-							for (final UsbDevice d : vserialKnxDevices) {
+							for (final var d : vserialKnxDevices) {
 								try {
-									final String ind = "    ";
-									final StringBuilder sb = new StringBuilder();
-									sb.append("TP-UART interface ").append(d).append(sep);
-									final UsbDeviceDescriptor dd = d.getUsbDeviceDescriptor();
-									final int vendorId = dd.idVendor() & 0xffff;
-									final int productId = dd.idProduct() & 0xffff;
-									final String product = productName(d, vendorId, productId);
-
-									sb.append(ind).append("Name: ").append(product).append(sep);
-									sb.append(ind).append(manufacturer(d, vendorId, productId));
-									final String dev = "/dev/";
-
-									final int medium = KNXMediumSettings.MEDIUM_TP1;
-									final var serialNumber = serialNumber(d, vendorId, productId);
-
-									addListItem(new String[] { sb.toString() },
+									addListItem(new String[] { "TP-UART -- ID " + d },
 											new String[] { "protocol", "name", "port", "medium", "SN" },
-											new Object[] { Protocol.Tpuart, product, dev, medium, serialNumber });
+											new Object[] { Protocol.Tpuart, d.product(), "/dev/",
+													KNXMediumSettings.MEDIUM_TP1, SerialNumber.Zero });
 								}
 								catch (final RuntimeException e) {
 									asyncAddLog("error: " + e.getMessage());
@@ -338,67 +299,6 @@ class DiscoverTab extends BaseTabLayout
 					catch (final RuntimeException e) {
 						asyncAddLog("error: " + e.getMessage());
 					}
-				}
-
-				private String productName(final UsbDevice d, final int vendorId, final int productId)
-				{
-					Optional<String> product;
-					try {
-						product = Optional.ofNullable(d.getProductString());
-					}
-					catch (UnsupportedEncodingException | UsbDisconnectedException | UsbException e) {
-						final Device device = findDeviceLowLevel(vendorId, productId);
-						product = getProductName(device);
-						LibUsb.unrefDevice(device);
-					}
-					return nullTerminate(product.orElse("n/a"));
-				}
-
-				private String manufacturer(final UsbDevice d, final int vendorId, final int productId)
-				{
-					Optional<String> mf;
-					try {
-						mf = Optional.ofNullable(d.getManufacturerString());
-					}
-					catch (UnsupportedEncodingException | UsbDisconnectedException | UsbException e) {
-						final Device device = findDeviceLowLevel(vendorId, productId);
-						mf = getManufacturer(device);
-						LibUsb.unrefDevice(device);
-					}
-					return "Manufacturer: " + nullTerminate(mf.orElse("n/a"));
-				}
-
-				private SerialNumber serialNumber(final UsbDevice d, final int vendorId, final int productId) {
-					try {
-						return SerialNumber.of(Long.parseLong(d.getSerialNumberString(), 16));
-					}
-					catch (final NumberFormatException e) {
-						return SerialNumber.Zero;
-					}
-					catch (UnsupportedEncodingException | UsbDisconnectedException | UsbException e) {
-						final Device device = findDeviceLowLevel(vendorId, productId);
-						final DeviceDescriptor dd = new DeviceDescriptor();
-						final DeviceHandle dh = new DeviceHandle();
-						final int ret = LibUsb.getDeviceDescriptor(device, dd);
-						final int open = LibUsb.open(device, dh);
-						String sn = null;
-						try {
-							if (ret == 0 && open == 0)
-								sn = LibUsb.getStringDescriptor(dh, dd.iSerialNumber());
-						}
-						finally {
-							LibUsb.close(dh);
-							LibUsb.unrefDevice(device);
-						}
-						return SerialNumber.of(sn == null ? 0 : Long.parseLong(sn, 16));
-					}
-				}
-
-				// sometimes usb4java returns strings which exceed past the null terminator
-				private String nullTerminate(final String s)
-				{
-					final int end = s.indexOf((char) 0);
-					return end > -1 ? s.substring(0, end) : s;
 				}
 			};
 			new Thread(usb).start();
@@ -477,73 +377,5 @@ class DiscoverTab extends BaseTabLayout
 					r.getControlEndpoint().getAddress().getHostAddress(), Integer.toString(r.getControlEndpoint().getPort()), mcast,
 					r.getDevice().getKNXMedium(), secureServices, routing, result.response().getDevice().getAddress(),
 					result.response().getDevice().serialNumber() });
-	}
-
-	private Device findDeviceLowLevel(final int vendorId, final int productId) {
-		final Context ctx = null; // use default context
-		int err = LibUsb.init(null);
-		if (err != 0) {
-			asyncAddLog("LibUsb initialization error " + -err + ": " + LibUsb.strError(err));
-			return null;
-		}
-//		try {
-		final DeviceList list = new DeviceList();
-		final int res = LibUsb.getDeviceList(ctx, list);
-		if (res < 0) {
-			asyncAddLog("LibUsb device list error " + -res + ": " + LibUsb.strError(res));
-			return null;
-		}
-		try {
-			for (final Device device : list) {
-				final DeviceDescriptor d = new DeviceDescriptor();
-				err = LibUsb.getDeviceDescriptor(device, d);
-				if (err == 0) {
-					final int vendor = d.idVendor() & 0xffff;
-					final int product = d.idProduct() & 0xffff;
-					if (vendor == vendorId && product == productId) {
-						LibUsb.refDevice(device);
-						return device;
-					}
-				}
-			}
-		}
-		finally {
-			LibUsb.freeDeviceList(list, true);
-		}
-//		}
-//		finally {
-		// we can't call exit here, as we return a Device for subsequent usage
-//			LibUsb.exit(ctx);
-//		}
-		return null;
-	}
-
-
-	private static Optional<String> getProductName(final Device device) {
-		final DeviceDescriptor d = new DeviceDescriptor();
-		final DeviceHandle dh = new DeviceHandle();
-		if (LibUsb.getDeviceDescriptor(device, d) == 0 && LibUsb.open(device, dh) == 0) {
-			try {
-				return Optional.ofNullable(LibUsb.getStringDescriptor(dh, d.iProduct()));
-			}
-			finally {
-				LibUsb.close(dh);
-			}
-		}
-		return Optional.empty();
-	}
-
-	private static Optional<String> getManufacturer(final Device device) {
-		final DeviceDescriptor d = new DeviceDescriptor();
-		final DeviceHandle dh = new DeviceHandle();
-		if (LibUsb.getDeviceDescriptor(device, d) == 0 && LibUsb.open(device, dh) == 0) {
-			try {
-				return Optional.ofNullable(LibUsb.getStringDescriptor(dh, d.iManufacturer()));
-			}
-			finally {
-				LibUsb.close(dh);
-			}
-		}
-		return Optional.empty();
 	}
 }

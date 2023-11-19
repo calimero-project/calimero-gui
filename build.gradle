@@ -62,7 +62,7 @@ compileJava.options*.compilerArgs = [
 
 configurations {
     provided
-    compile.extendsFrom provided    
+    compile.extendsFrom provided
 }
 
 configurations.configureEach {
@@ -87,7 +87,6 @@ dependencies {
         }
     }
     implementation "${swtGroupId}:${swtArtifact}:${swtVersion}"
-    implementation 'org.usb4java:usb4java-javax:1.3.0'
     implementation 'org.slf4j:slf4j-api:1.7.36'
     runtimeOnly 'org.slf4j:slf4j-simple:1.7.36'
 }
@@ -122,7 +121,7 @@ jar {
 }
 
 applicationDistribution.from(project.getProjectDir()) {
-    include 'LICENSE.txt' 
+    include 'LICENSE.txt'
 //    include 'README.md'
 }
 
@@ -137,17 +136,18 @@ distributions {
 startScripts {
     doLast {
         // on OS X, SWT needs to run on first thread
-        unixScript.text = unixScript.text.replace('DEFAULT_JVM_OPTS=""', 
-            'DEFAULT_JVM_OPTS=""\n' +
+        unixScript.text = unixScript.text.replace('DEFAULT_JVM_OPTS=\'',
+            'MACOS_JVM_OPTS=""\n' +
             'if [ "`uname`" = Darwin ] ; then\n' +
             '    DEFAULT_JVM_OPTS="-XstartOnFirstThread"\n' +
-            'fi')
+            'fi\n' +
+            'DEFAULT_JVM_OPTS="${MACOS_JVM_OPTS}"\' ')
     }
 }
 
 run {
-    if (os.contains("mac")) { 
-        jvmArgs '-XstartOnFirstThread' 
+    if (os.contains("mac")) {
+        jvmArgs '-XstartOnFirstThread'
     }
 }
 
