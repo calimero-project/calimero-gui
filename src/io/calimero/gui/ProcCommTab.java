@@ -91,7 +91,7 @@ import io.calimero.xml.XmlWriter;
 /**
  * @author B. Malinowsky
  */
-class TunnelTab extends BaseTabLayout
+class ProcCommTab extends BaseTabLayout
 {
 	private final class ProcCommWrapper extends ProcComm
 	{
@@ -177,7 +177,7 @@ class TunnelTab extends BaseTabLayout
 	private final ConnectArguments connect;
 
 
-	TunnelTab(final CTabFolder tf, final ConnectArguments args)
+	ProcCommTab(final CTabFolder tf, final ConnectArguments args)
 	{
 		super(tf, (args.protocol + " connection to " + args.name), headerInfo(args, "Connecting to"));
 		connect = args;

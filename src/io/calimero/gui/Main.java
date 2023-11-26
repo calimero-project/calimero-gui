@@ -199,7 +199,7 @@ public class Main
 	private void addLauncherBar()
 	{
 		final ToolBar functions = new ToolBar(shell, SWT.FLAT);
-		addToolItem(functions, "Group Monitor", () -> new TunnelTab(tf, ofDefaultInterface()));
+		addToolItem(functions, "Group Monitor", () -> new ProcCommTab(tf, ofDefaultInterface()));
 		addToolItem(functions, "Network Monitor", () -> new MonitorTab(tf, ofDefaultInterface()));
 		addToolItem(functions, "Programming Mode", () -> new ProgmodeTab(tf, ofDefaultInterface()));
 		addToolItem(functions, "Scan Devices", () -> new ScanDevicesTab(tf, ofDefaultInterface()));
