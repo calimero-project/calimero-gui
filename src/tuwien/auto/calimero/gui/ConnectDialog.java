@@ -510,12 +510,13 @@ class ConnectDialog
 		col.wrap = false;
 		mode.setLayout(col);
 
-		final Button tunnel = new Button(mode, SWT.RADIO);
-		tunnel.setText("Process communication / group monitor");
-		tunnel.setSelection(true);
+		final Button procComm = new Button(mode, SWT.RADIO);
+		procComm.setText("Process communication / group monitor");
+		procComm.setSelection(true);
 
 		final Button monitor = new Button(mode, SWT.RADIO);
 		monitor.setText("Network monitor");
+
 		final Button config = new Button(mode, SWT.RADIO);
 		config.setText("Configure KNXnet/IP");
 
@@ -610,7 +611,7 @@ class ConnectDialog
 					args = ConnectArguments.newUsb(p, knxAddr.getText());
 				else if (tpuart.getSelection()) {
 					// process communication and bus monitoring don't require local knx address
-					final String lka = tunnel.getSelection() || monitor.getSelection() ? "" : localKnxAddress.getText();
+					final String lka = procComm.getSelection() || monitor.getSelection() ? "" : localKnxAddress.getText();
 					args = ConnectArguments.newTpuart(p, lka, knxAddr.getText());
 				}
 				else if (!h.isEmpty()) {
@@ -645,8 +646,8 @@ class ConnectDialog
 					}
 					new MemoryEditor(tf, args);
 				}
-				else if (tunnel.getSelection())
-					new TunnelTab(tf, args);
+				else if (procComm.getSelection())
+					new ProcCommTab(tf, args);
 				else if (baos.getSelection())
 					new BaosTab(tf, args);
 
