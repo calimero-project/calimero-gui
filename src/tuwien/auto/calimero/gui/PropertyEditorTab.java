@@ -146,7 +146,7 @@ class PropertyEditorTab extends BaseTabLayout
 
 	private static final Map<PropertyKey, PropertyClient.Property> map = new HashMap<>();
 	private static final PropertyClient.Property unknown = new PropertyClient.Property(-1, "[Unknown Property]", "n/a",
-			-1, -1, null);
+			"", -1, -1, Optional.empty(), 0, 0, 0);
 
 	private static final Color title = Main.display.getSystemColor(SWT.COLOR_LIST_SELECTION_TEXT);
 	private static final Color bkgnd = Main.display.getSystemColor(SWT.COLOR_LIST_SELECTION);
@@ -288,7 +288,7 @@ class PropertyEditorTab extends BaseTabLayout
 					return;
 				final int objectIndex = (Integer) item.getData(ObjectIndex);
 				final int pid = (Integer) item.getData(Columns.Pid.name());
-				final int elems = findDescription(objectIndex, pid).getCurrentElements();
+				final int elems = findDescription(objectIndex, pid).currentElements();
 				runCommand("get", objectIndex, pid, "1", elems);
 			}
 		}));
@@ -398,7 +398,7 @@ class PropertyEditorTab extends BaseTabLayout
 		hidePropertyPage();
 		resetTable();
 		for (final Description d : descriptions) {
-			if (d.getObjectIndex() == objectIndex)
+			if (d.objectIndex() == objectIndex)
 				addProperty(d);
 		}
 		sashForm.layout();
@@ -415,7 +415,7 @@ class PropertyEditorTab extends BaseTabLayout
 		layout.verticalSpacing = 1;
 		propertyPage.setLayout(layout);
 		final Description d = findDescription(objectIndex, pid);
-		final PropertyClient.Property p = getDefinition(d.getObjectType(), d.getPID()).orElse(unknown);
+		final PropertyClient.Property p = getDefinition(d.objectType(), d.pid()).orElse(unknown);
 
 		final Composite caption = new Composite(propertyPage, SWT.FILL);
 		layout = new GridLayout(3, false);
@@ -428,7 +428,7 @@ class PropertyEditorTab extends BaseTabLayout
 		caption.setLayoutData(gridData);
 
 		final Label name = new Label(caption, SWT.NONE);
-		name.setText(p.getName());
+		name.setText(p.propertyName());
 		final FontData fontData = name.getFont().getFontData()[0];
 		name.setFont(new Font(Main.display, new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD)));
 		gridData = new GridData();
@@ -436,7 +436,7 @@ class PropertyEditorTab extends BaseTabLayout
 		name.setLayoutData(gridData);
 
 		final Label ro = new Label(caption, SWT.NONE);
-		ro.setText(remotePropertySvc ? (d.isWriteEnabled() ? "(write-enabled)" : "(read-only)") : "(read/write?)");
+		ro.setText(remotePropertySvc ? (d.writeEnabled() ? "(write-enabled)" : "(read-only)") : "(read/write?)");
 		gridData = new GridData();
 		gridData.verticalAlignment = SWT.BOTTOM;
 		ro.setLayoutData(gridData);
@@ -444,10 +444,10 @@ class PropertyEditorTab extends BaseTabLayout
 		final var description = new Label(caption, SWT.NONE);
 		description.setText(p.description());
 
-		singleLineLabel(p.getPIDName() + " (" + pid + ")");
-		singleLineLabel("Located at index " + d.getPropIndex());
+		singleLineLabel(p.pidName() + " (" + pid + ")");
+		singleLineLabel("Located at index " + d.propIndex());
 
-		final String rw = d.getReadLevel() + "/" + d.getWriteLevel();
+		final String rw = d.readLevel() + "/" + d.writeLevel();
 		label("Access level " + rw, false);
 
 		final Text authCode = new Text(propertyPage, SWT.BORDER);
@@ -473,7 +473,7 @@ class PropertyEditorTab extends BaseTabLayout
 		gridData.horizontalAlignment = SWT.FILL;
 		value.setLayoutData(gridData);
 		value.setMessage("Use space or comma for multiple values");
-		value.setText(formatted(d.getObjectType(), pid, values.getOrDefault(d, "")));
+		value.setText(formatted(d.objectType(), pid, values.getOrDefault(d, "")));
 		value.setData("property-edit-field");
 
 		final Button set = new Button(propertyPage, SWT.PUSH);
@@ -504,7 +504,7 @@ class PropertyEditorTab extends BaseTabLayout
 		final Spinner elems = new Spinner(propertyPage, SWT.BORDER | SWT.RIGHT);
 		elems.setData("current-elements");
 		elems.setEnabled(false);
-		elems.setValues(d.getCurrentElements(), 0, Math.max(d.getCurrentElements(), d.getMaxElements()), 0, 1, 10);
+		elems.setValues(d.currentElements(), 0, Math.max(d.currentElements(), d.maxElements()), 0, 1, 10);
 		gridData = new GridData();
 		gridData.horizontalAlignment = SWT.FILL;
 		elems.setLayoutData(gridData);
@@ -516,9 +516,9 @@ class PropertyEditorTab extends BaseTabLayout
 		set.addSelectionListener(adapt(e -> writeValues(objectIndex, pid, value.getText(),
 				override.getSelection() ? Integer.parseInt(elems.getText()) : -1, p)));
 
-		singleLineLabel("(Maximum elements " + (d.getMaxElements() > 0 ? d.getMaxElements() : "unknown") + ")");
+		singleLineLabel("(Maximum elements " + (d.maxElements() > 0 ? d.maxElements() : "unknown") + ")");
 
-		if (remotePropertySvc && !d.isWriteEnabled()) {
+		if (remotePropertySvc && !d.writeEnabled()) {
 			authCode.setEnabled(false);
 			authorize.setEnabled(false);
 			set.setEnabled(false);
@@ -526,7 +526,7 @@ class PropertyEditorTab extends BaseTabLayout
 			override.setEnabled(false);
 		}
 
-		updateDptBounds("" + d.getObjectType(), "" + pid);
+		updateDptBounds("" + d.objectType(), "" + pid);
 
 		sashForm.layout(false, true);
 	}
@@ -574,7 +574,7 @@ class PropertyEditorTab extends BaseTabLayout
 
 	private boolean isNewInterfaceObject(final int index)
 	{
-		return index <= 0 || descriptions.get(index).getObjectIndex() != descriptions.get(index - 1).getObjectIndex();
+		return index <= 0 || descriptions.get(index).objectIndex() != descriptions.get(index - 1).objectIndex();
 	}
 
 	private void addInterfaceObjectToTree(final int objectIndex, final int objectType)
@@ -592,7 +592,7 @@ class PropertyEditorTab extends BaseTabLayout
 			final TreeItem root = tree.getItem(tree.getItemCount() - 1);
 			final TreeItem item = new TreeItem(root, SWT.NONE);
 			final String name = "PID " + pid;
-			item.setText(getDefinition(objectType, pid).map(p -> p.getName() + " (" + name + ")").orElse(name));
+			item.setText(getDefinition(objectType, pid).map(p -> p.propertyName() + " (" + name + ")").orElse(name));
 			item.setData(ObjectIndex, root.getData(ObjectIndex));
 			item.setData(Columns.Pid.name(), pid);
 		});
@@ -606,14 +606,14 @@ class PropertyEditorTab extends BaseTabLayout
 		final AtomicBoolean differentObject = new AtomicBoolean();
 		Main.syncExec(() -> {
 			final TreeItem[] selection = tree.getSelection();
-			if (selection.length > 0 && tree.indexOf(selection[0]) != d.getObjectIndex())
+			if (selection.length > 0 && tree.indexOf(selection[0]) != d.objectIndex())
 				differentObject.set(true);
 		});
 		if (differentObject.get())
 			return;
 		if (isNewInterfaceObject(index)) {
 			final String[] keys = new String[] { ObjectHeader, ObjectIndex, ObjectType, };
-			final String[] data = new String[] { "", "" + d.getObjectIndex(), "" + d.getObjectType() };
+			final String[] data = new String[] { "", "" + d.objectIndex(), "" + d.objectType() };
 			count = 0;
 			asyncAddListItem(new String[Columns.values().length], keys, data);
 		}
@@ -623,18 +623,18 @@ class PropertyEditorTab extends BaseTabLayout
 	private void addProperty(final Description d)
 	{
 		final String[] keys = new String[] { ObjectIndex, ObjectType, };
-		final String[] data = new String[] { "" + d.getObjectIndex(), "" + d.getObjectType() };
+		final String[] data = new String[] { "" + d.objectIndex(), "" + d.objectType() };
 
-		final PropertyClient.Property p = getDefinition(d.getObjectType(), d.getPID()).orElse(unknown);
-		final String name = p.getPIDName();
-		final String desc = p.getName();
-		final Object writeLevel = d.isWriteEnabled() ? d.getWriteLevel() : "x";
-		final String rw = d.getReadLevel() + "/" + writeLevel + (d.isWriteEnabled() ? "" : " (read-only)");
+		final PropertyClient.Property p = getDefinition(d.objectType(), d.pid()).orElse(unknown);
+		final String name = p.pidName();
+		final String desc = p.propertyName();
+		final Object writeLevel = d.writeEnabled() ? d.writeLevel() : "x";
+		final String rw = d.readLevel() + "/" + writeLevel + (d.writeEnabled() ? "" : " (read-only)");
 
-		final String value = formatted(d.getObjectType(), d.getPID(), values.getOrDefault(d, ""));
+		final String value = formatted(d.objectType(), d.pid(), values.getOrDefault(d, ""));
 		final List<byte[]> raw = rawValues.getOrDefault(d, Collections.emptyList());
 		final String rawText = raw.stream().map(bytes -> HexFormat.of().formatHex(bytes)).collect(joining(", "));
-		final String[] item = { "" + count++, "" + d.getPID(), desc, value, rawText, "" + d.getCurrentElements(), rw,
+		final String[] item = { "" + count++, "" + d.pid(), desc, value, rawText, "" + d.currentElements(), rw,
 			name };
 		asyncAddListItem(item, keys, data);
 	}
@@ -649,7 +649,7 @@ class PropertyEditorTab extends BaseTabLayout
 	private void writeValues(final int objectIndex, final int pid, final String values, final int elems,
 		final PropertyClient.Property p)
 	{
-		final var optDptid = Optional.ofNullable(PropertyTypes.getAllPropertyTypes().get(p.getPDT()));
+		final var optDptid = Optional.ofNullable(PropertyTypes.getAllPropertyTypes().get(p.pdt()));
 		final int typeSize = optDptid.flatMap(dptid -> dptSize(dptid.getMainNumber(), dptid.getDPT()))
 					.or(() -> p.dpt().flatMap(dpt -> dptSize(0, dpt)))
 					.orElse(1);
@@ -657,7 +657,7 @@ class PropertyEditorTab extends BaseTabLayout
 		final String data;
 		final int elements;
 		// special case for KNXnet/IP friendly name: 30 chars
-		if (p.getObjectType() == 11 && pid == 76) {
+		if (p.objectType() == 11 && pid == 76) {
 			final byte[] bytes = values.getBytes(StandardCharsets.ISO_8859_1);
 			final byte[] array = Arrays.copyOf(bytes, 30);
 			data = "0x" + HexFormat.of().formatHex(array);
@@ -681,7 +681,7 @@ class PropertyEditorTab extends BaseTabLayout
 		runCommand("desc", objectIndex, pid);
 		// read maximum number of values back (number of elements might have changed)
 		// TODO we should wait until description got updated by "desc" command
-		final int readBack = Math.max(elements, findDescription(objectIndex, pid).getCurrentElements());
+		final int readBack = Math.max(elements, findDescription(objectIndex, pid).currentElements());
 		runCommand("get", objectIndex, pid, "1", readBack);
 	}
 
@@ -854,7 +854,7 @@ class PropertyEditorTab extends BaseTabLayout
 		final Optional<PropertyClient.Property> opt = getDefinition(Integer.parseInt(objType), Integer.parseInt(pid));
 		if (opt.isPresent()) {
 			final PropertyClient.Property p = opt.get();
-			p.dpt().flatMap(dpt -> createTranslator(0, dpt)).or(() -> createTranslator(p.getPDT()))
+			p.dpt().flatMap(dpt -> createTranslator(0, dpt)).or(() -> createTranslator(p.pdt()))
 					.ifPresentOrElse(t -> {
 						final DPT dpt = t.getType();
 						bounds.add(dpt.getLowerValue());
@@ -882,7 +882,7 @@ class PropertyEditorTab extends BaseTabLayout
 	private Description findDescription(final int objectIndex, final int pid)
 	{
 		for (final Description d : descriptions) {
-			if (d.getObjectIndex() == objectIndex && d.getPID() == pid)
+			if (d.objectIndex() == objectIndex && d.pid() == pid)
 				return d;
 		}
 		return null;
@@ -892,7 +892,7 @@ class PropertyEditorTab extends BaseTabLayout
 	{
 		for (int i = 0; i < descriptions.size(); i++) {
 			final Description d = descriptions.get(i);
-			if (d.getObjectIndex() == update.getObjectIndex() && d.getPID() == update.getPID()) {
+			if (d.objectIndex() == update.objectIndex() && d.pid() == update.pid()) {
 				descriptions.set(i, update);
 				return true;
 			}
@@ -1025,8 +1025,8 @@ class PropertyEditorTab extends BaseTabLayout
 								super.runCommand(cmd);
 
 								for (final Description d : descriptions) {
-									super.runCommand("get", "" + d.getObjectIndex(), "" + d.getPID(), "1",
-											"" + d.getCurrentElements());
+									super.runCommand("get", "" + d.objectIndex(), "" + d.pid(), "1",
+											"" + d.currentElements());
 								}
 								Main.asyncExec(() -> {
 									if (editArea.isDisposed())
@@ -1058,19 +1058,19 @@ class PropertyEditorTab extends BaseTabLayout
 						{
 							if (replaceDescription(d)) {
 								Main.asyncExec(() -> {
-									find(d.getObjectIndex(), d.getPID()).ifPresent(
-											i -> i.setText(Columns.Elements.ordinal(), "" + d.getCurrentElements()));
-									findPropertyPageControl(d.getObjectIndex(), d.getPID(), "current-elements")
-											.ifPresent(c -> ((Spinner) c).setValues(d.getCurrentElements(), 0,
-													Math.max(d.getCurrentElements(), d.getMaxElements()), 0, 1, 10));
+									find(d.objectIndex(), d.pid()).ifPresent(
+											i -> i.setText(Columns.Elements.ordinal(), "" + d.currentElements()));
+									findPropertyPageControl(d.objectIndex(), d.pid(), "current-elements")
+											.ifPresent(c -> ((Spinner) c).setValues(d.currentElements(), 0,
+													Math.max(d.currentElements(), d.maxElements()), 0, 1, 10));
 								});
 								return;
 							}
 							descriptions.add(d);
 							addRow(descriptions.size() - 1);
 							if (isNewInterfaceObject(descriptions.size() - 1))
-								addInterfaceObjectToTree(d.getObjectIndex(), d.getObjectType());
-							addPropertyToTree(d.getObjectType(), d.getPID());
+								addInterfaceObjectToTree(d.objectIndex(), d.objectType());
+							addPropertyToTree(d.objectType(), d.pid());
 						}
 
 						@Override
@@ -1086,7 +1086,7 @@ class PropertyEditorTab extends BaseTabLayout
 								final String rawText = raw.stream().map(data -> HexFormat.of().formatHex(data))
 										.collect(joining(", "));
 								find(idx, pid).ifPresent(i -> i.setText(Columns.RawValues.ordinal(), rawText));
-								final String text = formatted(d.getObjectType(), pid, value);
+								final String text = formatted(d.objectType(), pid, value);
 								find(idx, pid).ifPresent(i -> i.setText(Columns.Values.ordinal(), text));
 								findPropertyPageControl(idx, pid, "property-edit-field")
 										.ifPresent(c -> ((Text) c).setText(text));
