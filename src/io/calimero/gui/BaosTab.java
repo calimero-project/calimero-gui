@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2020, 2023 B. Malinowsky
+    Copyright (c) 2020, 2024 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -37,6 +37,7 @@
 package io.calimero.gui;
 
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -140,13 +141,12 @@ class BaosTab extends BaseTabLayout {
 			Main.asyncExec(() -> {
 				if (cancel.isDisposed())
 					return;
-				setHeaderInfo(statusInfo(2));
+				setHeaderInfoPhase(statusInfo(2));
 				cancel.setEnabled(false);
 			});
 		}
 	}
 
-	private final ConnectArguments connect;
 	private final BaosClientTool tool;
 
 	private Composite editArea;
@@ -163,10 +163,9 @@ class BaosTab extends BaseTabLayout {
 
 
 	BaosTab(final CTabFolder tf, final ConnectArguments args) {
-		super(tf, "BAOS view for " + uniqueId(args), headerInfo(adjustPreferRoutingConfig(args), "Connecting to"));
-		connect = args;
+		super(tf, "BAOS view for " + args.friendlyName(), "Connecting to", true, args);
 
-		final String prefix = "knx-baos_" + deviceName() + "_";
+		final String prefix = "knx-baos_" + connect.id() + "_";
 		final String suffix = ".csv";
 		setExportName(prefix, suffix);
 
@@ -195,8 +194,8 @@ class BaosTab extends BaseTabLayout {
 
 		workArea.layout(true, true);
 
-		if ("3671".equals(connect.port))
-			connect.port = "12004";
+		if (connect.remote != null && connect.remote.getPort() == 3671)
+			connect.remote = new InetSocketAddress(connect.remote.getAddress(), 12004);
 		final List<String> toolArgs = connect.getArgs(false);
 		asyncAddLog("Using command line: " + String.join(" ", toolArgs));
 		tool = new BaosClientTool(toolArgs.toArray(String[]::new));
@@ -698,7 +697,7 @@ class BaosTab extends BaseTabLayout {
 	}
 
 	private void startBaosClient() {
-		setHeaderInfo(statusInfo(0));
+		setHeaderInfoPhase(statusInfo(0));
 
 		toolThread = new Thread(() -> {
 			try {
@@ -708,7 +707,7 @@ class BaosTab extends BaseTabLayout {
 						return;
 					for (final Control c : editArea.getChildren())
 						c.setEnabled(true);
-					setHeaderInfo(statusInfo(1));
+					setHeaderInfoPhase(statusInfo(1));
 				});
 
 				while (true) {
@@ -724,7 +723,7 @@ class BaosTab extends BaseTabLayout {
 			}
 			catch (final Exception e) {
 				asyncAddLog(e);
-				Main.asyncExec(() -> setHeaderInfo(statusInfo(2)));
+				Main.asyncExec(() -> setHeaderInfoPhase(statusInfo(2)));
 			}
 			finally {
 				tool.quit();
@@ -735,12 +734,13 @@ class BaosTab extends BaseTabLayout {
 	}
 
 	// phase: 0=connecting, 1=reading, 2=completed, x=unknown
-	private String statusInfo(final int phase) {
-		final String status = phase == 0 ? "Connecting to"
-				: phase == 1 ? "Connected to" : phase == 2 ? "Completed BAOS access to device" : "Unknown";
-		final String device = connect.knxAddress.isEmpty() ? "" : " " + connect.knxAddress;
-		return status + device + (connect.remote == null ? "" : " " + connect.remote) + " port " + connect.port
-				+ (connect.useNat() ? " (using NAT)" : "");
+	private static String statusInfo(final int phase) {
+		return switch (phase) {
+			case 0 -> "Connecting to";
+			case 1 -> "Connected to";
+			case 2 -> "Completed BAOS access to device";
+			default -> "Unknown";
+		};
 	}
 
 	private SelectionListener adapt(final Consumer<SelectionEvent> c) {
@@ -904,13 +904,5 @@ class BaosTab extends BaseTabLayout {
 			case 2 -> "115200 Bd";
 			default -> "invalid";
 		};
-	}
-
-	private String deviceName() {
-		if (connect.knxAddress != null && !connect.knxAddress.isEmpty())
-			return connect.knxAddress;
-		if (connect.remote != null && !connect.remote.isEmpty())
-			return connect.remote;
-		return connect.port;
 	}
 }

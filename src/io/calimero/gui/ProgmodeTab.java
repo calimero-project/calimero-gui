@@ -57,13 +57,11 @@ import io.calimero.tools.ProgMode;
  */
 class ProgmodeTab extends BaseTabLayout
 {
-	private final ConnectArguments connect;
 	private Thread task;
 
 	ProgmodeTab(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, "In Programming Mode ", "Connect to " + connectionInfo(args));
-		connect = args;
+		super(tf, "In Programming Mode ", "Connect to", false, args);
 
 		final TableColumn device = new TableColumn(list, SWT.LEFT);
 		device.setText("Device Address");
@@ -108,10 +106,6 @@ class ProgmodeTab extends BaseTabLayout
 		for (final IndividualAddress addr : new TreeSet<>(Arrays.asList(devices)))
 			new TableItem(list, SWT.NONE).setText(addr.toString());
 
-		setHeaderInfo("Connected to " + connectionInfo(connect));
-	}
-
-	private static String connectionInfo(final ConnectArguments connect) {
-		return connect.name + ", " + connect.remote + " port " + connect.port + (connect.useNat() ? ", using NAT" : "");
+		setHeaderInfoPhase("Connected to");
 	}
 }

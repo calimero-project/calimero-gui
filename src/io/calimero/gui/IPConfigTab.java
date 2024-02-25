@@ -53,12 +53,9 @@ import io.calimero.tools.IPConfig;
  */
 class IPConfigTab extends BaseTabLayout
 {
-	private final ConnectArguments connect;
-
 	IPConfigTab(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, "KNX IP configuration of " + args.name, headerInfo(adjustPreferRoutingConfig(args), "Connecting to"));
-		connect = args;
+		super(tf, "KNX IP configuration of " + args.friendlyName(), "Connecting to", true, args);
 
 		final TableColumn pid = new TableColumn(list, SWT.LEFT);
 		pid.setText("Property ID");
@@ -83,7 +80,7 @@ class IPConfigTab extends BaseTabLayout
 			final IPConfig config = new IPConfig(args.toArray(new String[0])) {
 				@Override
 				public void run() {
-					Main.asyncExec(() -> setHeaderInfo(headerInfo(connect, "Query configuration from")));
+					Main.asyncExec(() -> setHeaderInfoPhase("Query configuration from"));
 					super.run();
 				}
 
@@ -102,7 +99,7 @@ class IPConfigTab extends BaseTabLayout
 						}
 						list.setRedraw(true);
 
-						setHeaderInfo(headerInfo(connect, "Configuration received from"));
+						setHeaderInfoPhase("Configuration received from");
 					});
 				}
 			};

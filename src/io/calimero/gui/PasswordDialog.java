@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2018, 2023 B. Malinowsky
+    Copyright (c) 2018, 2024 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@
 
 package io.calimero.gui;
 
+import java.net.InetAddress;
 import java.nio.file.Path;
 
 import org.eclipse.swt.SWT;
@@ -133,10 +134,10 @@ class PasswordDialog {
 		});
 	}
 
-	PasswordDialog(final String interfaceName, final String multicastGroup) {
+	PasswordDialog(final String interfaceName, final InetAddress multicastGroup) {
 		this(interfaceName);
 
-		passwordLabel.setText("Group/backbone key for multicast group " + multicastGroup);
+		passwordLabel.setText("Group/backbone key for multicast group " + multicastGroup.getHostAddress());
 
 		final Text groupKeyData = new Text(shell, SWT.BORDER);
 		groupKeyData.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));

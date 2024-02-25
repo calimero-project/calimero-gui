@@ -174,13 +174,11 @@ class ProcCommTab extends BaseTabLayout
 
 	private long eventCounter;
 	private long eventCounterFiltered = 1;
-	private final ConnectArguments connect;
 
 
 	ProcCommTab(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, (args.protocol + " connection to " + args.name), headerInfo(args, "Connecting to"));
-		connect = args;
+		super(tf, (args.protocol + " connection to " + args.name), "Connecting to", false, args);
 
 		list.setLinesVisible(true);
 		final TableColumn cnt = new TableColumn(list, SWT.RIGHT);
@@ -417,7 +415,7 @@ class ProcCommTab extends BaseTabLayout
 											c.setEnabled(false);
 									}
 								}
-								setHeaderInfo(headerInfo(connect, "Disconnected from"));
+								setHeaderInfoPhase("Disconnected from");
 							});
 						}
 					};
@@ -427,7 +425,7 @@ class ProcCommTab extends BaseTabLayout
 							return;
 						for (final Control c : editArea.getChildren())
 							c.setEnabled(true);
-						setHeaderInfo(headerInfo(connect, "Connected to"));
+						setHeaderInfoPhase("Connected to");
 					});
 				}
 				catch (final Exception e) {

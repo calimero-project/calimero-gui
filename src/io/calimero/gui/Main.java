@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2023 B. Malinowsky
+    Copyright (c) 2006, 2024 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -37,7 +37,6 @@
 package io.calimero.gui;
 
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 
 import org.eclipse.swt.SWT;
@@ -62,9 +61,7 @@ import org.eclipse.swt.widgets.ToolItem;
 
 import io.calimero.GroupAddress;
 import io.calimero.GroupAddress.Presentation;
-import io.calimero.SerialNumber;
 import io.calimero.gui.ConnectDialog.ConnectArguments;
-import io.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 
 /**
  * @author B. Malinowsky
@@ -91,8 +88,8 @@ public class Main
 		addLauncherBar();
 		tf = new CTabFolder(shell, SWT.NONE | SWT.BORDER);
 
-		addToolItem(header, "Connect ...", () -> new ConnectDialog(tf, Protocol.Unknown, null, null, "", "", null, null,
-				false, Map.of(), discoverTab().preferRouting.getSelection(), discoverTab().preferTcp.getSelection(), null, SerialNumber.Zero));
+		addToolItem(header, "Connect ...", () -> new ConnectDialog(tf, DiscoverTab.UnknownAccess, discoverTab().nat.getSelection(),
+				discoverTab().preferRouting.getSelection(), discoverTab().preferTcp.getSelection()));
 		addToolItem(header, "Show log", () -> new LogTab(tf));
 		addToolItem(header, "Show keyring", () -> new KeyringTab(tf));
 		addToolItem(header, "Show projects", () -> new ProjectTab(tf));

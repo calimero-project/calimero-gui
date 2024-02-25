@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2023 B. Malinowsky
+    Copyright (c) 2006, 2024 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -46,12 +46,11 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import io.calimero.serial.usb.Device;
+import io.calimero.knxnetip.KNXnetIPRouting;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.events.SelectionEvent;
@@ -77,6 +76,7 @@ import io.calimero.knxnetip.util.ServiceFamiliesDIB;
 import io.calimero.knxnetip.util.ServiceFamiliesDIB.ServiceFamily;
 import io.calimero.link.medium.KNXMediumSettings;
 import io.calimero.serial.SerialConnectionFactory;
+import io.calimero.serial.usb.Device;
 import io.calimero.serial.usb.UsbConnection;
 import io.calimero.serial.usb.UsbConnectionFactory;
 import io.calimero.tools.Discover;
@@ -86,13 +86,35 @@ import io.calimero.tools.Discover;
  */
 class DiscoverTab extends BaseTabLayout
 {
-	private Button nat;
+	interface Access {
+		ConnectDialog.ConnectArguments.Protocol protocol();
+
+		String name();
+
+		int medium();
+
+		SerialNumber serialNumber();
+	}
+
+	record SerialAccess(Protocol protocol, String name, int medium, String port, SerialNumber serialNumber)
+			implements Access {}
+
+	record IpAccess(Protocol protocol, String name, int medium, InetSocketAddress localEP, InetSocketAddress remote,
+			Optional<InetSocketAddress> multicast, Map<ServiceFamiliesDIB.ServiceFamily, Integer> securedServices,
+			IndividualAddress hostIA, SerialNumber serialNumber) implements Access {}
+
+	record UnknownAccess(Protocol protocol, String name, int medium, SerialNumber serialNumber) implements Access {}
+
+	static final UnknownAccess UnknownAccess = new UnknownAccess(Protocol.Unknown, "",
+			KNXMediumSettings.MEDIUM_TP1, SerialNumber.Zero);
+
+	Button nat;
 	Button preferRouting;
 	Button preferTcp;
 
 	DiscoverTab(final CTabFolder tf)
 	{
-		super(tf, "Endpoint discovery && description", null, false);
+		super(tf, "Endpoint discovery && description", null, false, false, null);
 		final Composite parent = list.getParent();
 		final int style = list.getStyle();
 		final Sash bottom = (Sash) ((FormData) list.getLayoutData()).bottom.control;
@@ -148,32 +170,31 @@ class DiscoverTab extends BaseTabLayout
 			return Optional.empty();
 
 		final TableItem defaultInterface = item.get();
-		Protocol protocol = (Protocol) defaultInterface.getData("protocol");
+		final var access = (Access) defaultInterface.getData("access");
+		Protocol protocol = access.protocol();
 		boolean tunneling = protocol == Protocol.Tunneling;
-		if (tunneling && preferRouting.getSelection()) {
-			final boolean routing = Optional.ofNullable((Boolean) defaultInterface.getData("supportsRouting")).orElse(false);
-			if (routing) {
-				tunneling = false;
-				protocol = Protocol.Routing;
-			}
+		if (preferRouting.getSelection() && access instanceof IpAccess ipAccess && ipAccess.multicast().isPresent()) {
+			tunneling = false;
+			protocol = Protocol.Routing;
 		}
 
-		final IndividualAddress host = (IndividualAddress) defaultInterface.getData("hostIA");
-		final String remote = (String) (tunneling ? defaultInterface.getData("host") : defaultInterface.getData("mcast"));
-		final ConnectArguments args = new ConnectArguments(protocol, (String) defaultInterface.getData("localEP"), remote,
-				(String) defaultInterface.getData("port"), nat.getSelection(), preferTcp.getSelection(), host, "", "");
-		args.serverIP = (String) defaultInterface.getData("host");
-		args.name = (String) defaultInterface.getData("name");
-		args.serverIA = Optional.ofNullable(defaultInterface.getData("hostIA")).map(Objects::toString).orElse("");
-		args.knxMedium = Optional.ofNullable((Integer) defaultInterface.getData("medium")).orElse(KNXMediumSettings.MEDIUM_TP1);
-		args.secureServices = secureServices(defaultInterface);
-		args.serialNumber = (SerialNumber) defaultInterface.getData("SN");
+		final IndividualAddress ia = access instanceof IpAccess ipAccess ? ipAccess.hostIA() : null;
+		var hostEP = access instanceof IpAccess ipAccess ? ipAccess.remote() : null;
+		var mcast = access instanceof IpAccess ipAccess ? ipAccess.multicast().orElse(null) : null;
+		var localEP = access instanceof IpAccess ipAccess ? ipAccess.localEP().getAddress() : null;
+		final InetSocketAddress remote = tunneling ? hostEP : mcast;
+		String port = access instanceof SerialAccess sa ? sa.port() : null;
+		final var args = new ConnectArguments(protocol, localEP, remote,
+				port, nat.getSelection(), preferTcp.getSelection(), ia, "", "");
+		args.name = access.name();
+		args.knxMedium = access.medium();
+		args.serialNumber = access.serialNumber();
+		if (access instanceof IpAccess ipAccess) {
+			args.serverIP = ipAccess.remote();
+			args.serverIA = ipAccess.hostIA();
+			args.secureServices = ipAccess.securedServices();
+		}
 		return Optional.of(args);
-	}
-
-	@SuppressWarnings("unchecked")
-	private static Map<ServiceFamily, Integer> secureServices(final TableItem tableItem) {
-		return (Map<ServiceFamily, Integer>) Optional.ofNullable(tableItem.getData("secure")).orElse(Map.of());
 	}
 
 	@Override
@@ -205,18 +226,22 @@ class DiscoverTab extends BaseTabLayout
 
 	private void discover()
 	{
-		final java.util.List<String> args = new ArrayList<>();
-		args.add("search");
-		if (nat.getSelection())
-			args.add("--nat");
 		list.removeAll();
 		list.redraw();
 		log.removeAll();
+		supportsSearchResponseV2.clear();
+
+		final var args = new ArrayList<String>();
+		args.add("search");
+		if (nat.getSelection())
+			args.add("--nat");
+
 		asyncAddLog("Discover KNXnet/IP servers, KNX USB interfaces, and USB serial KNX interfaces.");
 		asyncAddLog("Selecting an interface opens the connection dialog, checking makes it the default interface.");
 		asyncAddLog("KNXnet/IP discovery - using command line: " + String.join(" ", args));
+
+		final String sep = "\n";
 		try {
-			final String sep = "\n";
 			final Runnable r = new Discover(args.toArray(new String[0])) {
 				@Override
 				protected void onEndpointReceived(final Result<SearchResponse> result)
@@ -271,9 +296,8 @@ class DiscoverTab extends BaseTabLayout
 									}
 
 									final String vp = String.format("%04x:%04x", d.vendorId(), d.productId());
-									addListItem(new String[] { "USB -- ID " + d },
-											new String[] { "protocol", "name", "port", "medium", "SN" },
-											new Object[] { Protocol.USB, d.product(), vp, medium, SerialNumber.Zero });
+									addListItem("USB -- ID " + d,
+											new SerialAccess(Protocol.USB, d.product(), medium, vp, SerialNumber.Zero));
 								}
 								catch (final RuntimeException e) {
 									asyncAddLog("error: " + e.getMessage());
@@ -281,10 +305,9 @@ class DiscoverTab extends BaseTabLayout
 							}
 							for (final var d : vserialKnxDevices) {
 								try {
-									addListItem(new String[] { "TP-UART -- ID " + d },
-											new String[] { "protocol", "name", "port", "medium", "SN" },
-											new Object[] { Protocol.Tpuart, d.product(), "/dev/",
-													KNXMediumSettings.MEDIUM_TP1, SerialNumber.Zero });
+									addListItem("TP-UART -- ID " + d,
+											new SerialAccess(Protocol.Tpuart, d.product(),
+													KNXMediumSettings.MEDIUM_TP1, "/dev/", SerialNumber.Zero));
 								}
 								catch (final RuntimeException e) {
 									asyncAddLog("error: " + e.getMessage());
@@ -308,15 +331,16 @@ class DiscoverTab extends BaseTabLayout
 		}
 	}
 
+	void addListItem(final String itemText, final Access access) {
+		addListItem(new String[]{ itemText }, new String[]{ "access" }, new Object[] { access });
+	}
+
 	@Override
 	protected void onListItemSelected(final SelectionEvent e)
 	{
 		final TableItem i = (TableItem) e.item;
-		final var secure = secureServices(i);
-		new ConnectDialog(getTabFolder(), (Protocol) i.getData("protocol"), (String) i.getData("localEP"),
-				(String) i.getData("name"), (String) i.getData("host"), (String) i.getData("port"),
-				(String) i.getData("mcast"), (Integer) i.getData("medium"), nat.getSelection(), secure,
-				preferRouting.getSelection(), preferTcp.getSelection(), (IndividualAddress) i.getData("hostIA"), (SerialNumber) i.getData("SN"));
+		new ConnectDialog(getTabFolder(), (Access) i.getData("access"), nat.getSelection(),
+				preferRouting.getSelection(), preferTcp.getSelection());
 	}
 
 	private static final String secureSymbol = new String(Character.toChars(0x1F512));
@@ -337,14 +361,14 @@ class DiscoverTab extends BaseTabLayout
 		else if (supportsSearchResponseV2.contains(result.remoteEndpoint()))
 			return;
 
-		String mcast = null;
+		var mcast = Optional.<InetSocketAddress>empty();
 		try {
-			mcast = InetAddress.getByAddress(r.getDevice().getMulticastAddress()).getHostAddress();
+			mcast = Optional.of(new InetSocketAddress(InetAddress.getByAddress(r.getDevice().getMulticastAddress()),
+					KNXnetIPRouting.DEFAULT_PORT));
 		}
 		catch (final UnknownHostException e) {}
 
 		boolean tunneling = false;
-		boolean routing = false;
 		Map<ServiceFamily, Integer> secureServices = Map.of();
 
 		String itemText = newItem;
@@ -357,8 +381,6 @@ class DiscoverTab extends BaseTabLayout
 							itemText = itemText.replaceFirst("UDP", "UDP & TCP");
 						if (entry.getKey() == ServiceFamily.Tunneling)
 							tunneling = true;
-						if (entry.getKey() == ServiceFamily.Routing)
-							routing = true;
 					}
 				}
 				else if (families.getDescTypeCode() == DIB.SecureServiceFamilies) {
@@ -371,11 +393,10 @@ class DiscoverTab extends BaseTabLayout
 
 		final Protocol protocol = tunneling ? Protocol.Tunneling : Protocol.Routing;
 
-		addListItem(new String[] { itemText },
-				new String[] { "protocol", "localEP", "name", "host", "port", "mcast", "medium", "secure", "supportsRouting", "hostIA", "SN" },
-				new Object[] { protocol, result.localEndpoint().getAddress().getHostAddress(), r.getDevice().getName(),
-					r.getControlEndpoint().getAddress().getHostAddress(), Integer.toString(r.getControlEndpoint().getPort()), mcast,
-					r.getDevice().getKNXMedium(), secureServices, routing, result.response().getDevice().getAddress(),
-					result.response().getDevice().serialNumber() });
+		final var ctrlEndoint = r.getControlEndpoint();
+		addListItem(itemText, new IpAccess(protocol, r.getDevice().getName(), r.getDevice().getKNXMedium(),
+				result.localEndpoint(), ctrlEndoint.endpoint(),
+				mcast, secureServices, result.response().getDevice().getAddress(),
+				result.response().getDevice().serialNumber()));
 	}
 }
