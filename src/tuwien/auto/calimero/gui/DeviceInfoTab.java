@@ -55,13 +55,11 @@ import tuwien.auto.calimero.tools.DeviceInfo;
  */
 class DeviceInfoTab extends BaseTabLayout
 {
-	private final ConnectArguments connect;
 	private Thread worker;
 
 	DeviceInfoTab(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, "Device info of " + uniqueId(args), headerInfo(adjustPreferRoutingConfig(args), "Read info of") + " ...");
-		connect = args;
+		super(tf, "Device info of " + args.friendlyName(), "Read info of", true, args);
 
 		final TableColumn pid = new TableColumn(list, SWT.LEFT);
 		pid.setText("Setting");
@@ -109,7 +107,7 @@ class DeviceInfoTab extends BaseTabLayout
 						if (list.isDisposed())
 							return;
 						final String status = canceled ? "canceled" : "completed";
-						setHeaderInfo(connect, "Device info " + status + " for");
+						setHeaderInfoPhase("Device info " + status + " for");
 					});
 					if (thrown != null)
 						asyncAddLog(thrown);
@@ -129,7 +127,7 @@ class DeviceInfoTab extends BaseTabLayout
 					i.setText(new String[] { "\t" + param, item.value(), rawString });
 				}
 			};
-			worker = new Thread(config, "Info reader " + uniqueId(connect));
+			worker = new Thread(config, "Info reader " + connect.friendlyName());
 			worker.start();
 		}
 		catch (final KNXIllegalArgumentException e) {

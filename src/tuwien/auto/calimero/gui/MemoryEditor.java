@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2017, 2023 B. Malinowsky
+    Copyright (c) 2017, 2024 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -123,7 +123,6 @@ class MemoryEditor extends BaseTabLayout
 	private Label binary;
 	private Button write;
 
-	private final ConnectArguments connect;
 	private final IndividualAddress device;
 	private Thread workerThread;
 	private KNXNetworkLink knxLink;
@@ -143,15 +142,14 @@ class MemoryEditor extends BaseTabLayout
 
 	MemoryEditor(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, (args.protocol + " connection to " + args.name), headerInfo(adjustPreferRoutingConfig(args), "Connecting to"));
-		connect = args;
+		super(tf, args.protocol + " connection to " + args.name, "Connecting to", true, args);
 		IndividualAddress ia;
 		try {
 			ia = new IndividualAddress(connect.knxAddress);
 		}
 		catch (final KNXFormatException e) {
 			ia = null;
-			setHeaderInfo(statusInfo(3));
+			setHeaderInfoPhase(statusInfo(3));
 			asyncAddLog(e.getMessage());
 		}
 		device = ia;
@@ -547,7 +545,7 @@ class MemoryEditor extends BaseTabLayout
 			return new KNXNetworkLinkTpuart(connect.port, medium, Collections.emptyList());
 
 		final InetSocketAddress local = new InetSocketAddress(connect.local, 0);
-		final InetAddress addr = InetAddress.getByName(connect.remote);
+		final InetAddress addr = connect.remote.getAddress();
 		if (addr.isMulticastAddress()) {
 			if (connect.isSecure(Protocol.Routing)) {
 				try {
@@ -564,15 +562,14 @@ class MemoryEditor extends BaseTabLayout
 			}
 			return KNXNetworkLinkIP.newRoutingLink(local.getAddress(), addr, medium);
 		}
-		final InetSocketAddress remote = new InetSocketAddress(addr, Integer.parseInt(connect.port));
 		if (connect.isSecure(Protocol.Tunneling)) {
 			final List<String> args = connect.getArgs(false);
 			final byte[] devAuth = fromHex(args.get(1 + args.indexOf("--device-key")));
 			final int userId = Integer.parseInt(args.get(1 + args.indexOf("--user")));
 			final byte[] userKey = fromHex(args.get(1 + args.indexOf("--user-key")));
-			return KNXNetworkLinkIP.newSecureTunnelingLink(local, remote, connect.useNat(), devAuth, userId, userKey, medium);
+			return KNXNetworkLinkIP.newSecureTunnelingLink(local, connect.remote, connect.useNat(), devAuth, userId, userKey, medium);
 		}
-		return KNXNetworkLinkIP.newTunnelingLink(local, remote, connect.useNat(), medium);
+		return KNXNetworkLinkIP.newTunnelingLink(local, connect.remote, connect.useNat(), medium);
 	}
 
 	private void restart()
@@ -620,7 +617,7 @@ class MemoryEditor extends BaseTabLayout
 		runWorker(() -> {
 			try (ManagementClient mgmt = new ManagementClientImpl(knxLink());
 					Destination dst = mgmt.createDestination(device, true)) {
-				Main.asyncExec(() -> setHeaderInfo(statusInfo(1)));
+				Main.asyncExec(() -> setHeaderInfoPhase(statusInfo(1)));
 				for (final Iterator<Entry<Integer, Integer>> i = modified.entrySet().iterator(); i.hasNext();) {
 					final Entry<Integer, Integer> entry = i.next();
 					try {
@@ -644,7 +641,7 @@ class MemoryEditor extends BaseTabLayout
 	{
 		runWorker(() -> {
 			try (ManagementProcedures mgmt = new ManagementProceduresImpl(knxLink())) {
-				Main.asyncExec(() -> setHeaderInfo(statusInfo(1)));
+				Main.asyncExec(() -> setHeaderInfoPhase(statusInfo(1)));
 				final int stride = 1;
 				for (long addr = startAddress; addr < startAddress + bytes; addr += stride) {
 					final int min = (int) Math.min(stride, startAddress + bytes - addr);
@@ -668,7 +665,7 @@ class MemoryEditor extends BaseTabLayout
 
 	private void runWorker(final Runnable r)
 	{
-		setHeaderInfo(statusInfo(0));
+		setHeaderInfoPhase(statusInfo(0));
 		workerThread = new Thread(() -> {
 			Main.asyncExec(() -> {
 				for (final Control c : editArea.getChildren())
@@ -679,7 +676,7 @@ class MemoryEditor extends BaseTabLayout
 			}
 			finally {
 				Main.asyncExec(() -> {
-					setHeaderInfo(statusInfo(2));
+					setHeaderInfoPhase(statusInfo(2));
 					editArea.setEnabled(true);
 					for (final Control c : editArea.getChildren()) {
 						if (c != write || !modified.isEmpty())
@@ -748,14 +745,14 @@ class MemoryEditor extends BaseTabLayout
 	}
 
 	// phase: 0=connecting, 1=reading, 2=completed, 3=error, 4=unknown
-	private String statusInfo(final int phase)
-	{
-		final String[] phases = { "Connecting to", "Reading memory of", "Completed reading memory of",
-			"Error reading memory of", "Unknown" };
-		final String status = phases[phase];
-		final String device = connect.knxAddress.isEmpty() ? "" : " device " + connect.knxAddress;
-		return status + device + (connect.remote == null ? "" : " " + connect.remote) + " on port " + connect.port
-				+ (connect.useNat() ? " (using NAT)" : "");
+	private static String statusInfo(final int phase) {
+		return switch (phase) {
+			case 0 -> "Connecting to";
+			case 1 -> "Reading memory of";
+			case 2 -> "Completed reading memory of";
+			case 3 -> "Error reading memory of";
+			default -> "Unknown";
+		};
 	}
 
 	private static String address(final long addr)

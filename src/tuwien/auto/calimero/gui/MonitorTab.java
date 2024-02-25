@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2023 B. Malinowsky
+    Copyright (c) 2006, 2024 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -81,7 +81,6 @@ class MonitorTab extends BaseTabLayout
 	private NetworkMonitor m;
 	private long eventCounter;
 	private long eventCounterFiltered = 1;
-	private final ConnectArguments connect;
 
 	private final DateTimeFormatter dateFormatter;
 	private final DateTimeFormatter timeFormatter;
@@ -90,8 +89,7 @@ class MonitorTab extends BaseTabLayout
 
 	MonitorTab(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, "Monitor for " + args.name, headerInfo(ignoreRoutingAndRemoteAddress(args), "Open monitor on"));
-		connect = args;
+		super(tf, "Monitor for " + args.name, "Open monitor on", false, ignoreRoutingAndRemoteAddress(args));
 
 		final TableColumn cnt = new TableColumn(list, SWT.RIGHT);
 		cnt.setText("#");
@@ -129,7 +127,7 @@ class MonitorTab extends BaseTabLayout
 
 		enableColumnAdjusting();
 
-		final String filter = args.remote == null ? args.port : args.remote;
+		final String filter = args.remote == null ? args.port : args.remote.getAddress().getHostAddress();
 		addLogIncludeFilter(".*" + Pattern.quote(filter) + ".*");
 		addLogExcludeFilter(".*Discoverer.*", ".*DevMgmt.*", ".*calimero\\.mgmt\\..*");
 
@@ -174,7 +172,7 @@ class MonitorTab extends BaseTabLayout
 			public void start() throws KNXException, InterruptedException
 			{
 				super.start();
-				Main.asyncExec(() -> setHeaderInfo(headerInfo(connect, "Monitoring on")));
+				Main.asyncExec(() -> setHeaderInfoPhase("Monitoring on"));
 			}
 
 			@Override

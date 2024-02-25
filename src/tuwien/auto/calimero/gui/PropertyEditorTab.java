@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2015, 2023 B. Malinowsky
+    Copyright (c) 2015, 2024 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -159,7 +159,6 @@ class PropertyEditorTab extends BaseTabLayout
 	private Combo bounds;
 	private Button cancel;
 
-	private final ConnectArguments connect;
 	private final boolean remotePropertySvc;
 	private Thread toolThread;
 	private KNXNetworkLink toolLink;
@@ -176,11 +175,10 @@ class PropertyEditorTab extends BaseTabLayout
 
 	PropertyEditorTab(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, "Properties of " + uniqueId(args), headerInfo(adjustPreferRoutingConfig(args), "Connecting to"));
-		connect = args;
+		super(tf, "Properties of " + args.friendlyName(), "Connecting to", true, args);
 		remotePropertySvc = !connect.knxAddress.isEmpty();
 
-		final String prefix = "knx-properties_" + deviceName() + "_";
+		final String prefix = "knx-properties_" + connect.id() + "_";
 		final String suffix = ".csv";
 		setExportName(prefix, suffix);
 
@@ -914,7 +912,7 @@ class PropertyEditorTab extends BaseTabLayout
 	private void restart()
 	{
 		if (connect.knxAddress.isEmpty()) {
-			if (askUser("Restart KNX Device " + deviceName(), "Perform local device management reset?") != SWT.YES)
+			if (askUser("Restart KNX " + connect.friendlyName(), "Perform local device management reset?") != SWT.YES)
 				return;
 
 			toolThread.interrupt();
@@ -986,7 +984,7 @@ class PropertyEditorTab extends BaseTabLayout
 		final List<String> args = new ArrayList<>();
 		args.addAll(connect.getArgs(true));
 		args.addAll(cmd);
-		setHeaderInfo(statusInfo(0));
+		setHeaderInfoPhase(statusInfo(0));
 
 		// ensure user 1 if we're using local device management
 		if (!args.contains("-r")) {
@@ -1017,7 +1015,7 @@ class PropertyEditorTab extends BaseTabLayout
 						{
 							toolLink = link();
 							if (init) {
-								Main.asyncExec(() -> setHeaderInfo(statusInfo(1)));
+								Main.asyncExec(() -> setHeaderInfoPhase(statusInfo(1)));
 								pc.addDefinitions(definitions);
 								map.putAll(pc.getDefinitions());
 
@@ -1032,7 +1030,7 @@ class PropertyEditorTab extends BaseTabLayout
 										return;
 									for (final Control c : editArea.getChildren())
 										c.setEnabled(true);
-									setHeaderInfo(statusInfo(2));
+									setHeaderInfoPhase(statusInfo(2));
 								});
 							}
 							while (true) {
@@ -1103,7 +1101,7 @@ class PropertyEditorTab extends BaseTabLayout
 							Main.asyncExec(() -> {
 								if (cancel.isDisposed())
 									return;
-								setHeaderInfo(statusInfo(2));
+								setHeaderInfoPhase(statusInfo(2));
 								cancel.setEnabled(false);
 							});
 						}
@@ -1119,13 +1117,13 @@ class PropertyEditorTab extends BaseTabLayout
 	}
 
 	// phase: 0=connecting, 1=reading, 2=completed, x=unknown
-	private String statusInfo(final int phase)
-	{
-		final String status = phase == 0 ? "Connecting to"
-				: phase == 1 ? "Reading properties of device" : phase == 2 ? "Completed property access of device" : "Unknown";
-		final String device = connect.knxAddress.isEmpty() ? "" : " " + connect.knxAddress;
-		return status + device + (connect.remote == null ? "" : " " + connect.remote) + " on port " + connect.port
-				+ (connect.useNat() ? " (using NAT)" : "");
+	private static String statusInfo(final int phase) {
+		return switch (phase) {
+			case 0 -> "Connecting to";
+			case 1 -> "Reading properties of";
+			case 2 -> "Completed property access of";
+			default -> "Unknown";
+		};
 	}
 
 	// assumes we're running on the main thread
@@ -1157,14 +1155,6 @@ class PropertyEditorTab extends BaseTabLayout
 	private String formatted(final int objectType, final int pid, final String value)
 	{
 		return value;
-	}
-
-	private String deviceName() {
-		if (connect.knxAddress != null && !connect.knxAddress.isEmpty())
-			return connect.knxAddress;
-		if (connect.remote != null && !connect.remote.isEmpty())
-			return connect.remote;
-		return connect.port;
 	}
 
 	private static void joinUninterruptibly(final Thread t) {

@@ -181,15 +181,13 @@ class ProcCommTab extends BaseTabLayout
 
 	private long eventCounter;
 	private long eventCounterFiltered = 1;
-	private final ConnectArguments connect;
 
 	private final DateTimeFormatter dateFormatter;
 	private final DateTimeFormatter timeFormatter;
 
 	ProcCommTab(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, (args.protocol + " connection to " + args.name), headerInfo(args, "Connecting to"));
-		connect = args;
+		super(tf, (args.protocol + " connection to " + args.name), "Connecting to", false, args);
 
 		list.setLinesVisible(true);
 		final TableColumn cnt = new TableColumn(list, SWT.RIGHT);
@@ -221,7 +219,7 @@ class ProcCommTab extends BaseTabLayout
 		decoded.setWidth(100);
 		enableColumnAdjusting();
 
-		final String filter = args.remote == null ? args.port : args.remote;
+		final String filter = args.remote == null ? args.port : args.remote.getAddress().getHostAddress();
 		addLogIncludeFilter(".*" + Pattern.quote(filter) + ".*");
 		addLogExcludeFilter(".*Discoverer.*", ".*DevMgmt.*", ".*calimero\\.mgmt\\..*");
 
@@ -448,7 +446,7 @@ class ProcCommTab extends BaseTabLayout
 											c.setEnabled(false);
 									}
 								}
-								setHeaderInfo(headerInfo(connect, "Disconnected from"));
+								setHeaderInfoPhase("Disconnected from");
 							});
 						}
 					};
@@ -458,7 +456,7 @@ class ProcCommTab extends BaseTabLayout
 							return;
 						for (final Control c : editArea.getChildren())
 							c.setEnabled(true);
-						setHeaderInfo(headerInfo(connect, "Connected to"));
+						setHeaderInfoPhase("Connected to");
 					});
 				}
 				catch (final Exception e) {

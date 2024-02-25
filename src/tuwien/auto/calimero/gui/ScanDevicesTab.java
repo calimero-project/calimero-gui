@@ -60,14 +60,12 @@ import tuwien.auto.calimero.tools.ScanDevices;
  */
 class ScanDevicesTab extends BaseTabLayout
 {
-	private final ConnectArguments connect;
 	private Button cancel;
 	private Thread worker;
 
 	ScanDevicesTab(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, "Scan subnet " + uniqueId(args), headerInfo(args, "Scanning subnet ..."));
-		connect = args;
+		super(tf, "Scan subnet " + args.friendlyName(), "Scanning subnet", false, args);
 
 		final TableColumn cnt = new TableColumn(list, SWT.RIGHT);
 		cnt.setText("#");
@@ -168,7 +166,7 @@ class ScanDevicesTab extends BaseTabLayout
 						}
 
 						final String status = canceled ? "canceled" : "completed";
-						setHeaderInfo(headerInfo(connect, "Device scan " + status + " for")
+						setHeaderInfo(connectInfo("Device scan " + status + " for", false)
 								+ " (select an address to read KNX device info)");
 						cancel.setEnabled(false);
 					});

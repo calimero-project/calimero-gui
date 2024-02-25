@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2023 B. Malinowsky
+    Copyright (c) 2006, 2024 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@ package tuwien.auto.calimero.gui;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -65,6 +66,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.ToolTip;
 
 import tuwien.auto.calimero.IndividualAddress;
 import tuwien.auto.calimero.KNXFormatException;
@@ -92,29 +94,29 @@ class ConnectDialog
 
 		String name;
 		String knxAddress;
-		String serverIA;
+		IndividualAddress serverIA;
 
 		Protocol protocol;
-		String remote;
+		InetSocketAddress remote;
 		String port;
 		int knxMedium;
 
-		final String local;
+		final InetAddress local;
 		private final boolean nat;
 		private final boolean tcp;
 		private final IndividualAddress host;
-		String serverIP;
+		InetSocketAddress serverIP;
 
 		String localKnxAddress;
-		Map<ServiceFamily, Integer> secureServices;
+		Map<ServiceFamily, Integer> secureServices = Map.of();
 
 		SerialNumber serialNumber = SerialNumber.Zero;
 
-		static ConnectArguments newKnxNetIP(final boolean routing, final String localHost, final String remoteHost,
-			final String port, final boolean nat, final boolean tcp, final String knxAddress, final IndividualAddress serverIA) {
+		static ConnectArguments newKnxNetIP(final boolean routing, final InetAddress localHost, final InetSocketAddress remoteHost,
+				final boolean nat, final boolean tcp, final String knxAddress, final IndividualAddress serverIA) {
 			final var config = new ConnectArguments(routing ? Protocol.Routing : Protocol.Tunneling, localHost,
-					remoteHost, port, nat, tcp, "", knxAddress);
-			config.serverIA = serverIA != null ? serverIA.toString() : "";
+					remoteHost, null, nat, tcp, "", knxAddress);
+			config.serverIA = serverIA;
 			return config;
 		}
 
@@ -134,7 +136,7 @@ class ConnectDialog
 			return new ConnectArguments(Protocol.FT12, null, null, port, false, false, "", knxAddress);
 		}
 
-		ConnectArguments(final Protocol p, final String local, final String remote,
+		ConnectArguments(final Protocol p, final InetAddress local, final InetSocketAddress remote,
 			final String port, final boolean nat, final boolean tcp, final String localKnxAddress,
 			final String remoteKnxAddress)
 		{
@@ -149,7 +151,7 @@ class ConnectDialog
 			this.knxAddress = remoteKnxAddress;
 		}
 
-		ConnectArguments(final Protocol p, final String local, final String remote, final String port,
+		ConnectArguments(final Protocol p, final InetAddress local, final InetSocketAddress remote, final String port,
 			final boolean nat, final boolean tcp, final IndividualAddress host, final String localKnxAddress,
 			final String remoteKnxAddress) {
 			protocol = p;
@@ -175,8 +177,28 @@ class ConnectDialog
 			}
 		}
 
-		public void useServerIA() {
-			knxAddress = serverIA;
+		// if prefer routing option is set but no knx address is given, we use the server knx address
+		ConnectArguments adjustPreferRoutingConfig() {
+			if (protocol == Protocol.Routing && knxAddress.isEmpty())
+				knxAddress = serverIA.toString();
+			return this;
+		}
+
+		public String friendlyName() {
+			if (!knxAddress.isEmpty())
+				return (knxAddress.split("\\.").length < 3 ? "line " : "device ") + knxAddress;
+
+			if (remote != null)
+				return "interface " + remote + (useNat() ? " (UDP/NAT)" : "") + (tcp ? " (TCP)" : "");
+			return "interface " + port;
+		}
+
+		public String id() {
+			if (knxAddress != null && !knxAddress.isEmpty())
+				return knxAddress;
+			if (remote != null)
+				return remote.toString();
+			return port;
 		}
 
 		public List<String> getArgs(final boolean useRemoteAddressOption)
@@ -197,11 +219,12 @@ class ConnectDialog
 			switch (protocol) {
 			case Routing:
 			case Tunneling:
-				if (!local.isEmpty()) {
+				if (local != null) {
 					args.add("--localhost");
-					args.add(local);
+					args.add(local.getHostAddress());
 				}
-				args.add(remote);
+				final InetAddress addr = remote.getAddress();
+				args.add(addr.getHostAddress());
 				if (protocol == Protocol.Tunneling) {
 					if (useNat())
 						args.add("--nat");
@@ -209,11 +232,11 @@ class ConnectDialog
 						args.add("--tcp");
 				}
 				if (protocol == Protocol.Routing && isSecure(Protocol.Routing)) {
-					String key = config("group.key", remote);
+					String key = config("group.key", addr.getHostAddress());
 					if (key.isEmpty()) {
 						final String[] tempKey = new String[1];
 						Main.syncExec(() -> {
-							final PasswordDialog dlg = new PasswordDialog(name, remote);
+							final PasswordDialog dlg = new PasswordDialog(name, addr);
 							if (dlg.show())
 								tempKey[0] = dlg.groupKey();
 						});
@@ -252,8 +275,8 @@ class ConnectDialog
 					args.add("0.0.0");
 				}
 
-				if (!port.isEmpty())
-					args.add("-p");
+				args.add("-p");
+				args.add("" + remote.getPort());
 				break;
 			case USB:
 				args.add("--usb");
@@ -267,7 +290,7 @@ class ConnectDialog
 			default:
 				throw new IllegalStateException();
 			}
-			if (!port.isEmpty())
+			if (port != null && !port.isEmpty())
 				args.add(port);
 			if (knxMedium != 0) {
 				args.add("--medium");
@@ -389,37 +412,42 @@ class ConnectDialog
 		}
 	}
 
-	private final int knxMedium;
 
-	ConnectDialog(final CTabFolder tf, final Protocol protocol, final String localEP, final String name,
-			final String host, final String port, final String mcast, final Integer medium, final boolean useNAT,
-			final Map<ServiceFamily, Integer> secureServices, final boolean preferRouting, final boolean preferTcp,
-			final IndividualAddress serverIA, final SerialNumber serialNumber) {
+	ConnectDialog(final CTabFolder tf, final DiscoverTab.Access access, final boolean useNAT, final boolean preferRouting,
+			final boolean preferTcp) {
 		final Shell shell = new Shell(Main.shell, SWT.DIALOG_TRIM | SWT.RESIZE);
 		shell.setLayout(new GridLayout());
 		shell.setText("Open connection");
 
-		final boolean confirm = name != null;
-		final boolean serial = host == null;
+		final boolean confirm = !access.name().isEmpty();
+		final boolean serial = access instanceof DiscoverTab.SerialAccess;
 
 		final Label nameLabel = new Label(shell, SWT.NONE);
 		nameLabel.setFont(Main.font);
-		nameLabel.setText(confirm ? "Name / ID: " + name
+		nameLabel.setText(confirm ? "Name / ID: " + access.name()
 				: "Specify connection parameters.\nFor serial connections, leave the endpoints empty.");
 
 		final Composite c = new Composite(shell, SWT.NONE);
 		c.setLayout(new GridLayout(2, false));
 		c.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
 
-		var localhost = "";
+		InetAddress localhost = null;
 		try {
-			localhost = InetAddress.getLocalHost().getHostAddress();
+			localhost = InetAddress.getLocalHost();
 		}
 		catch (final UnknownHostException uhe) {}
 
-		final String local = localEP != null ? localEP : localhost;
-		final Text localhostData = addHostInput(c, "Local endpoint:", local,  serial);
-		final Text hostData = addHostInput(c, "Remote endpoint:", host, serial);
+		final Text hostData;
+		final Text localhostData;
+		if (access instanceof final DiscoverTab.IpAccess ipAccess) {
+			final var local = ipAccess.localEP() != null ? ipAccess.localEP().getAddress() : localhost;
+			localhostData = addHostInput(c, "Local endpoint:", local, serial);
+			hostData = addHostInput(c, "Remote endpoint:", ipAccess.remote().getAddress(), serial);
+		}
+		else {
+			localhostData = addHostInput(c, "Local endpoint:", localhost, serial);
+			hostData = addHostInput(c, "Remote endpoint:", localhost, serial);
+		}
 
 		final Label portLabel = new Label(c, SWT.NONE);
 		portLabel.setLayoutData(new GridData(SWT.LEFT, SWT.NONE, false, false));
@@ -427,9 +455,10 @@ class ConnectDialog
 
 		final Text portData = new Text(c, SWT.BORDER);
 		portData.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
-		portData.setText(port);
-
-		knxMedium = medium == null ? KNXMediumSettings.MEDIUM_TP1 : medium;
+		if (access instanceof final DiscoverTab.SerialAccess serialAccess)
+			portData.setText(serialAccess.port());
+		else if (access instanceof final DiscoverTab.IpAccess ipAccess)
+			portData.setText("" + ipAccess.remote().getPort());
 
 		final Button usb = new Button(c, SWT.CHECK);
 		usb.setText("Use KNX USB interface");
@@ -469,16 +498,16 @@ class ConnectDialog
 			public void widgetSelected(final SelectionEvent e)
 			{
 				if (IpType.values()[ipType.getSelectionIndex()] == IpType.Routing) {
-					if (mcast != null)
-						hostData.setText(mcast);
+					if (access instanceof final DiscoverTab.IpAccess ipAccess && ipAccess.multicast().isPresent())
+						hostData.setText(ipAccess.multicast().get().getAddress().getHostAddress());
 					else if (hostData.getText().isEmpty())
 						hostData.setText(Discoverer.SEARCH_MULTICAST);
-				} else if (host != null && !host.isEmpty())
-					hostData.setText(host);
+				} else if (access instanceof final DiscoverTab.IpAccess ipAccess && ipAccess.remote() != null)
+					hostData.setText(ipAccess.remote().getAddress().getHostAddress());
 			}
 		});
 
-		if (protocol == Protocol.Routing || preferRouting) ipType.select(IpType.Routing.ordinal());
+		if (access.protocol() == Protocol.Routing || preferRouting) ipType.select(IpType.Routing.ordinal());
 		else if (preferTcp) ipType.select(IpType.Tcp.ordinal());
 		else if (useNAT) ipType.select(IpType.UdpNat.ordinal());
 		else ipType.select(IpType.Udp.ordinal());
@@ -563,19 +592,21 @@ class ConnectDialog
 			}
 		});
 
-		if (protocol == Protocol.USB) {
-			usb.setSelection(true);
-			// programmatically setting a selection does not invoke selection listeners :(
-			usb.notifyListeners(SWT.Selection, new Event());
-		}
-		else if (protocol == Protocol.Tpuart) {
-			tpuart.setSelection(true);
-			// programmatically setting a selection does not invoke selection listeners :(
-			tpuart.notifyListeners(SWT.Selection, new Event());
-		}
-		else if (protocol == Protocol.Tunneling) {
-			usb.setEnabled(false);
-			tpuart.setEnabled(false);
+		switch (access.protocol()) {
+			case USB -> {
+				usb.setSelection(true);
+				// programmatically setting a selection does not invoke selection listeners :(
+				usb.notifyListeners(SWT.Selection, new Event());
+			}
+			case Tpuart -> {
+				tpuart.setSelection(true);
+				// programmatically setting a selection does not invoke selection listeners :(
+				tpuart.notifyListeners(SWT.Selection, new Event());
+			}
+			case Tunneling -> {
+				usb.setEnabled(false);
+				tpuart.setEnabled(false);
+			}
 		}
 
 		final Composite buttons = new Composite(shell, SWT.NONE);
@@ -593,15 +624,14 @@ class ConnectDialog
 			@Override
 			public void widgetSelected(final SelectionEvent e)
 			{
-				final String local = localhostData.getText();
+				final InetAddress local = parseIp(localhostData);
+				if (local == null)
+					return;
 				final String h = hostData.getText();
-				String p = portData.getText();
+				final String p = portData.getText();
 				if (h.isEmpty() && p.isEmpty())
 					return;
-				final String n = confirm ? name : h.isEmpty() ? p : h;
-				// if no port is supplied for KNXnet/IP, we use default port
-				if (p.isEmpty())
-					p = Integer.toString(KNXnetIPConnection.DEFAULT_PORT);
+				final String n = confirm ? access.name() : h.isEmpty() ? p : h;
 				final boolean natChecked = serial ? false : ipType.getSelectionIndex() == IpType.UdpNat.ordinal();
 
 				ConnectArguments args;
@@ -613,18 +643,27 @@ class ConnectDialog
 					args = ConnectArguments.newTpuart(p, lka, knxAddr.getText());
 				}
 				else if (!h.isEmpty()) {
+					final InetAddress addr = parseIp(hostData);
+					if (addr == null)
+						return;
+					// if no port is supplied for KNXnet/IP, we use default port
+					final int port = p.isEmpty() ? KNXnetIPConnection.DEFAULT_PORT : Integer.parseInt(p);
+					final var remote = new InetSocketAddress(addr, port);
 					final boolean tcp = ipType.getSelectionIndex() == IpType.Tcp.ordinal();
-					args = ConnectArguments.newKnxNetIP(useRouting(), local, h, p, natChecked, tcp, knxAddr.getText(), serverIA);
+					args = ConnectArguments.newKnxNetIP(useRouting(), local, remote, natChecked, tcp, knxAddr.getText(), null);
+					if (access instanceof final DiscoverTab.IpAccess ipAccess) {
+						args.serverIP = ipAccess.remote();
+						args.secureServices = ipAccess.securedServices();
+						args.serverIA = ipAccess.hostIA();
+					}
 					if (!localKnxAddress.getText().isEmpty())
 						args.localKnxAddress = localKnxAddress.getText();
-					args.serverIP = host;
-					args.secureServices = secureServices;
 				}
 				else
 					args = ConnectArguments.newFT12(p, knxAddr.getText());
 				args.name = n;
-				args.knxMedium = knxMedium;
-				args.serialNumber = serialNumber;
+				args.knxMedium = access.medium();
+				args.serialNumber = access.serialNumber();
 
 				if (monitor.getSelection())
 					new MonitorTab(tf, args);
@@ -687,7 +726,7 @@ class ConnectDialog
 		shell.open();
 	}
 
-	private static Text addHostInput(final Composite c, final String description, final String host,
+	private static Text addHostInput(final Composite c, final String description, final InetAddress host,
 		final boolean serial)
 	{
 		final Label label = new Label(c, SWT.NONE);
@@ -700,8 +739,25 @@ class ConnectDialog
 		if (serial)
 			data.setEnabled(false);
 		else
-			data.setText(host);
+			data.setText(host.getHostAddress());
 		data.setToolTipText("IP address or host name");
 		return data;
+	}
+
+	private InetAddress parseIp(final Text text) {
+		try {
+			if (!text.getText().isEmpty())
+				return InetAddress.getByName(text.getText());
+			return InetAddress.getByAddress(new byte[4]); // XXX OK?
+		} catch (final UnknownHostException uhe) {
+			text.setFocus();
+			final var tooltip = new ToolTip(text.getShell(), SWT.ICON_WARNING | SWT.BALLOON);
+			tooltip.setMessage("Error determining IP address (" + uhe.getMessage() + ")");
+			final Point pt = text.getParent().toDisplay(text.getLocation());
+			final var size = text.getSize();
+			tooltip.setLocation(pt.x + size.x / 2, pt.y + size.y);
+			tooltip.setVisible(true);
+			return null;
+		}
 	}
 }

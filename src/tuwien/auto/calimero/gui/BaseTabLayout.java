@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2023 B. Malinowsky
+    Copyright (c) 2006, 2024 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -90,7 +90,6 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 import tuwien.auto.calimero.log.LogService.LogLevel;
 
 /**
@@ -170,14 +169,24 @@ class BaseTabLayout
 	// Type params of array are <String[] String[], Object[]>
 	private final java.util.List<Object[][]> itemBuffer = Collections.synchronizedList(new ArrayList<>());
 
-	BaseTabLayout(final CTabFolder tf, final String tabTitle, final String info)
-	{
-		this(tf, tabTitle, info, true);
+	final ConnectArguments connect;
+
+	BaseTabLayout(final CTabFolder tf, final String tabTitle, final String info) {
+		this(tf, tabTitle, info, false, true, null);
 	}
 
-	BaseTabLayout(final CTabFolder tf, final String tabTitle, final String info, final boolean showClose)
+	BaseTabLayout(final CTabFolder tf, final String tabTitle, final String phase, final boolean adjustForRouting,
+			final ConnectArguments connect) {
+		this(tf, tabTitle, phase, adjustForRouting, true, connect);
+	}
+
+	BaseTabLayout(final CTabFolder tf, final String tabTitle, final String info, final boolean adjustForRouting,
+			final boolean showClose, final ConnectArguments connect)
 	{
 		this.tf = tf;
+		if (adjustForRouting)
+			connect.adjustPreferRoutingConfig();
+		this.connect = connect;
 		tab = new CTabItem(tf, showClose ? SWT.CLOSE : SWT.NONE);
 		tab.setText(tabTitle);
 		workArea = new Composite(tf, SWT.NONE);
@@ -193,7 +202,10 @@ class BaseTabLayout
 		if (info != null) {
 			infoLabel = new Label(top, SWT.WRAP);
 			infoLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
-			setHeaderInfo(info);
+			if (connect != null)
+				setHeaderInfoPhase(info);
+			else
+				setHeaderInfo(info);
 		}
 		initWorkAreaTop();
 		final Composite splitted = new Composite(workArea, SWT.NONE);
@@ -370,31 +382,14 @@ class BaseTabLayout
 		top.layout();
 	}
 
-	protected final void setHeaderInfo(final ConnectArguments connect, final String phase)
+	protected final void setHeaderInfoPhase(final String phase)
 	{
-		setHeaderInfo(headerInfo(connect, phase));
+		setHeaderInfo(connectInfo(phase, false));
 	}
 
-	static final String headerInfo(final ConnectArguments connect, final String status)
-	{
-		return status + " " + uniqueId(connect) + (connect.useNat() ? " (using NAT)" : "");
-	}
-
-	static String uniqueId(final ConnectArguments connect)
-	{
-		if (!connect.knxAddress.isEmpty())
-			return (connect.knxAddress.split("\\.").length < 3 ? "line " : "device ") + connect.knxAddress;
-
-		if (connect.remote != null)
-			return "interface " + connect.remote + ":" + connect.port;
-		return "interface " + connect.port;
-	}
-
-	// if prefer routing option is set but no knx address is given, we use the server knx address
-	static ConnectArguments adjustPreferRoutingConfig(final ConnectArguments config) {
-		if (config.protocol == Protocol.Routing && config.knxAddress.isEmpty())
-			config.useServerIA();
-		return config;
+	final String connectInfo(final String status, final boolean adjustForRouting) {
+		final var args = adjustForRouting ? connect.adjustPreferRoutingConfig() : connect;
+		return status + " " + args.friendlyName();
 	}
 
 	/**
