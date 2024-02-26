@@ -66,8 +66,7 @@ import org.eclipse.swt.widgets.TableItem;
 import io.calimero.IndividualAddress;
 import io.calimero.KNXException;
 import io.calimero.SerialNumber;
-import io.calimero.gui.ConnectDialog.ConnectArguments;
-import io.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
+import io.calimero.gui.ConnectArguments.Protocol;
 import io.calimero.internal.Executor;
 import io.calimero.knxnetip.Discoverer.Result;
 import io.calimero.knxnetip.KNXnetIPConnection;
@@ -89,7 +88,7 @@ import io.calimero.tools.Discover;
 class DiscoverTab extends BaseTabLayout
 {
 	sealed interface Access {
-		ConnectDialog.ConnectArguments.Protocol protocol();
+		ConnectArguments.Protocol protocol();
 
 		String name();
 

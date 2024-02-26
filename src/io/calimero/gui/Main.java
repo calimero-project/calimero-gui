@@ -61,7 +61,6 @@ import org.eclipse.swt.widgets.ToolItem;
 
 import io.calimero.GroupAddress;
 import io.calimero.GroupAddress.Presentation;
-import io.calimero.gui.ConnectDialog.ConnectArguments;
 
 /**
  * @author B. Malinowsky

@@ -95,7 +95,6 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
-import io.calimero.gui.ConnectDialog.ConnectArguments;
 import io.calimero.gui.logging.LogNotifier;
 import io.calimero.gui.logging.LoggerFinder;
 import io.calimero.internal.Executor;

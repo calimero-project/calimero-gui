@@ -98,7 +98,6 @@ import io.calimero.baos.BaosService.Property;
 import io.calimero.dptxlator.DPT;
 import io.calimero.dptxlator.TranslatorTypes;
 import io.calimero.dptxlator.TranslatorTypes.MainType;
-import io.calimero.gui.ConnectDialog.ConnectArguments;
 import io.calimero.internal.Executor;
 import io.calimero.tools.BaosClient;
 
