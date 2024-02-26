@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2023 B. Malinowsky
+    Copyright (c) 2006, 2024 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -50,6 +50,7 @@ import org.eclipse.swt.widgets.TableItem;
 import io.calimero.IndividualAddress;
 import io.calimero.KNXIllegalArgumentException;
 import io.calimero.gui.ConnectDialog.ConnectArguments;
+import io.calimero.internal.Executor;
 import io.calimero.tools.ProgMode;
 
 /**
@@ -84,13 +85,13 @@ class ProgmodeTab extends BaseTabLayout
 		asyncAddLog("Using command line: " + String.join(" ", args));
 
 		try {
-			task = new Thread(new ProgMode(args.toArray(new String[0])) {
+			final var poller = new ProgMode(args.toArray(new String[0])) {
 				@Override
 				protected void devicesInProgMode(final IndividualAddress... devices) {
 					Main.asyncExec(() -> updateDevices(devices));
 				}
-			});
-			task.start();
+			};
+			task = Executor.execute(poller, "Programming mode poller");
 		}
 		catch (final KNXIllegalArgumentException e) {
 			asyncAddLog("error: " + e.getMessage());

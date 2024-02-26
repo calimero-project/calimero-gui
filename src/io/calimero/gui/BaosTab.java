@@ -99,6 +99,7 @@ import io.calimero.dptxlator.DPT;
 import io.calimero.dptxlator.TranslatorTypes;
 import io.calimero.dptxlator.TranslatorTypes.MainType;
 import io.calimero.gui.ConnectDialog.ConnectArguments;
+import io.calimero.internal.Executor;
 import io.calimero.tools.BaosClient;
 
 class BaosTab extends BaseTabLayout {
@@ -675,7 +676,7 @@ class BaosTab extends BaseTabLayout {
 	private void startBaosClient() {
 		setHeaderInfoPhase(statusInfo(0));
 
-		toolThread = new Thread(() -> {
+		final Runnable looper = () -> {
 			try {
 				tool.start();
 				Main.asyncExec(() -> {
@@ -704,9 +705,8 @@ class BaosTab extends BaseTabLayout {
 			finally {
 				tool.quit();
 			}
-
-		}, "Calimero BAOS tool");
-		toolThread.start();
+		};
+		toolThread = Executor.execute(looper, "Calimero BAOS tool");
 	}
 
 	// phase: 0=connecting, 1=reading, 2=completed, x=unknown

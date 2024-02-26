@@ -95,6 +95,7 @@ import io.calimero.KNXIllegalArgumentException;
 import io.calimero.KNXTimeoutException;
 import io.calimero.gui.ConnectDialog.ConnectArguments;
 import io.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
+import io.calimero.internal.Executor;
 import io.calimero.link.KNXNetworkLink;
 import io.calimero.link.KNXNetworkLinkFT12;
 import io.calimero.link.KNXNetworkLinkIP;
@@ -668,7 +669,7 @@ class MemoryEditor extends BaseTabLayout
 	private void runWorker(final Runnable r)
 	{
 		setHeaderInfoPhase(statusInfo(0));
-		workerThread = new Thread(() -> {
+		workerThread = Executor.execute(() -> {
 			Main.asyncExec(() -> {
 				for (final Control c : editArea.getChildren())
 					c.setEnabled(false);
@@ -687,7 +688,6 @@ class MemoryEditor extends BaseTabLayout
 				});
 			}
 		}, "Calimero memory worker");
-		workerThread.start();
 	}
 
 	private void addMemoryRow(final boolean topOfList)

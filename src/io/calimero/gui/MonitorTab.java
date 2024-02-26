@@ -56,6 +56,7 @@ import io.calimero.cemi.CEMIBusMon;
 import io.calimero.datapoint.DatapointMap;
 import io.calimero.dptxlator.TranslatorTypes;
 import io.calimero.gui.ConnectDialog.ConnectArguments;
+import io.calimero.internal.Executor;
 import io.calimero.link.MonitorFrameEvent;
 import io.calimero.link.medium.RFLData;
 import io.calimero.link.medium.RawFrame;
@@ -221,7 +222,7 @@ class MonitorTab extends BaseTabLayout
 
 		try {
 			m = new Monitor(args.toArray(new String[0]));
-			new Thread(m).start();
+			Executor.execute(m);
 		}
 		catch (final RuntimeException e) {
 			log.add("error: " + e.getMessage());

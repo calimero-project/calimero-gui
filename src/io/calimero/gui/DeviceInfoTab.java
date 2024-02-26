@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2015, 2023 B. Malinowsky
+    Copyright (c) 2015, 2024 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
 
+import io.calimero.internal.Executor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.events.DisposeEvent;
@@ -127,8 +128,7 @@ class DeviceInfoTab extends BaseTabLayout
 					i.setText(new String[] { "\t" + param, item.value(), rawString });
 				}
 			};
-			worker = new Thread(config, "Info reader " + connect.friendlyName());
-			worker.start();
+			worker = Executor.execute(config, "Info reader " + connect.friendlyName());
 		}
 		catch (final KNXIllegalArgumentException e) {
 			asyncAddLog("error: " + e.getMessage());

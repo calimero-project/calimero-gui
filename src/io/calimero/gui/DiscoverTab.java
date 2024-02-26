@@ -68,6 +68,7 @@ import io.calimero.KNXException;
 import io.calimero.SerialNumber;
 import io.calimero.gui.ConnectDialog.ConnectArguments;
 import io.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
+import io.calimero.internal.Executor;
 import io.calimero.knxnetip.Discoverer.Result;
 import io.calimero.knxnetip.KNXnetIPConnection;
 import io.calimero.knxnetip.servicetype.SearchResponse;
@@ -269,62 +270,58 @@ class DiscoverTab extends BaseTabLayout
 					asyncAddLog("KNXnet/IP discovery finished");
 				}
 			};
-			new Thread(r).start();
+			Executor.execute(r);
 
-			final Runnable usb = new Runnable() {
-				@Override
-				public void run()
-				{
-					try {
-						asyncAddLog("Search for KNX USB interfaces");
-						final var knxUsbDevices = UsbConnectionFactory.attachedKnxUsbDevices();
-						final var vserialKnxDevices = List.<Device>of();
+			final Runnable usb = () -> {
+				try {
+					asyncAddLog("Search for KNX USB interfaces");
+					final var knxUsbDevices = UsbConnectionFactory.attachedKnxUsbDevices();
+					final var vserialKnxDevices = List.<Device>of();
 
-						asyncAddLog("Found " + knxUsbDevices.size() + " KNX USB interfaces");
-						asyncAddLog("Found " + vserialKnxDevices.size() + " USB serial KNX interfaces");
+					asyncAddLog("Found " + knxUsbDevices.size() + " KNX USB interfaces");
+					asyncAddLog("Found " + vserialKnxDevices.size() + " USB serial KNX interfaces");
 
-						Main.syncExec(() -> {
-							for (final var d : knxUsbDevices) {
-								try {
-									// check knx medium, defaults to TP1
-									int medium = KNXMediumSettings.MEDIUM_TP1;
-									try (UsbConnection c = UsbConnectionFactory.open(d)) {
-										medium = c.deviceDescriptor().medium().getMedium();
-									}
-									catch (KNXException | InterruptedException | RuntimeException e) {
-										asyncAddLog("reading KNX device descriptor of " + d,  e);
-									}
-
-									final String vp = String.format("%04x:%04x", d.vendorId(), d.productId());
-									addListItem("USB -- ID " + d,
-											new SerialAccess(Protocol.USB, d.product(), medium, vp, SerialNumber.Zero));
+					Main.syncExec(() -> {
+						for (final var d : knxUsbDevices) {
+							try {
+								// check knx medium, defaults to TP1
+								int medium = KNXMediumSettings.MEDIUM_TP1;
+								try (UsbConnection c = UsbConnectionFactory.open(d)) {
+									medium = c.deviceDescriptor().medium().getMedium();
 								}
-								catch (final RuntimeException e) {
-									asyncAddLog("error: " + e.getMessage());
+								catch (KNXException | InterruptedException | RuntimeException e) {
+									asyncAddLog("reading KNX device descriptor of " + d,  e);
 								}
+
+								final String vp = String.format("%04x:%04x", d.vendorId(), d.productId());
+								addListItem("USB -- ID " + d,
+										new SerialAccess(Protocol.USB, d.product(), medium, vp, SerialNumber.Zero));
 							}
-							for (final var d : vserialKnxDevices) {
-								try {
-									addListItem("TP-UART -- ID " + d,
-											new SerialAccess(Protocol.Tpuart, d.product(),
-													KNXMediumSettings.MEDIUM_TP1, "/dev/", SerialNumber.Zero));
-								}
-								catch (final RuntimeException e) {
-									asyncAddLog("error: " + e.getMessage());
-								}
+							catch (final RuntimeException e) {
+								asyncAddLog("error: " + e.getMessage());
 							}
-						});
-						if (!vserialKnxDevices.isEmpty()) {
-							final Set<String> ports = SerialConnectionFactory.portIdentifiers();
-							asyncAddLog(ports.stream().collect(Collectors.joining(", ", "Available serial ports: ", "")));
 						}
-					}
-					catch (final RuntimeException e) {
-						asyncAddLog("error: " + e.getMessage());
+						for (final var d : vserialKnxDevices) {
+							try {
+								addListItem("TP-UART -- ID " + d,
+										new SerialAccess(Protocol.Tpuart, d.product(),
+												KNXMediumSettings.MEDIUM_TP1, "/dev/", SerialNumber.Zero));
+							}
+							catch (final RuntimeException e) {
+								asyncAddLog("error: " + e.getMessage());
+							}
+						}
+					});
+					if (!vserialKnxDevices.isEmpty()) {
+						final Set<String> ports = SerialConnectionFactory.portIdentifiers();
+						asyncAddLog(ports.stream().collect(Collectors.joining(", ", "Available serial ports: ", "")));
 					}
 				}
+				catch (final RuntimeException e) {
+					asyncAddLog("error: " + e.getMessage());
+				}
 			};
-			new Thread(usb).start();
+			Executor.execute(usb);
 		}
 		catch (final Exception e) {
 			log.add("error: " + e.getMessage());
