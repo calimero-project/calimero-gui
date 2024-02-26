@@ -66,6 +66,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.ToolTip;
 
 import io.calimero.IndividualAddress;
 import io.calimero.KNXFormatException;
@@ -79,7 +80,6 @@ import io.calimero.knxnetip.util.ServiceFamiliesDIB.ServiceFamily;
 import io.calimero.link.medium.KNXMediumSettings;
 import io.calimero.secure.Keyring;
 import io.calimero.secure.Keyring.Interface;
-import org.eclipse.swt.widgets.ToolTip;
 
 /**
  * @author B. Malinowsky
@@ -98,7 +98,7 @@ class ConnectDialog
 
 		Protocol protocol;
 		InetSocketAddress remote;
-		String port;
+		final String port;
 		int knxMedium;
 
 		final InetAddress local;
@@ -217,78 +217,67 @@ class ConnectDialog
 
 			final List<String> args = new ArrayList<>();
 			switch (protocol) {
-			case Routing:
-			case Tunneling:
-				if (local != null) {
-					args.add("--localhost");
-					args.add(local.getHostAddress());
-				}
-				InetAddress addr = remote.getAddress();
-				args.add(addr.getHostAddress());
-				if (protocol == Protocol.Tunneling) {
-					if (useNat())
-						args.add("--nat");
-					if (tcp)
-						args.add("--tcp");
-				}
-				if (protocol == Protocol.Routing && isSecure(Protocol.Routing)) {
-					String key = config("group.key", addr.getHostAddress());
-					if (key.isEmpty()) {
-						final String[] tempKey = new String[1];
-						Main.syncExec(() -> {
-							final PasswordDialog dlg = new PasswordDialog(name, addr);
-							if (dlg.show())
-								tempKey[0] = dlg.groupKey();
-						});
-						if (tempKey[0] == null) // canceled
-							throw new KnxRuntimeException("no group key entered");
-						key = tempKey[0];
+				case Routing, Tunneling -> {
+					if (local != null) {
+						args.add("--localhost");
+						args.add(local.getHostAddress());
 					}
-					args.add("--group-key");
-					args.add(key);
-				}
-				else if (protocol == Protocol.Tunneling && isSecure(Protocol.Tunneling)) {
-					final String user = "" + KeyringTab.user();
-					final String userPwd = config("user." + user, user);
-					if (userPwd.isEmpty()) {
-						final PasswordDialog dlg = new PasswordDialog(name, true);
-						if (dlg.show()) {
-							args.add("--user");
-							args.add(dlg.user());
-							args.add(dlg.isUserPasswordHash() ? "--user-key" : "--user-pwd");
-							args.add(dlg.userPassword());
-							if (!dlg.deviceAuthCode().isEmpty()) {
-								args.add(dlg.isDeviceAuthHash() ? "--device-key" : "--device-pwd");
-								args.add(dlg.deviceAuthCode());
+					final InetAddress addr = remote.getAddress();
+					args.add(addr.getHostAddress());
+					if (protocol == Protocol.Tunneling) {
+						if (useNat()) args.add("--nat");
+						if (tcp) args.add("--tcp");
+					}
+					if (protocol == Protocol.Routing && isSecure(Protocol.Routing)) {
+						String key = config("group.key", addr.getHostAddress());
+						if (key.isEmpty()) {
+							final String[] tempKey = new String[1];
+							Main.syncExec(() -> {
+								final PasswordDialog dlg = new PasswordDialog(name, addr);
+								if (dlg.show()) tempKey[0] = dlg.groupKey();
+							});
+							if (tempKey[0] == null) // canceled
+								throw new KnxRuntimeException("no group key entered");
+							key = tempKey[0];
+						}
+						args.add("--group-key");
+						args.add(key);
+					}
+					else if (protocol == Protocol.Tunneling && isSecure(Protocol.Tunneling)) {
+						final String user = "" + KeyringTab.user();
+						final String userPwd = config("user." + user, user);
+						if (userPwd.isEmpty()) {
+							final PasswordDialog dlg = new PasswordDialog(name, true);
+							if (dlg.show()) {
+								args.add("--user");
+								args.add(dlg.user());
+								args.add(dlg.isUserPasswordHash() ? "--user-key" : "--user-pwd");
+								args.add(dlg.userPassword());
+								if (!dlg.deviceAuthCode().isEmpty()) {
+									args.add(dlg.isDeviceAuthHash() ? "--device-key" : "--device-pwd");
+									args.add(dlg.deviceAuthCode());
+								}
 							}
 						}
+						else {
+							args.add("--user");
+							args.add(user);
+							args.add("--user-pwd");
+							args.add(userPwd);
+							args.add("--device-key");
+							args.add(config("device.key", ""));
+						}
+						args.add("--knx-address");
+						args.add("0.0.0");
 					}
-					else {
-						args.add("--user");
-						args.add(user);
-						args.add("--user-pwd");
-						args.add(userPwd);
-						args.add("--device-key");
-						args.add(config("device.key", ""));
-					}
-					args.add("--knx-address");
-					args.add("0.0.0");
-				}
 
-				args.add("-p");
-				args.add("" + remote.getPort());
-				break;
-			case USB:
-				args.add("--usb");
-				break;
-			case FT12:
-				args.add("--ft12");
-				break;
-			case Tpuart:
-				args.add("--tpuart");
-				break;
-			default:
-				throw new IllegalStateException();
+					args.add("-p");
+					args.add("" + remote.getPort());
+				}
+				case USB -> args.add("--usb");
+				case FT12 -> args.add("--ft12");
+				case Tpuart -> args.add("--tpuart");
+				default -> throw new IllegalStateException();
 			}
 			if (port != null && !port.isEmpty())
 				args.add(port);
@@ -413,7 +402,7 @@ class ConnectDialog
 	}
 
 
-	ConnectDialog(final CTabFolder tf, DiscoverTab.Access access, final boolean useNAT, final boolean preferRouting,
+	ConnectDialog(final CTabFolder tf, final DiscoverTab.Access access, final boolean useNAT, final boolean preferRouting,
 			final boolean preferTcp) {
 		final Shell shell = new Shell(Main.shell, SWT.DIALOG_TRIM | SWT.RESIZE);
 		shell.setLayout(new GridLayout());
@@ -439,10 +428,10 @@ class ConnectDialog
 
 		final Text hostData;
 		final Text localhostData;
-		if (access instanceof DiscoverTab.IpAccess ipAccess) {
+		if (access instanceof final DiscoverTab.IpAccess ipAccess) {
 			final var local = ipAccess.localEP() != null ? ipAccess.localEP().getAddress() : localhost;
-			localhostData = addHostInput(c, "Local endpoint:", local, serial);
-			hostData = addHostInput(c, "Remote endpoint:", ipAccess.remote().getAddress(), serial);
+			localhostData = addHostInput(c, "Local endpoint:", local, false);
+			hostData = addHostInput(c, "Remote endpoint:", ipAccess.remote().getAddress(), false);
 		}
 		else {
 			localhostData = addHostInput(c, "Local endpoint:", localhost, serial);
@@ -455,9 +444,9 @@ class ConnectDialog
 
 		final Text portData = new Text(c, SWT.BORDER);
 		portData.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
-		if (access instanceof DiscoverTab.SerialAccess serialAccess)
+		if (access instanceof final DiscoverTab.SerialAccess serialAccess)
 			portData.setText(serialAccess.port());
-		else if (access instanceof DiscoverTab.IpAccess ipAccess)
+		else if (access instanceof final DiscoverTab.IpAccess ipAccess)
 			portData.setText("" + ipAccess.remote().getPort());
 
 		final Button usb = new Button(c, SWT.CHECK);
@@ -498,11 +487,11 @@ class ConnectDialog
 			public void widgetSelected(final SelectionEvent e)
 			{
 				if (IpType.values()[ipType.getSelectionIndex()] == IpType.Routing) {
-					if (access instanceof DiscoverTab.IpAccess ipAccess && ipAccess.multicast().isPresent())
+					if (access instanceof final DiscoverTab.IpAccess ipAccess && ipAccess.multicast().isPresent())
 						hostData.setText(ipAccess.multicast().get().getAddress().getHostAddress());
 					else if (hostData.getText().isEmpty())
 						hostData.setText(Discoverer.SEARCH_MULTICAST);
-				} else if (access instanceof DiscoverTab.IpAccess ipAccess && ipAccess.remote() != null)
+				} else if (access instanceof final DiscoverTab.IpAccess ipAccess)
 					hostData.setText(ipAccess.remote().getAddress().getHostAddress());
 			}
 		});
@@ -624,11 +613,11 @@ class ConnectDialog
 			@Override
 			public void widgetSelected(final SelectionEvent e)
 			{
-				InetAddress local = parseIp(localhostData);
+				final InetAddress local = parseIp(localhostData);
 				if (local == null)
 					return;
 				final String h = hostData.getText();
-				String p = portData.getText();
+				final String p = portData.getText();
 				if (h.isEmpty() && p.isEmpty())
 					return;
 				final String n = confirm ? access.name() : h.isEmpty() ? p : h;
@@ -643,15 +632,15 @@ class ConnectDialog
 					args = ConnectArguments.newTpuart(p, lka, knxAddr.getText());
 				}
 				else if (!h.isEmpty()) {
-					InetAddress addr = parseIp(hostData);
+					final InetAddress addr = parseIp(hostData);
 					if (addr == null)
 						return;
 					// if no port is supplied for KNXnet/IP, we use default port
-					int port = p.isEmpty() ? KNXnetIPConnection.DEFAULT_PORT : Integer.parseInt(p);
-					var remote = new InetSocketAddress(addr, port);
+					final int port = p.isEmpty() ? KNXnetIPConnection.DEFAULT_PORT : Integer.parseInt(p);
+					final var remote = new InetSocketAddress(addr, port);
 					final boolean tcp = ipType.getSelectionIndex() == IpType.Tcp.ordinal();
 					args = ConnectArguments.newKnxNetIP(useRouting(), local, remote, natChecked, tcp, knxAddr.getText(), null);
-					if (access instanceof DiscoverTab.IpAccess ipAccess) {
+					if (access instanceof final DiscoverTab.IpAccess ipAccess) {
 						args.serverIP = ipAccess.remote();
 						args.secureServices = ipAccess.securedServices();
 						args.serverIA = ipAccess.hostIA();
@@ -744,17 +733,17 @@ class ConnectDialog
 		return data;
 	}
 
-	private InetAddress parseIp(Text text) {
+	private InetAddress parseIp(final Text text) {
 		try {
 			if (!text.getText().isEmpty())
 				return InetAddress.getByName(text.getText());
 			return InetAddress.getByAddress(new byte[4]); // XXX OK?
-		} catch (UnknownHostException uhe) {
+		} catch (final UnknownHostException uhe) {
 			text.setFocus();
 			final var tooltip = new ToolTip(text.getShell(), SWT.ICON_WARNING | SWT.BALLOON);
 			tooltip.setMessage("Error determining IP address (" + uhe.getMessage() + ")");
-			Point pt = text.getParent().toDisplay(text.getLocation());
-			var size = text.getSize();
+			final Point pt = text.getParent().toDisplay(text.getLocation());
+			final var size = text.getSize();
 			tooltip.setLocation(pt.x + size.x / 2, pt.y + size.y);
 			tooltip.setVisible(true);
 			return null;

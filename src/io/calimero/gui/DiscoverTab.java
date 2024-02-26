@@ -50,7 +50,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import io.calimero.knxnetip.KNXnetIPRouting;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.events.SelectionEvent;
@@ -70,6 +69,7 @@ import io.calimero.SerialNumber;
 import io.calimero.gui.ConnectDialog.ConnectArguments;
 import io.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 import io.calimero.knxnetip.Discoverer.Result;
+import io.calimero.knxnetip.KNXnetIPConnection;
 import io.calimero.knxnetip.servicetype.SearchResponse;
 import io.calimero.knxnetip.util.DIB;
 import io.calimero.knxnetip.util.ServiceFamiliesDIB;
@@ -173,23 +173,23 @@ class DiscoverTab extends BaseTabLayout
 		final var access = (Access) defaultInterface.getData("access");
 		Protocol protocol = access.protocol();
 		boolean tunneling = protocol == Protocol.Tunneling;
-		if (preferRouting.getSelection() && access instanceof IpAccess ipAccess && ipAccess.multicast().isPresent()) {
+		if (preferRouting.getSelection() && access instanceof final IpAccess ipAccess && ipAccess.multicast().isPresent()) {
 			tunneling = false;
 			protocol = Protocol.Routing;
 		}
 
-		final IndividualAddress ia = access instanceof IpAccess ipAccess ? ipAccess.hostIA() : null;
-		var hostEP = access instanceof IpAccess ipAccess ? ipAccess.remote() : null;
-		var mcast = access instanceof IpAccess ipAccess ? ipAccess.multicast().orElse(null) : null;
-		var localEP = access instanceof IpAccess ipAccess ? ipAccess.localEP().getAddress() : null;
+		final IndividualAddress ia = access instanceof final IpAccess ipAccess ? ipAccess.hostIA() : null;
+		final var hostEP = access instanceof final IpAccess ipAccess ? ipAccess.remote() : null;
+		final var mcast = access instanceof final IpAccess ipAccess ? ipAccess.multicast().orElse(null) : null;
+		final var localEP = access instanceof final IpAccess ipAccess ? ipAccess.localEP().getAddress() : null;
 		final InetSocketAddress remote = tunneling ? hostEP : mcast;
-		String port = access instanceof SerialAccess sa ? sa.port() : null;
+		final String port = access instanceof final SerialAccess sa ? sa.port() : null;
 		final var args = new ConnectArguments(protocol, localEP, remote,
 				port, nat.getSelection(), preferTcp.getSelection(), ia, "", "");
 		args.name = access.name();
 		args.knxMedium = access.medium();
 		args.serialNumber = access.serialNumber();
-		if (access instanceof IpAccess ipAccess) {
+		if (access instanceof final IpAccess ipAccess) {
 			args.serverIP = ipAccess.remote();
 			args.serverIA = ipAccess.hostIA();
 			args.secureServices = ipAccess.securedServices();
@@ -209,7 +209,7 @@ class DiscoverTab extends BaseTabLayout
 		start.setFocus();
 
 		nat = new Button(top, SWT.CHECK);
-		nat.setText("Be aware of NAT (Network Address Translation) during search");
+		nat.setText("Use NAT (Network Address Translation)");
 		nat.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		nat.setToolTipText("Some KNXnet/IP devices might not answer in this mode");
 
@@ -364,7 +364,7 @@ class DiscoverTab extends BaseTabLayout
 		var mcast = Optional.<InetSocketAddress>empty();
 		try {
 			mcast = Optional.of(new InetSocketAddress(InetAddress.getByAddress(r.getDevice().getMulticastAddress()),
-					KNXnetIPRouting.DEFAULT_PORT));
+					KNXnetIPConnection.DEFAULT_PORT));
 		}
 		catch (final UnknownHostException e) {}
 

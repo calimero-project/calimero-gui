@@ -456,8 +456,10 @@ class PropertyEditorTab extends BaseTabLayout
 		authCode.addListener(SWT.Verify, e -> {
 			final char[] chars = e.text.toLowerCase().toCharArray();
 			for (final char c : chars)
-				if (!('0' <= c && c <= '9') && !('a' <= c && c <= 'f') && c != 'x')
+				if (!('0' <= c && c <= '9') && !('a' <= c && c <= 'f') && c != 'x') {
 					e.doit = false;
+					break;
+				}
 		});
 		final Button authorize = new Button(propertyPage, SWT.PUSH);
 		authorize.setText("Authorize");
@@ -469,7 +471,7 @@ class PropertyEditorTab extends BaseTabLayout
 		gridData.horizontalAlignment = SWT.FILL;
 		value.setLayoutData(gridData);
 		value.setMessage("Use space or comma for multiple values");
-		value.setText(formatted(d.objectType(), pid, values.getOrDefault(d, "")));
+		value.setText(values.getOrDefault(d, ""));
 		value.setData("property-edit-field");
 
 		final Button set = new Button(propertyPage, SWT.PUSH);
@@ -627,7 +629,7 @@ class PropertyEditorTab extends BaseTabLayout
 		final Object writeLevel = d.writeEnabled() ? d.writeLevel() : "x";
 		final String rw = d.readLevel() + "/" + writeLevel + (d.writeEnabled() ? "" : " (read-only)");
 
-		final String value = formatted(d.objectType(), d.pid(), values.getOrDefault(d, ""));
+		final String value = values.getOrDefault(d, "");
 		final List<byte[]> raw = rawValues.getOrDefault(d, Collections.emptyList());
 		final String rawText = raw.stream().map(bytes -> HexFormat.of().formatHex(bytes)).collect(joining(", "));
 		final String[] item = { "" + count++, "" + d.pid(), desc, value, rawText, "" + d.currentElements(), rw,
@@ -1082,10 +1084,9 @@ class PropertyEditorTab extends BaseTabLayout
 								final String rawText = raw.stream().map(data -> HexFormat.of().formatHex(data))
 										.collect(joining(", "));
 								find(idx, pid).ifPresent(i -> i.setText(Columns.RawValues.ordinal(), rawText));
-								final String text = formatted(d.objectType(), pid, value);
-								find(idx, pid).ifPresent(i -> i.setText(Columns.Values.ordinal(), text));
+								find(idx, pid).ifPresent(i -> i.setText(Columns.Values.ordinal(), value));
 								findPropertyPageControl(idx, pid, "property-edit-field")
-										.ifPresent(c -> ((Text) c).setText(text));
+										.ifPresent(c -> ((Text) c).setText(value));
 								findPropertyPageControl(idx, pid, "property-alt-formatted")
 										.ifPresent(c -> ((Text) c).setText(altFormatted(value, ((Text) c).getText())));
 							});
@@ -1149,11 +1150,6 @@ class PropertyEditorTab extends BaseTabLayout
 				}
 			}
 		};
-	}
-
-	private String formatted(final int objectType, final int pid, final String value)
-	{
-		return value;
 	}
 
 	private static void joinUninterruptibly(final Thread t) {

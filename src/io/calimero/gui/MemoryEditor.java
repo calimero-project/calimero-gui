@@ -136,8 +136,10 @@ class MemoryEditor extends BaseTabLayout
 	private static final Listener hexOnly = e -> {
 		final char[] chars = e.text.toLowerCase().toCharArray();
 		for (final char c : chars)
-			if (!('0' <= c && c <= '9') && !('a' <= c && c <= 'f'))
+			if (!('0' <= c && c <= '9') && !('a' <= c && c <= 'f')) {
 				e.doit = false;
+				break;
+			}
 	};
 
 	MemoryEditor(final CTabFolder tf, final ConnectArguments args)
@@ -200,7 +202,7 @@ class MemoryEditor extends BaseTabLayout
 			public void widgetDefaultSelected(final SelectionEvent e)
 			{
 				try {
-					setViewerStartOffset(e);
+					setViewerStartOffset();
 				}
 				catch (final RuntimeException rte) {
 					asyncAddLog(rte);
@@ -510,7 +512,7 @@ class MemoryEditor extends BaseTabLayout
 			binary.setText("0b" + Integer.toBinaryString((1 << 8) | Integer.parseInt(text, 16)).substring(1));
 	}
 
-	private void setViewerStartOffset(final SelectionEvent e)
+	private void setViewerStartOffset()
 	{
 		final int offset = Integer.parseInt(setStartOffset.getText(), 16);
 		while (viewerStartOffset > offset) {
@@ -531,7 +533,7 @@ class MemoryEditor extends BaseTabLayout
 		return knxLink;
 	}
 
-	private KNXNetworkLink createLink() throws KNXException, UnknownHostException, InterruptedException
+	private KNXNetworkLink createLink() throws KNXException, InterruptedException
 	{
 		final IndividualAddress localKnxAddress = connect.localKnxAddress.isEmpty()
 				? KNXMediumSettings.BackboneRouter : new IndividualAddress(connect.localKnxAddress);

@@ -50,7 +50,6 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -141,16 +140,16 @@ class BaseTabLayout implements LogNotifier
 
 	final ConnectArguments connect;
 
-	BaseTabLayout(final CTabFolder tf, final String tabTitle, String info) {
+	BaseTabLayout(final CTabFolder tf, final String tabTitle, final String info) {
 		this(tf, tabTitle, info, false, true, null);
 	}
 
-	BaseTabLayout(final CTabFolder tf, final String tabTitle, String phase, final boolean adjustForRouting,
+	BaseTabLayout(final CTabFolder tf, final String tabTitle, final String phase, final boolean adjustForRouting,
 			final ConnectArguments connect) {
 		this(tf, tabTitle, phase, adjustForRouting, true, connect);
 	}
 
-	BaseTabLayout(final CTabFolder tf, final String tabTitle, String info, final boolean adjustForRouting,
+	BaseTabLayout(final CTabFolder tf, final String tabTitle, final String info, final boolean adjustForRouting,
 			final boolean showClose, final ConnectArguments connect)
 	{
 		this.tf = tf;
@@ -382,8 +381,8 @@ class BaseTabLayout implements LogNotifier
 		setHeaderInfo(connectInfo(phase, false));
 	}
 
-	final String connectInfo(final String status, boolean adjustForRouting) {
-		var args = adjustForRouting ? connect.adjustPreferRoutingConfig() : connect;
+	final String connectInfo(final String status, final boolean adjustForRouting) {
+		final var args = adjustForRouting ? connect.adjustPreferRoutingConfig() : connect;
 		return status + " " + args.friendlyName();
 	}
 
@@ -471,15 +470,6 @@ class BaseTabLayout implements LogNotifier
 			break;
 		}
 		return match;
-	}
-
-	void addToLogBuffer(final Collection<String> c) {
-		logBuffer.addAll(c);
-	}
-
-	void asyncLogAddAll(final Collection<String> c) {
-		addToLogBuffer(c);
-		asyncAddLog();
 	}
 
 	/**

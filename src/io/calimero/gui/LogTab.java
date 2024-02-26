@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2023 B. Malinowsky
+    Copyright (c) 2006, 2024 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -121,7 +121,6 @@ class LogTab extends BaseTabLayout
 
 		oldSystemErr = System.err;
 		System.setErr(new StreamRedirector("System.err", ERROR, oldSystemErr));
-
 	}
 
 	private static final String[] levels = new String[] { "All", "Trace", "Debug", "Info", "Warn", "Error", "Off" };
@@ -205,7 +204,7 @@ class LogTab extends BaseTabLayout
 		((GridLayout) top.getLayout()).makeColumnsEqualWidth = false;
 		((GridLayout) top.getLayout()).horizontalSpacing = 10 * ((GridLayout) top.getLayout()).horizontalSpacing;
 
-		Button clear = new Button(top, SWT.NONE);
+		final Button clear = new Button(top, SWT.NONE);
 		clear.setText("Clear log");
 		clear.addSelectionListener(new SelectionAdapter() {
 			@Override

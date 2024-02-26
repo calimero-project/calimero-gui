@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2019, 2023 B. Malinowsky
+    Copyright (c) 2019, 2024 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -108,8 +108,6 @@ class KeyringTab extends BaseTabLayout {
 		return user;
 	}
 
-	static IndividualAddress tunnelingAddress() { return address; }
-
 	KeyringTab(final CTabFolder tf) {
 		super(tf, "Keyring", "Available interfaces in");
 
@@ -169,7 +167,7 @@ class KeyringTab extends BaseTabLayout {
 		keyringLabel = new Label(top, SWT.NONE);
 		keyringLabel.setText(keyringResource);
 
-		Button load = new Button(top, SWT.NONE);
+		final Button load = new Button(top, SWT.NONE);
 		load.setText("Load keyring ...");
 		load.addSelectionListener(selected(this::loadKeyring));
 		load.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false));
