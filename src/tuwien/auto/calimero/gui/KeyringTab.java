@@ -67,12 +67,13 @@ import org.eclipse.swt.widgets.TableItem;
 import tuwien.auto.calimero.IndividualAddress;
 import tuwien.auto.calimero.KNXFormatException;
 import tuwien.auto.calimero.secure.Keyring;
+import tuwien.auto.calimero.secure.KnxSecureException;
 import tuwien.auto.calimero.secure.Security;
 
 class KeyringTab extends BaseTabLayout {
 	private Label keyringLabel;
 
-	static String keyringResource = "";
+	static String keyringResource = "[no keyring loaded]";
 	private static Keyring keyring;
 	private static char[] keyringPassword = new char[0];
 
@@ -94,11 +95,19 @@ class KeyringTab extends BaseTabLayout {
 	}
 
 	static char[] keyringPassword() {
-		if (keyringPassword.length == 0 && keyring != null) {
-			final var dlg = PasswordDialog.forKeyring(Path.of(keyringResource));
-			if (dlg.show()) {
-				keyringPassword = dlg.keyringPassword();
-				Security.defaultInstallation().useKeyring(keyring, keyringPassword);
+		boolean tryAgain = false;
+		while (keyringPassword.length == 0 && keyring != null) {
+			final var dlg = PasswordDialog.forKeyring(Path.of(keyringResource), tryAgain);
+			if (!dlg.show())
+				break;
+			final var pwd = dlg.keyringPassword();
+			try {
+				Security.defaultInstallation().useKeyring(keyring, pwd);
+				keyringPassword = pwd;
+				break;
+			} catch (final KnxSecureException e) {
+				System.err.println(keyringResource + ": " + e.getMessage());
+				tryAgain = true;
 			}
 		}
 		return keyringPassword;
@@ -222,14 +231,18 @@ class KeyringTab extends BaseTabLayout {
 	}
 
 	private void setKeyring(final String resource) {
-		loadKeyring(resource);
-		keyringLabel.setText(keyringResource);
-		keyringLabel.requestLayout();
+		try {
+			loadKeyring(resource);
+			keyringLabel.setText(keyringResource);
+			keyringLabel.requestLayout();
 
-		list.removeAll();
-		populateList();
+			list.removeAll();
+			populateList();
 
-		keyringPassword();
+			keyringPassword();
+		} catch (final RuntimeException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private void populateList() {

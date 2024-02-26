@@ -70,12 +70,12 @@ class PasswordDialog {
 
 	private char[] keyringPassword;
 
-	public static PasswordDialog forKeyring(final Path keyringResource) {
-		return new PasswordDialog(keyringResource);
+	public static PasswordDialog forKeyring(final Path keyringResource, final boolean tryAgain) {
+		return new PasswordDialog(keyringResource, tryAgain);
 	}
 
 	public static PasswordDialog forProject(final Path project) {
-		return new PasswordDialog(project);
+		return new PasswordDialog(project, false);
 	}
 
 	PasswordDialog(final String interfaceName, final boolean secureUnicast) {
@@ -153,7 +153,7 @@ class PasswordDialog {
 		});
 	}
 
-	private PasswordDialog(final Path keyringResource) {
+	private PasswordDialog(final Path keyringResource, final boolean tryAgain) {
 		// TODO init code copied over from private ctor
 		shell = new Shell(Main.shell, SWT.DIALOG_TRIM | SWT.PRIMARY_MODAL | SWT.SHEET);
 		shell.setLayout(new GridLayout());
@@ -163,7 +163,10 @@ class PasswordDialog {
 		final FontData fontData = connection.getFont().getFontData()[0];
 		final Font bold = new Font(Main.display, new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD));
 		connection.setFont(bold);
-		connection.setText("Password for '" + keyringResource.getFileName() + "'");
+		if (tryAgain)
+			connection.setText("Invalid keyring or wrong password, retry for '" + keyringResource.getFileName() + "'");
+		else
+			connection.setText("Password for '" + keyringResource.getFileName() + "'");
 
 		passwordLabel = new Label(shell, SWT.NONE);
 		passwordLabel.setFont(Main.font);
