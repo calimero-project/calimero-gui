@@ -179,7 +179,7 @@ class ProcCommTab extends BaseTabLayout
 
 	ProcCommTab(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, (args.protocol + " connection to " + args.name), "Connecting to", false, args);
+		super(tf, (args.access().protocol() + " connection to " + args.access().name()), "Connecting to", false, args);
 
 		list.setLinesVisible(true);
 		final TableColumn cnt = new TableColumn(list, SWT.RIGHT);
@@ -432,7 +432,7 @@ class ProcCommTab extends BaseTabLayout
 					pc.quit();
 			}
 		};
-		Executor.execute(connector, "Connector for " + connect.name);
+		Executor.execute(connector, "Connector for " + connect.access().name());
 	}
 
 	private void loadDatapoints()
@@ -478,7 +478,7 @@ class ProcCommTab extends BaseTabLayout
 	}
 
 	private String defaultDatapointsFilename() {
-		final String fileName = ".datapoints_" + connect.serialNumber + ".xml";
+		final String fileName = ".datapoints_" + connect.access().serialNumber() + ".xml";
 		return fileName.replaceAll(":", "-");
 	}
 

@@ -82,7 +82,7 @@ class ScanDevicesTab extends BaseTabLayout
 				final TableItem row = list.getSelection()[0];
 				final String device = row.getText(1);
 				asyncAddLog("Read device information of KNX device " + device);
-				connect.knxAddress = device;
+				connect.remoteKnxAddress = device;
 				new DeviceInfoTab(tf, connect);
 			}));
 

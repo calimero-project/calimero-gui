@@ -73,6 +73,7 @@ import io.calimero.knxnetip.Discoverer.Result;
 import io.calimero.knxnetip.KNXnetIPConnection;
 import io.calimero.knxnetip.servicetype.SearchResponse;
 import io.calimero.knxnetip.util.DIB;
+import io.calimero.knxnetip.util.DeviceDIB;
 import io.calimero.knxnetip.util.ServiceFamiliesDIB;
 import io.calimero.knxnetip.util.ServiceFamiliesDIB.ServiceFamily;
 import io.calimero.link.medium.KNXMediumSettings;
@@ -87,7 +88,7 @@ import io.calimero.tools.Discover;
  */
 class DiscoverTab extends BaseTabLayout
 {
-	interface Access {
+	sealed interface Access {
 		ConnectDialog.ConnectArguments.Protocol protocol();
 
 		String name();
@@ -106,7 +107,7 @@ class DiscoverTab extends BaseTabLayout
 
 	record UnknownAccess(Protocol protocol, String name, int medium, SerialNumber serialNumber) implements Access {}
 
-	static final UnknownAccess UnknownAccess = new UnknownAccess(Protocol.Unknown, "",
+	static final UnknownAccess UnknownAccess = new UnknownAccess(Protocol.Unknown, "unknown",
 			KNXMediumSettings.MEDIUM_TP1, SerialNumber.Zero);
 
 	Button nat;
@@ -165,37 +166,26 @@ class DiscoverTab extends BaseTabLayout
 		final Optional<TableItem> item;
 		if (items.length == 1)
 			item = Optional.of(items[0]);
-		else
+		else {
 			item = Arrays.stream(items).filter(TableItem::getChecked).findFirst();
-		if (item.isEmpty())
-			return Optional.empty();
+			if (item.isEmpty())
+				return Optional.empty();
+		}
 
 		final TableItem defaultInterface = item.get();
 		final var access = (Access) defaultInterface.getData("access");
-		Protocol protocol = access.protocol();
-		boolean tunneling = protocol == Protocol.Tunneling;
-		if (preferRouting.getSelection() && access instanceof final IpAccess ipAccess && ipAccess.multicast().isPresent()) {
-			tunneling = false;
-			protocol = Protocol.Routing;
+
+		if (access instanceof IpAccess ipAccess) {
+			// switch to routing if preferred and available
+			if (preferRouting.getSelection() && access.protocol() == Protocol.Tunneling && ipAccess.multicast().isPresent()) {
+				ipAccess = new IpAccess(Protocol.Routing, ipAccess.name(), ipAccess.medium(),
+						ipAccess.localEP, ipAccess.remote, ipAccess.multicast, ipAccess.securedServices, ipAccess.hostIA,
+						ipAccess.serialNumber);
+			}
+			return Optional.of(new ConnectArguments(ipAccess, nat.getSelection(), preferTcp.getSelection(), "", ""));
 		}
 
-		final IndividualAddress ia = access instanceof final IpAccess ipAccess ? ipAccess.hostIA() : null;
-		final var hostEP = access instanceof final IpAccess ipAccess ? ipAccess.remote() : null;
-		final var mcast = access instanceof final IpAccess ipAccess ? ipAccess.multicast().orElse(null) : null;
-		final var localEP = access instanceof final IpAccess ipAccess ? ipAccess.localEP().getAddress() : null;
-		final InetSocketAddress remote = tunneling ? hostEP : mcast;
-		final String port = access instanceof final SerialAccess sa ? sa.port() : null;
-		final var args = new ConnectArguments(protocol, localEP, remote,
-				port, nat.getSelection(), preferTcp.getSelection(), ia, "", "");
-		args.name = access.name();
-		args.knxMedium = access.medium();
-		args.serialNumber = access.serialNumber();
-		if (access instanceof final IpAccess ipAccess) {
-			args.serverIP = ipAccess.remote();
-			args.serverIA = ipAccess.hostIA();
-			args.secureServices = ipAccess.securedServices();
-		}
-		return Optional.of(args);
+		return Optional.of(new ConnectArguments((SerialAccess) access, "", ""));
 	}
 
 	@Override
@@ -352,6 +342,7 @@ class DiscoverTab extends BaseTabLayout
 				return;
 		}
 		final SearchResponse r = result.response();
+		final DeviceDIB device = r.getDevice();
 
 		if (r.v2())
 			supportsSearchResponseV2.add(result.remoteEndpoint());
@@ -360,16 +351,15 @@ class DiscoverTab extends BaseTabLayout
 
 		var mcast = Optional.<InetSocketAddress>empty();
 		try {
-			mcast = Optional.of(new InetSocketAddress(InetAddress.getByAddress(r.getDevice().getMulticastAddress()),
+			mcast = Optional.of(new InetSocketAddress(InetAddress.getByAddress(device.getMulticastAddress()),
 					KNXnetIPConnection.DEFAULT_PORT));
 		}
 		catch (final UnknownHostException e) {}
 
-		boolean tunneling = false;
 		Map<ServiceFamily, Integer> secureServices = Map.of();
-
 		String itemText = newItem;
 
+		Protocol protocol = Protocol.Routing;
 		for (final var d : r.description()) {
 			if (d instanceof final ServiceFamiliesDIB families) {
 				if (families.getDescTypeCode() == DIB.SUPP_SVC_FAMILIES) {
@@ -377,7 +367,7 @@ class DiscoverTab extends BaseTabLayout
 						if (entry.getKey() == ServiceFamily.Core && entry.getValue() > 1)
 							itemText = itemText.replaceFirst("UDP", "UDP & TCP");
 						if (entry.getKey() == ServiceFamily.Tunneling)
-							tunneling = true;
+							protocol = Protocol.Tunneling;
 					}
 				}
 				else if (families.getDescTypeCode() == DIB.SecureServiceFamilies) {
@@ -388,12 +378,11 @@ class DiscoverTab extends BaseTabLayout
 			}
 		}
 
-		final Protocol protocol = tunneling ? Protocol.Tunneling : Protocol.Routing;
-
-		final var ctrlEndoint = r.getControlEndpoint();
-		addListItem(itemText, new IpAccess(protocol, r.getDevice().getName(), r.getDevice().getKNXMedium(),
-				result.localEndpoint(), ctrlEndoint.endpoint(),
-				mcast, secureServices, result.response().getDevice().getAddress(),
-				result.response().getDevice().serialNumber()));
+		// reset search port (3671) to use ephemeral port, otherwise we might run into already bound address
+		final var localEP = new InetSocketAddress(result.localEndpoint().getAddress(), 0);
+		final var access = new IpAccess(protocol, device.getName(), device.getKNXMedium(), localEP,
+				r.getControlEndpoint().endpoint(), mcast, secureServices, device.getAddress(),
+				device.serialNumber());
+		addListItem(itemText, access);
 	}
 }

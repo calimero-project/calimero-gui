@@ -93,6 +93,7 @@ import io.calimero.KNXException;
 import io.calimero.KNXFormatException;
 import io.calimero.KNXIllegalArgumentException;
 import io.calimero.KNXTimeoutException;
+import io.calimero.KnxRuntimeException;
 import io.calimero.gui.ConnectDialog.ConnectArguments;
 import io.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 import io.calimero.internal.Executor;
@@ -145,10 +146,10 @@ class MemoryEditor extends BaseTabLayout
 
 	MemoryEditor(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, args.protocol + " connection to " + args.name, "Connecting to", true, args);
+		super(tf, args.access().protocol() + " connection to " + args.access().name(), "Connecting to", true, args);
 		IndividualAddress ia;
 		try {
-			ia = new IndividualAddress(connect.knxAddress);
+			ia = new IndividualAddress(connect.remoteKnxAddress);
 		}
 		catch (final KNXFormatException e) {
 			ia = null;
@@ -538,41 +539,48 @@ class MemoryEditor extends BaseTabLayout
 	{
 		final IndividualAddress localKnxAddress = connect.localKnxAddress.isEmpty()
 				? KNXMediumSettings.BackboneRouter : new IndividualAddress(connect.localKnxAddress);
-		final KNXMediumSettings medium = KNXMediumSettings.create(connect.knxMedium, localKnxAddress);
+		final KNXMediumSettings medium = KNXMediumSettings.create(connect.access().medium(), localKnxAddress);
 
-		if (connect.protocol == Protocol.FT12)
-			return new KNXNetworkLinkFT12(connect.port, medium);
-		if (connect.protocol == Protocol.USB)
-			return new KNXNetworkLinkUsb(connect.port, medium);
-		if (connect.protocol == Protocol.Tpuart)
-			return new KNXNetworkLinkTpuart(connect.port, medium, Collections.emptyList());
-
-		final InetSocketAddress local = new InetSocketAddress(connect.local, 0);
-		final InetAddress addr = connect.remote.getAddress();
-		if (addr.isMulticastAddress()) {
-			if (connect.isSecure(Protocol.Routing)) {
-				try {
-					final List<String> args = connect.getArgs(false);
-					final byte[] groupKey = fromHex(args.get(1 + args.indexOf("--group-key")));
-					final NetworkInterface nif = NetworkInterface.getByInetAddress(local.getAddress());
-					if (!local.getAddress().isAnyLocalAddress() && nif == null)
-						throw new KNXIllegalArgumentException(local.getAddress() + " is not assigned to a network interface");
-					return KNXNetworkLinkIP.newSecureRoutingLink(nif, addr, groupKey, Duration.ofMillis(2000), medium);
+		if (connect.access() instanceof final DiscoverTab.SerialAccess serAccess) {
+			return switch (serAccess.protocol()) {
+				case FT12 -> new KNXNetworkLinkFT12(serAccess.port(), medium);
+				case USB -> new KNXNetworkLinkUsb(serAccess.port(), medium);
+				case Tpuart -> new KNXNetworkLinkTpuart(serAccess.port(), medium, Collections.emptyList());
+				default -> throw new IllegalStateException("Unexpected value: " + serAccess.protocol());
+			};
+		}
+		else if (connect.access() instanceof final DiscoverTab.IpAccess ipAccess) {
+			final InetSocketAddress local = ipAccess.localEP();
+			final InetAddress addr = ipAccess.remote().getAddress();
+			if (addr.isMulticastAddress()) {
+				if (connect.isSecure(Protocol.Routing)) {
+					try {
+						final List<String> args = connect.getArgs(false);
+						final byte[] groupKey = fromHex(args.get(1 + args.indexOf("--group-key")));
+						final NetworkInterface nif = NetworkInterface.getByInetAddress(local.getAddress());
+						if (!local.getAddress().isAnyLocalAddress() && nif == null)
+							throw new KNXIllegalArgumentException(
+									local.getAddress() + " is not assigned to a network interface");
+						return KNXNetworkLinkIP.newSecureRoutingLink(nif, addr, groupKey, Duration.ofMillis(2000),
+								medium);
+					} catch (final SocketException e) {
+						throw new KNXIllegalArgumentException("getting network interface of " + local.getAddress(), e);
+					}
 				}
-				catch (final SocketException e) {
-					throw new KNXIllegalArgumentException("getting network interface of " + local.getAddress(), e);
-				}
+				return KNXNetworkLinkIP.newRoutingLink(local.getAddress(), addr, medium);
 			}
-			return KNXNetworkLinkIP.newRoutingLink(local.getAddress(), addr, medium);
+			if (connect.isSecure(Protocol.Tunneling)) {
+				final List<String> args = connect.getArgs(false);
+				final byte[] devAuth = fromHex(args.get(1 + args.indexOf("--device-key")));
+				final int userId = Integer.parseInt(args.get(1 + args.indexOf("--user")));
+				final byte[] userKey = fromHex(args.get(1 + args.indexOf("--user-key")));
+				return KNXNetworkLinkIP.newSecureTunnelingLink(local, ipAccess.remote(), connect.useNat(), devAuth,
+						userId, userKey, medium);
+			}
+			return KNXNetworkLinkIP.newTunnelingLink(local, ipAccess.remote(), connect.useNat(), medium);
 		}
-		if (connect.isSecure(Protocol.Tunneling)) {
-			final List<String> args = connect.getArgs(false);
-			final byte[] devAuth = fromHex(args.get(1 + args.indexOf("--device-key")));
-			final int userId = Integer.parseInt(args.get(1 + args.indexOf("--user")));
-			final byte[] userKey = fromHex(args.get(1 + args.indexOf("--user-key")));
-			return KNXNetworkLinkIP.newSecureTunnelingLink(local, connect.remote, connect.useNat(), devAuth, userId, userKey, medium);
-		}
-		return KNXNetworkLinkIP.newTunnelingLink(local, connect.remote, connect.useNat(), medium);
+		else
+			throw new KnxRuntimeException("unsupported access protocol");
 	}
 
 	private void restart()

@@ -40,7 +40,6 @@ import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
 
-import io.calimero.internal.Executor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.events.DisposeEvent;
@@ -49,6 +48,7 @@ import org.eclipse.swt.widgets.TableItem;
 
 import io.calimero.KNXIllegalArgumentException;
 import io.calimero.gui.ConnectDialog.ConnectArguments;
+import io.calimero.internal.Executor;
 import io.calimero.tools.DeviceInfo;
 
 /**
@@ -86,10 +86,17 @@ class DeviceInfoTab extends BaseTabLayout
 	{
 		list.removeAll();
 		log.removeAll();
-		// remove knx medium if we do local device info
-		if (connect.knxAddress.isEmpty())
-			connect.knxMedium = 0;
 		final List<String> args = new ArrayList<>(connect.getArgs(false));
+		// remove knx medium if we do local device info
+		if (connect.remoteKnxAddress.isEmpty()) {
+			for (int i = 0; i < args.size() - 1; i++) {
+				if ("--medium".equals(args.get(i))) {
+					args.remove(i); // --medium
+					args.remove(i); // <medium>
+					break;
+				}
+			}
+		}
 		asyncAddLog("Using command line: " + String.join(" ", args));
 
 		try {
