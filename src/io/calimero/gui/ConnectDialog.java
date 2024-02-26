@@ -74,8 +74,8 @@ import io.calimero.KnxRuntimeException;
 import io.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
 import io.calimero.gui.DiscoverTab.IpAccess;
 import io.calimero.gui.DiscoverTab.SerialAccess;
-import io.calimero.knxnetip.Discoverer;
 import io.calimero.knxnetip.KNXnetIPConnection;
+import io.calimero.knxnetip.KNXnetIPRouting;
 import io.calimero.knxnetip.SecureConnection;
 import io.calimero.knxnetip.util.ServiceFamiliesDIB.ServiceFamily;
 import io.calimero.link.medium.KNXMediumSettings;
@@ -450,8 +450,15 @@ class ConnectDialog {
 				if (IpType.values()[ipType.getSelectionIndex()] == IpType.Routing) {
 					if (access instanceof final IpAccess ipAccess && ipAccess.multicast().isPresent())
 						hostData.setText(ipAccess.multicast().get().getAddress().getHostAddress());
-					else if (hostData.getText().isEmpty())
-						hostData.setText(Discoverer.SEARCH_MULTICAST);
+					else {
+						// if no valid multicast address, set to default knx multicast group
+						try {
+							if (!KNXnetIPRouting.isValidRoutingMulticast(InetAddress.getByName(hostData.getText())))
+								hostData.setText(KNXnetIPRouting.DEFAULT_MULTICAST);
+						} catch (final UnknownHostException ex) {
+							hostData.setText(KNXnetIPRouting.DEFAULT_MULTICAST);
+						}
+					}
 				} else if (access instanceof final IpAccess ipAccess)
 					hostData.setText(ipAccess.remote().getAddress().getHostAddress());
 			}
@@ -527,6 +534,8 @@ class ConnectDialog {
 				tpuart.setEnabled(enabled);
 				ipType.setEnabled(enabled);
 				localKnxAddress.setEnabled(enabled);
+				portLabel.setText(enabled ? "UDP port:" : "USB port or ID:");
+				portLabel.requestLayout();
 			}
 		});
 
@@ -539,6 +548,8 @@ class ConnectDialog {
 				hostData.setEnabled(enabled);
 				usb.setEnabled(enabled);
 				ipType.setEnabled(enabled);
+				portLabel.setText(enabled ? "UDP port:" : "Serial port ID:");
+				portLabel.requestLayout();
 			}
 		});
 
@@ -601,8 +612,15 @@ class ConnectDialog {
 					final InetAddress addr = parseIp(hostData);
 					if (addr == null)
 						return;
-					// if no port is supplied for KNXnet/IP, we use default port
-					final int port = p.isEmpty() ? KNXnetIPConnection.DEFAULT_PORT : Integer.parseInt(p);
+
+					// if no/invalid port is supplied for KNXnet/IP, we use default port
+					int port;
+					try {
+						port = Integer.parseInt(p);
+					} catch (final NumberFormatException ex) {
+						port = KNXnetIPConnection.DEFAULT_PORT;
+					}
+
 					final var remote = new InetSocketAddress(addr, port);
 					final boolean tcp = ipType.getSelectionIndex() == IpType.Tcp.ordinal();
 
