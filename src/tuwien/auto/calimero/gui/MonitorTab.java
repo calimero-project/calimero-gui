@@ -90,7 +90,7 @@ class MonitorTab extends BaseTabLayout
 
 	MonitorTab(final CTabFolder tf, final ConnectArguments args)
 	{
-		super(tf, "Monitor for " + args.name, "Open monitor on", false, ignoreRoutingAndRemoteAddress(args));
+		super(tf, "Monitor for " + args.access().name(), "Open monitor on", false, ignoreRoutingAndRemoteAddress(args));
 
 		final TableColumn cnt = new TableColumn(list, SWT.RIGHT);
 		cnt.setText("#");
@@ -128,8 +128,7 @@ class MonitorTab extends BaseTabLayout
 
 		enableColumnAdjusting();
 
-		final String filter = args.remote == null ? args.port : args.remote.getAddress().getHostAddress();
-		addLogIncludeFilter(".*" + Pattern.quote(filter) + ".*");
+		addLogIncludeFilter(".*" + Pattern.quote(filter()) + ".*");
 		addLogExcludeFilter(".*Discoverer.*", ".*DevMgmt.*", ".*calimero\\.mgmt\\..*");
 
 		DateTimeFormatter dfmt = DateTimeFormatter.ISO_LOCAL_DATE;
@@ -276,7 +275,7 @@ class MonitorTab extends BaseTabLayout
 	}
 
 	private String defaultDatapointsFilename() {
-		final String fileName = ".datapoints_" + connect.serialNumber + ".xml";
+		final String fileName = ".datapoints_" + connect.access().serialNumber() + ".xml";
 		return fileName.replaceAll(":", "-");
 	}
 
@@ -294,7 +293,7 @@ class MonitorTab extends BaseTabLayout
 	// routing is not supported with netmon, remote address not used
 	private static ConnectArguments ignoreRoutingAndRemoteAddress(final ConnectArguments config) {
 		config.ignoreRoutingProtocol();
-		config.knxAddress = "";
+		config.remoteKnxAddress = "";
 		return config;
 	}
 }

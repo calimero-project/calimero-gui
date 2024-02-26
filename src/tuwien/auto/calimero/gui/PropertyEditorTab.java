@@ -176,7 +176,7 @@ class PropertyEditorTab extends BaseTabLayout
 	PropertyEditorTab(final CTabFolder tf, final ConnectArguments args)
 	{
 		super(tf, "Properties of " + args.friendlyName(), "Connecting to", true, args);
-		remotePropertySvc = !connect.knxAddress.isEmpty();
+		remotePropertySvc = !connect.remoteKnxAddress.isEmpty();
 
 		final String prefix = "knx-properties_" + connect.id() + "_";
 		final String suffix = ".csv";
@@ -901,7 +901,7 @@ class PropertyEditorTab extends BaseTabLayout
 
 	private void authorize(final String authCode)
 	{
-		if (connect.knxAddress.isEmpty()) {
+		if (connect.remoteKnxAddress.isEmpty()) {
 			asyncAddLog("connection uses local property services, no authorization available");
 			return;
 		}
@@ -913,7 +913,7 @@ class PropertyEditorTab extends BaseTabLayout
 
 	private void restart()
 	{
-		if (connect.knxAddress.isEmpty()) {
+		if (connect.remoteKnxAddress.isEmpty()) {
 			if (askUser("Restart KNX " + connect.friendlyName(), "Perform local device management reset?") != SWT.YES)
 				return;
 
@@ -924,7 +924,7 @@ class PropertyEditorTab extends BaseTabLayout
 			return;
 		}
 		try {
-			final IndividualAddress device = new IndividualAddress(connect.knxAddress);
+			final IndividualAddress device = new IndividualAddress(connect.remoteKnxAddress);
 			if (askUser("Restart KNX Device " + device,
 					"Perform a confirmed restart in connection-less mode?") != SWT.YES)
 				return;

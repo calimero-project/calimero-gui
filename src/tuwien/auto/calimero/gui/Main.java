@@ -287,7 +287,7 @@ public class Main
 
 		// TODO we don't have a provider for the local knx address
 		final String localKnxAddress = "";
-		args.ifPresent(ca -> ca.knxAddress = address.getText());
+		args.ifPresent(ca -> ca.remoteKnxAddress = address.getText());
 		return args.orElseThrow(() -> new RuntimeException("Discover and check default interface first!"));
 	}
 

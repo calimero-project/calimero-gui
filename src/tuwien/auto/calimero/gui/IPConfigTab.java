@@ -70,8 +70,7 @@ class IPConfigTab extends BaseTabLayout
 		value.setWidth(200);
 		enableColumnAdjusting();
 
-		final String filter = args.remote == null ? args.port : args.remote.getAddress().getHostAddress();
-		addLogIncludeFilter(".*" + Pattern.quote(filter) + ".*", ".*calimero\\.mgmt\\.PC.*", ".*calimero\\.tools.*");
+		addLogIncludeFilter(".*" + Pattern.quote(filter()) + ".*", ".*calimero\\.mgmt\\.PC.*", ".*calimero\\.tools.*");
 		addLogExcludeFilter(".*Discoverer.*");
 
 		readConfig();

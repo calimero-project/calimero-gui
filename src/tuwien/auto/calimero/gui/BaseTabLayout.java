@@ -90,6 +90,8 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
+import tuwien.auto.calimero.gui.DiscoverTab.IpAccess;
+import tuwien.auto.calimero.gui.DiscoverTab.SerialAccess;
 import tuwien.auto.calimero.log.LogService.LogLevel;
 
 /**
@@ -348,6 +350,14 @@ class BaseTabLayout
 				return true;
 		}
 		return false;
+	}
+
+	final String filter() {
+		if (connect.access() instanceof final IpAccess ipAccess)
+			return ipAccess.remote().getAddress().getHostAddress();
+		if (connect.access() instanceof final SerialAccess serAccess)
+			return serAccess.port();
+		return connect.access().name();
 	}
 
 	/**

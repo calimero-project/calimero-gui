@@ -70,8 +70,7 @@ class ProgmodeTab extends BaseTabLayout
 		device.setWidth(100);
 		enableColumnAdjusting();
 
-		final String filter = args.remote == null ? args.port : args.remote.getAddress().getHostAddress();
-		addLogIncludeFilter(".*" + Pattern.quote(filter) + ".*", ".*calimero\\.mgmt\\.MgmtProc.*",
+		addLogIncludeFilter(".*" + Pattern.quote(filter()) + ".*", ".*calimero\\.mgmt\\.MgmtProc.*",
 				".*calimero\\.mgmt\\.MC.*", ".*calimero\\.tools.*");
 		addLogExcludeFilter(".*Discoverer.*");
 

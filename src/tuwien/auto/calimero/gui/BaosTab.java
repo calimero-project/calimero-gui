@@ -37,7 +37,6 @@
 package tuwien.auto.calimero.gui;
 
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -196,9 +195,13 @@ class BaosTab extends BaseTabLayout {
 
 		workArea.layout(true, true);
 
-		if (connect.remote != null && connect.remote.getPort() == 3671)
-			connect.remote = new InetSocketAddress(connect.remote.getAddress(), 12004);
 		final List<String> toolArgs = connect.getArgs(false);
+		for (int i = 0; i < toolArgs.size() - 1; i++) {
+			if ("-p".equals(toolArgs.get(i)) && "3671".equals(toolArgs.get(i + 1))) {
+				toolArgs.set(i + 1, "12004");
+				break;
+			}
+		}
 		asyncAddLog("Using command line: " + String.join(" ", toolArgs));
 		try {
 			tool = new BaosClientTool(toolArgs.toArray(String[]::new));
