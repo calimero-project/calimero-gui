@@ -95,6 +95,7 @@ import tuwien.auto.calimero.KNXIllegalArgumentException;
 import tuwien.auto.calimero.KNXTimeoutException;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
+import tuwien.auto.calimero.internal.Executor;
 import tuwien.auto.calimero.link.KNXNetworkLink;
 import tuwien.auto.calimero.link.KNXNetworkLinkFT12;
 import tuwien.auto.calimero.link.KNXNetworkLinkIP;
@@ -668,7 +669,7 @@ class MemoryEditor extends BaseTabLayout
 	private void runWorker(final Runnable r)
 	{
 		setHeaderInfoPhase(statusInfo(0));
-		workerThread = new Thread(() -> {
+		workerThread = Executor.execute(() -> {
 			Main.asyncExec(() -> {
 				for (final Control c : editArea.getChildren())
 					c.setEnabled(false);
@@ -687,7 +688,6 @@ class MemoryEditor extends BaseTabLayout
 				});
 			}
 		}, "Calimero memory worker");
-		workerThread.start();
 	}
 
 	private void addMemoryRow(final boolean topOfList)

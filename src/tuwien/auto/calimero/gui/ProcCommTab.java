@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2023 B. Malinowsky
+    Copyright (c) 2006, 2024 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -85,6 +85,7 @@ import tuwien.auto.calimero.dptxlator.DPT;
 import tuwien.auto.calimero.dptxlator.TranslatorTypes;
 import tuwien.auto.calimero.dptxlator.TranslatorTypes.MainType;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
+import tuwien.auto.calimero.internal.Executor;
 import tuwien.auto.calimero.process.LteProcessEvent;
 import tuwien.auto.calimero.process.ProcessEvent;
 import tuwien.auto.calimero.process.ProcessListener;
@@ -417,55 +418,52 @@ class ProcCommTab extends BaseTabLayout
 		args.add("monitor");
 		asyncAddLog("Using command line: " + String.join(" ", args));
 
-		// thread for connecting, it quits as soon communicator is running
-		new Thread("Connector for " + connect.name) {
-			@Override
-			public void run()
-			{
-				try {
-					pc = new ProcCommWrapper(args.toArray(new String[0]));
-					final var listener = new ProcessListener() {
-						@Override
-						public void groupWrite(final ProcessEvent e) {}
+		// quits as soon communicator is running
+		final Runnable connector = () -> {
+			try {
+				pc = new ProcCommWrapper(args.toArray(new String[0]));
+				final var listener = new ProcessListener() {
+					@Override
+					public void groupWrite(final ProcessEvent e) {}
 
-						@Override
-						public void groupReadResponse(final ProcessEvent e) {}
+					@Override
+					public void groupReadResponse(final ProcessEvent e) {}
 
-						@Override
-						public void groupReadRequest(final ProcessEvent e) {}
+					@Override
+					public void groupReadRequest(final ProcessEvent e) {}
 
-						@Override
-						public void detached(final DetachEvent e) {
-							Main.asyncExec(() -> {
-								if (editArea.isDisposed())
-									return;
-								for (final Control c : editArea.getChildren()) {
-									if (c instanceof Button) {
-										final var text = ((Button) c).getText();
-										if (text.equals("Read") || text.equals("Write"))
-											c.setEnabled(false);
-									}
+					@Override
+					public void detached(final DetachEvent e) {
+						Main.asyncExec(() -> {
+							if (editArea.isDisposed())
+								return;
+							for (final Control c : editArea.getChildren()) {
+								if (c instanceof Button) {
+									final var text = ((Button) c).getText();
+									if (text.equals("Read") || text.equals("Write"))
+										c.setEnabled(false);
 								}
-								setHeaderInfoPhase("Disconnected from");
-							});
-						}
-					};
-					pc.start(listener);
-					Main.asyncExec(() -> {
-						if (editArea.isDisposed())
-							return;
-						for (final Control c : editArea.getChildren())
-							c.setEnabled(true);
-						setHeaderInfoPhase("Connected to");
-					});
-				}
-				catch (final Exception e) {
-					asyncAddLog(e);
-					if (pc != null)
-						pc.quit();
-				}
+							}
+							setHeaderInfoPhase("Disconnected from");
+						});
+					}
+				};
+				pc.start(listener);
+				Main.asyncExec(() -> {
+					if (editArea.isDisposed())
+						return;
+					for (final Control c : editArea.getChildren())
+						c.setEnabled(true);
+					setHeaderInfoPhase("Connected to");
+				});
 			}
-		}.start();
+			catch (final Exception e) {
+				asyncAddLog(e);
+				if (pc != null)
+					pc.quit();
+			}
+		};
+		Executor.execute(connector, "Connector for " + connect.name);
 	}
 
 	private void loadDatapoints()

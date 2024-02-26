@@ -99,6 +99,7 @@ import tuwien.auto.calimero.dptxlator.DPT;
 import tuwien.auto.calimero.dptxlator.TranslatorTypes;
 import tuwien.auto.calimero.dptxlator.TranslatorTypes.MainType;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
+import tuwien.auto.calimero.internal.Executor;
 import tuwien.auto.calimero.tools.BaosClient;
 
 class BaosTab extends BaseTabLayout {
@@ -675,7 +676,7 @@ class BaosTab extends BaseTabLayout {
 	private void startBaosClient() {
 		setHeaderInfoPhase(statusInfo(0));
 
-		toolThread = new Thread(() -> {
+		final Runnable looper = () -> {
 			try {
 				tool.start();
 				Main.asyncExec(() -> {
@@ -704,9 +705,8 @@ class BaosTab extends BaseTabLayout {
 			finally {
 				tool.quit();
 			}
-
-		}, "Calimero BAOS tool");
-		toolThread.start();
+		};
+		toolThread = Executor.execute(looper, "Calimero BAOS tool");
 	}
 
 	// phase: 0=connecting, 1=reading, 2=completed, x=unknown

@@ -105,6 +105,7 @@ import tuwien.auto.calimero.dptxlator.DPTXlator;
 import tuwien.auto.calimero.dptxlator.PropertyTypes;
 import tuwien.auto.calimero.dptxlator.TranslatorTypes;
 import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
+import tuwien.auto.calimero.internal.Executor;
 import tuwien.auto.calimero.knxnetip.SecureConnection;
 import tuwien.auto.calimero.link.KNXNetworkLink;
 import tuwien.auto.calimero.mgmt.Description;
@@ -113,7 +114,6 @@ import tuwien.auto.calimero.mgmt.ManagementClientImpl;
 import tuwien.auto.calimero.mgmt.PropertyClient;
 import tuwien.auto.calimero.mgmt.PropertyClient.PropertyKey;
 import tuwien.auto.calimero.tools.Property;
-
 import tuwien.auto.calimero.xml.XmlInputFactory;
 import tuwien.auto.calimero.xml.XmlReader;
 
@@ -1006,115 +1006,107 @@ class PropertyEditorTab extends BaseTabLayout
 
 		asyncAddLog("Using command line: " + String.join(" ", args));
 
-		toolThread = new Thread("Calimero property editor") {
-			@Override
-			public void run()
-			{
-				try {
-					final Property tool = new Property(args.toArray(new String[0])) {
-						@Override
-						protected void runCommand(final String... cmd) throws InterruptedException
-						{
-							toolLink = link();
-							if (init) {
-								Main.asyncExec(() -> setHeaderInfoPhase(statusInfo(1)));
-								pc.addDefinitions(definitions);
-								map.putAll(pc.getDefinitions());
+		final Runnable task = () -> {
+			try {
+				final Property tool = new Property(args.toArray(new String[0])) {
+					@Override
+					protected void runCommand(final String... cmd) throws InterruptedException {
+						toolLink = link();
+						if (init) {
+							Main.asyncExec(() -> setHeaderInfoPhase(statusInfo(1)));
+							pc.addDefinitions(definitions);
+							map.putAll(pc.getDefinitions());
 
-								super.runCommand(cmd);
+							super.runCommand(cmd);
 
-								for (final Description d : descriptions) {
-									super.runCommand("get", "" + d.objectIndex(), "" + d.pid(), "1",
-											"" + d.currentElements());
-								}
-								Main.asyncExec(() -> {
-									if (editArea.isDisposed())
-										return;
-									for (final Control c : editArea.getChildren())
-										c.setEnabled(true);
-									setHeaderInfoPhase(statusInfo(2));
-								});
+							for (final Description d : descriptions) {
+								super.runCommand("get", "" + d.objectIndex(), "" + d.pid(), "1",
+										"" + d.currentElements());
 							}
-							while (true) {
-								final String[] command;
-								synchronized (commands) {
-									while (commands.isEmpty())
-										commands.wait();
-									command = commands.remove(0);
-								}
-								asyncAddLog(String.join(" ", command));
-								try {
-									super.runCommand(command);
-								}
-								catch (final RuntimeException e) {
-									asyncAddLog(e.toString());
-								}
-							}
-						}
-
-						@Override
-						protected void onDescription(final Description d)
-						{
-							if (replaceDescription(d)) {
-								Main.asyncExec(() -> {
-									find(d.objectIndex(), d.pid()).ifPresent(
-											i -> i.setText(Columns.Elements.ordinal(), "" + d.currentElements()));
-									findPropertyPageControl(d.objectIndex(), d.pid(), "current-elements")
-											.ifPresent(c -> ((Spinner) c).setValues(d.currentElements(), 0,
-													Math.max(d.currentElements(), d.maxElements()), 0, 1, 10));
-								});
-								return;
-							}
-							descriptions.add(d);
-							addRow(descriptions.size() - 1);
-							if (isNewInterfaceObject(descriptions.size() - 1))
-								addInterfaceObjectToTree(d.objectIndex(), d.objectType());
-							addPropertyToTree(d.objectType(), d.pid());
-						}
-
-						@Override
-						protected void onPropertyValue(final int idx, final int pid, final String value,
-							final List<byte[]> raw)
-						{
-							final Description d = findDescription(idx, pid);
-							values.put(d, value);
-							rawValues.put(d, raw);
 							Main.asyncExec(() -> {
 								if (editArea.isDisposed())
 									return;
-								final String rawText = raw.stream().map(data -> HexFormat.of().formatHex(data))
-										.collect(joining(", "));
-								find(idx, pid).ifPresent(i -> i.setText(Columns.RawValues.ordinal(), rawText));
-								find(idx, pid).ifPresent(i -> i.setText(Columns.Values.ordinal(), value));
-								findPropertyPageControl(idx, pid, "property-edit-field")
-										.ifPresent(c -> ((Text) c).setText(value));
-								findPropertyPageControl(idx, pid, "property-alt-formatted")
-										.ifPresent(c -> ((Text) c).setText(altFormatted(value, ((Text) c).getText())));
-							});
-						}
-
-						@Override
-						protected void onCompletion(final Exception thrown, final boolean canceled)
-						{
-							if (thrown != null) {
-								asyncAddLog(thrown);
-							}
-							Main.asyncExec(() -> {
-								if (cancel.isDisposed())
-									return;
+								for (final Control c : editArea.getChildren())
+									c.setEnabled(true);
 								setHeaderInfoPhase(statusInfo(2));
-								cancel.setEnabled(false);
 							});
 						}
-					};
-					tool.run();
-				}
-				catch (final Exception e) {
-					asyncAddLog(e);
-				}
+						while (true) {
+							final String[] command;
+							synchronized (commands) {
+								while (commands.isEmpty())
+									commands.wait();
+								command = commands.remove(0);
+							}
+							asyncAddLog(String.join(" ", command));
+							try {
+								super.runCommand(command);
+							}
+							catch (final RuntimeException e) {
+								asyncAddLog(e.toString());
+							}
+						}
+					}
+
+					@Override
+					protected void onDescription(final Description d) {
+						if (replaceDescription(d)) {
+							Main.asyncExec(() -> {
+								find(d.objectIndex(), d.pid()).ifPresent(
+										i -> i.setText(Columns.Elements.ordinal(), "" + d.currentElements()));
+								findPropertyPageControl(d.objectIndex(), d.pid(), "current-elements")
+										.ifPresent(c -> ((Spinner) c).setValues(d.currentElements(), 0,
+												Math.max(d.currentElements(), d.maxElements()), 0, 1, 10));
+							});
+							return;
+						}
+						descriptions.add(d);
+						addRow(descriptions.size() - 1);
+						if (isNewInterfaceObject(descriptions.size() - 1))
+							addInterfaceObjectToTree(d.objectIndex(), d.objectType());
+						addPropertyToTree(d.objectType(), d.pid());
+					}
+
+					@Override
+					protected void onPropertyValue(final int idx, final int pid, final String value,
+						final List<byte[]> raw) {
+						final Description d = findDescription(idx, pid);
+						values.put(d, value);
+						rawValues.put(d, raw);
+						Main.asyncExec(() -> {
+							if (editArea.isDisposed())
+								return;
+							final String rawText = raw.stream().map(data -> HexFormat.of().formatHex(data))
+									.collect(joining(", "));
+							find(idx, pid).ifPresent(i -> i.setText(Columns.RawValues.ordinal(), rawText));
+							find(idx, pid).ifPresent(i -> i.setText(Columns.Values.ordinal(), value));
+							findPropertyPageControl(idx, pid, "property-edit-field")
+									.ifPresent(c -> ((Text) c).setText(value));
+							findPropertyPageControl(idx, pid, "property-alt-formatted")
+									.ifPresent(c -> ((Text) c).setText(altFormatted(value, ((Text) c).getText())));
+						});
+					}
+
+					@Override
+					protected void onCompletion(final Exception thrown, final boolean canceled) {
+						if (thrown != null) {
+							asyncAddLog(thrown);
+						}
+						Main.asyncExec(() -> {
+							if (cancel.isDisposed())
+								return;
+							setHeaderInfoPhase(statusInfo(2));
+							cancel.setEnabled(false);
+						});
+					}
+				};
+				tool.run();
+			}
+			catch (final Exception e) {
+				asyncAddLog(e);
 			}
 		};
-		toolThread.start();
+		toolThread = Executor.execute(task, "Calimero property editor");
 	}
 
 	// phase: 0=connecting, 1=reading, 2=completed, x=unknown
