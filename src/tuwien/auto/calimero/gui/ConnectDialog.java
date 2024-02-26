@@ -98,7 +98,7 @@ class ConnectDialog
 
 		Protocol protocol;
 		InetSocketAddress remote;
-		String port;
+		final String port;
 		int knxMedium;
 
 		final InetAddress local;
@@ -217,78 +217,67 @@ class ConnectDialog
 
 			final List<String> args = new ArrayList<>();
 			switch (protocol) {
-			case Routing:
-			case Tunneling:
-				if (local != null) {
-					args.add("--localhost");
-					args.add(local.getHostAddress());
-				}
-				final InetAddress addr = remote.getAddress();
-				args.add(addr.getHostAddress());
-				if (protocol == Protocol.Tunneling) {
-					if (useNat())
-						args.add("--nat");
-					if (tcp)
-						args.add("--tcp");
-				}
-				if (protocol == Protocol.Routing && isSecure(Protocol.Routing)) {
-					String key = config("group.key", addr.getHostAddress());
-					if (key.isEmpty()) {
-						final String[] tempKey = new String[1];
-						Main.syncExec(() -> {
-							final PasswordDialog dlg = new PasswordDialog(name, addr);
-							if (dlg.show())
-								tempKey[0] = dlg.groupKey();
-						});
-						if (tempKey[0] == null) // canceled
-							throw new KnxRuntimeException("no group key entered");
-						key = tempKey[0];
+				case Routing, Tunneling -> {
+					if (local != null) {
+						args.add("--localhost");
+						args.add(local.getHostAddress());
 					}
-					args.add("--group-key");
-					args.add(key);
-				}
-				else if (protocol == Protocol.Tunneling && isSecure(Protocol.Tunneling)) {
-					final String user = "" + KeyringTab.user();
-					final String userPwd = config("user." + user, user);
-					if (userPwd.isEmpty()) {
-						final PasswordDialog dlg = new PasswordDialog(name, true);
-						if (dlg.show()) {
-							args.add("--user");
-							args.add(dlg.user());
-							args.add(dlg.isUserPasswordHash() ? "--user-key" : "--user-pwd");
-							args.add(dlg.userPassword());
-							if (!dlg.deviceAuthCode().isEmpty()) {
-								args.add(dlg.isDeviceAuthHash() ? "--device-key" : "--device-pwd");
-								args.add(dlg.deviceAuthCode());
+					final InetAddress addr = remote.getAddress();
+					args.add(addr.getHostAddress());
+					if (protocol == Protocol.Tunneling) {
+						if (useNat()) args.add("--nat");
+						if (tcp) args.add("--tcp");
+					}
+					if (protocol == Protocol.Routing && isSecure(Protocol.Routing)) {
+						String key = config("group.key", addr.getHostAddress());
+						if (key.isEmpty()) {
+							final String[] tempKey = new String[1];
+							Main.syncExec(() -> {
+								final PasswordDialog dlg = new PasswordDialog(name, addr);
+								if (dlg.show()) tempKey[0] = dlg.groupKey();
+							});
+							if (tempKey[0] == null) // canceled
+								throw new KnxRuntimeException("no group key entered");
+							key = tempKey[0];
+						}
+						args.add("--group-key");
+						args.add(key);
+					}
+					else if (protocol == Protocol.Tunneling && isSecure(Protocol.Tunneling)) {
+						final String user = "" + KeyringTab.user();
+						final String userPwd = config("user." + user, user);
+						if (userPwd.isEmpty()) {
+							final PasswordDialog dlg = new PasswordDialog(name, true);
+							if (dlg.show()) {
+								args.add("--user");
+								args.add(dlg.user());
+								args.add(dlg.isUserPasswordHash() ? "--user-key" : "--user-pwd");
+								args.add(dlg.userPassword());
+								if (!dlg.deviceAuthCode().isEmpty()) {
+									args.add(dlg.isDeviceAuthHash() ? "--device-key" : "--device-pwd");
+									args.add(dlg.deviceAuthCode());
+								}
 							}
 						}
+						else {
+							args.add("--user");
+							args.add(user);
+							args.add("--user-pwd");
+							args.add(userPwd);
+							args.add("--device-key");
+							args.add(config("device.key", ""));
+						}
+						args.add("--knx-address");
+						args.add("0.0.0");
 					}
-					else {
-						args.add("--user");
-						args.add(user);
-						args.add("--user-pwd");
-						args.add(userPwd);
-						args.add("--device-key");
-						args.add(config("device.key", ""));
-					}
-					args.add("--knx-address");
-					args.add("0.0.0");
-				}
 
-				args.add("-p");
-				args.add("" + remote.getPort());
-				break;
-			case USB:
-				args.add("--usb");
-				break;
-			case FT12:
-				args.add("--ft12");
-				break;
-			case Tpuart:
-				args.add("--tpuart");
-				break;
-			default:
-				throw new IllegalStateException();
+					args.add("-p");
+					args.add("" + remote.getPort());
+				}
+				case USB -> args.add("--usb");
+				case FT12 -> args.add("--ft12");
+				case Tpuart -> args.add("--tpuart");
+				default -> throw new IllegalStateException();
 			}
 			if (port != null && !port.isEmpty())
 				args.add(port);
@@ -441,8 +430,8 @@ class ConnectDialog
 		final Text localhostData;
 		if (access instanceof final DiscoverTab.IpAccess ipAccess) {
 			final var local = ipAccess.localEP() != null ? ipAccess.localEP().getAddress() : localhost;
-			localhostData = addHostInput(c, "Local endpoint:", local, serial);
-			hostData = addHostInput(c, "Remote endpoint:", ipAccess.remote().getAddress(), serial);
+			localhostData = addHostInput(c, "Local endpoint:", local, false);
+			hostData = addHostInput(c, "Remote endpoint:", ipAccess.remote().getAddress(), false);
 		}
 		else {
 			localhostData = addHostInput(c, "Local endpoint:", localhost, serial);
@@ -502,7 +491,7 @@ class ConnectDialog
 						hostData.setText(ipAccess.multicast().get().getAddress().getHostAddress());
 					else if (hostData.getText().isEmpty())
 						hostData.setText(Discoverer.SEARCH_MULTICAST);
-				} else if (access instanceof final DiscoverTab.IpAccess ipAccess && ipAccess.remote() != null)
+				} else if (access instanceof final DiscoverTab.IpAccess ipAccess)
 					hostData.setText(ipAccess.remote().getAddress().getHostAddress());
 			}
 		});

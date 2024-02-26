@@ -537,90 +537,66 @@ class BaosTab extends BaseTabLayout {
 	}
 
 	private Control controlForEditing(final Property p, final String currentValue) {
-		switch (p) {
-		case Baudrate: {
-			final var baudrate = comboBox(properties, currentValue, "19200 Bd", "115200 Bd");
-			final Supplier<String> formatter = () -> {
-				final int idx = baudrate.getSelectionIndex();
-				return String.format("%02x", idx + 1);
-			};
-			baudrate.setData(formatter);
-			return baudrate;
-		}
-
-		case CurrentBufferSize:
-			return digitsOnlyTextBox(properties, true, currentValue);
-
-		case ProgrammingMode:
-		case IndicationSending:
-		case TunnelingEnabled:
-		case BaosBinaryEnabled:
-		case BaosWebEnabled:
-		case BaosRestEnabled:
-		case HttpFileEnabled:
-		case SearchRequestEnabled:
-		case MenuEnabled:
-		case EnableSuspend:
-			return comboBox(properties, currentValue, "disabled", "enabled");
-
-		case IndividualAddress: {
-			final var ia = textBox(properties, currentValue);
-			final Supplier<String> formatter = () -> {
-				try {
-					return HexFormat.of().formatHex(new IndividualAddress(ia.getText()).toByteArray());
-				}
-				catch (final KNXFormatException e) {
-					asyncAddLog(e);
-					return "";
-				}
-			};
-			ia.setData(formatter);
-			return ia;
-		}
-
-		case DeviceFriendlyName:
-			final var text = textBox(properties, currentValue);
-			text.setTextLimit(30);
-			return text;
-
-		case IpAssignment:
-			return comboBox(properties, currentValue, "DHCP", "Manual");
-
-		case IpAddress:
-		case SubnetMask:
-		case DefaultGateway:
-			final var ip = textBox(properties, currentValue);
-			final Supplier<String> ipFormatter = () -> {
-				try {
-					return HexFormat.of().formatHex(InetAddress.getByName(ip.getText()).getAddress());
-				}
-				catch (final UnknownHostException e) {
-					asyncAddLog(e);
-					return "";
-				}
-			};
-			ip.setData(ipFormatter);
-			return ip;
-
-		case TimeSinceResetUnit:
-			final var unit = comboBox(properties, currentValue, "ms", "seconds", "minutes", "hours");
-			final char[] setting = { 'x', 's', 'm', 'h' };
-			final Supplier<String> formatter = () -> String.format("%02x", (int) setting[unit.getSelectionIndex()]);
-			unit.setData(formatter);
-			return unit;
-
-		case SystemTime:
-			return dateTimeControl(properties);
-
-		case SystemTimezoneOffset:
-			return spinner(properties, -12, 14, currentValue);
-
-		default:
-			return null;
-		}
+		return switch (p) {
+			case Baudrate -> {
+				final var baudrate = comboBox(properties, currentValue, "19200 Bd", "115200 Bd");
+				final Supplier<String> formatter = () -> {
+					final int idx = baudrate.getSelectionIndex();
+					return String.format("%02x", idx + 1);
+				};
+				baudrate.setData(formatter);
+				yield baudrate;
+			}
+			case CurrentBufferSize -> digitsOnlyTextBox(properties, true, currentValue);
+			case ProgrammingMode, IndicationSending, TunnelingEnabled, BaosBinaryEnabled, BaosWebEnabled,
+					BaosRestEnabled, HttpFileEnabled, SearchRequestEnabled, MenuEnabled, EnableSuspend ->
+					comboBox(properties, currentValue, "disabled", "enabled");
+			case IndividualAddress -> {
+				final var ia = textBox(properties, currentValue);
+				final Supplier<String> formatter = () -> {
+					try {
+						return HexFormat.of().formatHex(new IndividualAddress(ia.getText()).toByteArray());
+					} catch (final KNXFormatException e) {
+						asyncAddLog(e);
+						return "";
+					}
+				};
+				ia.setData(formatter);
+				yield ia;
+			}
+			case DeviceFriendlyName -> {
+				final var text = textBox(properties, currentValue);
+				text.setTextLimit(30);
+				yield text;
+			}
+			case IpAssignment -> comboBox(properties, currentValue, "DHCP", "Manual");
+			case IpAddress, SubnetMask, DefaultGateway -> {
+				final var ip = textBox(properties, currentValue);
+				final Supplier<String> ipFormatter = () -> {
+					try {
+						return HexFormat.of().formatHex(InetAddress.getByName(ip.getText()).getAddress());
+					} catch (final UnknownHostException e) {
+						asyncAddLog(e);
+						return "";
+					}
+				};
+				ip.setData(ipFormatter);
+				yield ip;
+			}
+			case TimeSinceResetUnit -> {
+				final var unit = comboBox(properties, currentValue, "ms", "seconds", "minutes", "hours");
+				final char[] setting = {'x', 's', 'm', 'h'};
+				final Supplier<String> formatter = () -> String.format("%02x", (int) setting[unit.getSelectionIndex()]);
+				unit.setData(formatter);
+				yield unit;
+			}
+			case SystemTime -> dateTimeControl(properties);
+			case SystemTimezoneOffset -> spinner(-12, 14, currentValue);
+			default -> null;
+		};
 	}
 
-	private Spinner spinner(final Composite parent, final int min, final int max, final String currentValue) {
+	private Spinner spinner(final int min, final int max, final String currentValue) {
 		final var spinner = new Spinner(properties, SWT.NONE);
 		spinner.setMinimum(min);
 		spinner.setMaximum(max);
@@ -758,104 +734,52 @@ class BaosTab extends BaseTabLayout {
 	}
 
 	private static String formatted(final Property p, final byte[] data) {
-		switch (p) {
-		// hex values
-		case Invalid:
-		case HardwareType:
-			return HexFormat.ofDelimiter(" ").formatHex(data);
+		return switch (p) {
+			// hex values
+			case Invalid, HardwareType -> HexFormat.ofDelimiter(" ").formatHex(data);
 
-		// version
-		case HardwareVersion:
-		case FirmwareVersion:
-		case ApplicationVersion:
-		case ProtocolVersionBinary:
-		case ProtocolVersionWeb:
-		case ProtocolVersionRest:
-			return ((data[0] >> 4) & 0xf) + "." + (data[0] & 0xf);
+			// version
+			case HardwareVersion, FirmwareVersion, ApplicationVersion, ProtocolVersionBinary, ProtocolVersionWeb,
+					ProtocolVersionRest -> ((data[0] >> 4) & 0xf) + "." + (data[0] & 0xf);
 
-		// manufacturer
-		case Manufacturer:
-		case ManufacturerApp:
-			final int mf = (int) unsigned(data);
-			return String.format("%s (%d)", BaosClient.manufacturer(mf), mf);
+			// manufacturer
+			case Manufacturer, ManufacturerApp -> {
+				final int mf = (int) unsigned(data);
+				yield String.format("%s (%d)", BaosClient.manufacturer(mf), mf);
+			}
 
-		// unsigned values
-		case ApplicationId:
-		case MaxBufferSize:
-		case LengthOfDescriptionString:
-		case CurrentBufferSize:
-		case MaxManagementClients:
-		case ConnectedManagementClients:
-		case MaxTunnelingClients:
-		case ConnectedTunnelingClients:
-		case MaxBaosUdpClients:
-		case ConnectedBaosUdpClients:
-		case MaxBaosTcpClients:
-		case ConnectedBaosTcpClients:
-		case MaxDatapoints:
-		case ConfiguredDatapoints:
-		case MaxParameterBytes:
-		case DownloadCounter:
-			return "" + unsigned(data);
+			// unsigned values
+			case ApplicationId, MaxBufferSize, LengthOfDescriptionString, CurrentBufferSize, MaxManagementClients,
+					ConnectedManagementClients, MaxTunnelingClients, ConnectedTunnelingClients, MaxBaosUdpClients,
+					ConnectedBaosUdpClients, MaxBaosTcpClients, ConnectedBaosTcpClients, MaxDatapoints,
+					ConfiguredDatapoints, MaxParameterBytes, DownloadCounter -> "" + unsigned(data);
 
-		case Baudrate:
-			return baudRate(data);
+			case Baudrate -> baudRate(data);
+			case SerialNumber -> knxSerialNumber(data);
+			case TimeSinceReset -> {
+				final long ms = unsigned(data);
+				final var d = Duration.ofMillis(ms);
+				yield String.format("%d:%02d:%02d (%d ms)", d.toHours(), d.toMinutesPart(), d.toSecondsPart(), ms);
+			}
+			case ConnectionState -> (data[0] & 0x01) != 0 ? "connected" : "disconnected";
 
-		case SerialNumber:
-			return knxSerialNumber(data);
+			// enabled/disabled
+			case ProgrammingMode, IndicationSending -> (data[0] & 0x01) != 0 ? "enabled" : "disabled";
 
-		case TimeSinceReset:
-			final long ms = unsigned(data);
-			final var d = Duration.ofMillis(ms);
-			return String.format("%d:%02d:%02d (%d ms)", d.toHours(), d.toMinutesPart(), d.toSecondsPart(), ms);
+			// yes/no
+			case TunnelingEnabled, BaosBinaryEnabled, BaosWebEnabled, BaosRestEnabled, HttpFileEnabled,
+					SearchRequestEnabled, StructuredDatabase, MenuEnabled, EnableSuspend ->
+					(data[0] & 0x01) != 0 ? "yes" : "no";
 
-		case ConnectionState:
-			return (data[0] & 0x01) != 0  ? "connected" : "disconnected";
-
-		// enabled/disabled
-		case ProgrammingMode:
-		case IndicationSending:
-			return (data[0] & 0x01) != 0  ? "enabled" : "disabled";
-
-		// yes/no
-		case TunnelingEnabled:
-		case BaosBinaryEnabled:
-		case BaosWebEnabled:
-		case BaosRestEnabled:
-		case HttpFileEnabled:
-		case SearchRequestEnabled:
-		case StructuredDatabase:
-		case MenuEnabled:
-		case EnableSuspend:
-			return (data[0] & 0x01) != 0 ? "yes" : "no";
-
-		case IndividualAddress:
-			return new IndividualAddress(data).toString();
-
-		case MacAddress:
-			return HexFormat.ofDelimiter(":").formatHex(data);
-
-		case DeviceFriendlyName:
-			return string(data);
-
-		case IpAssignment:
-			return (data[0] & 0xff) == 0 ? "DHCP" : "Manual";
-
-		case IpAddress:
-		case SubnetMask:
-		case DefaultGateway:
-			return ipAddress(data);
-
-		case TimeSinceResetUnit:
-			return timeSinceResetUnit(data);
-
-		case SystemTime:
-			return new String(data, StandardCharsets.ISO_8859_1);
-
-		case SystemTimezoneOffset:
-			return "" + data[0];
-		}
-		return HexFormat.ofDelimiter(" ").formatHex(data);
+			case IndividualAddress -> new IndividualAddress(data).toString();
+			case MacAddress -> HexFormat.ofDelimiter(":").formatHex(data);
+			case DeviceFriendlyName -> string(data);
+			case IpAssignment -> (data[0] & 0xff) == 0 ? "DHCP" : "Manual";
+			case IpAddress, SubnetMask, DefaultGateway -> ipAddress(data);
+			case TimeSinceResetUnit -> timeSinceResetUnit(data);
+			case SystemTime -> new String(data, StandardCharsets.ISO_8859_1);
+			case SystemTimezoneOffset -> "" + data[0];
+		};
 	}
 
 	private static String knxSerialNumber(final byte[] data) {

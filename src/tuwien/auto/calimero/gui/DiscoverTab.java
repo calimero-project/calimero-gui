@@ -209,7 +209,7 @@ class DiscoverTab extends BaseTabLayout
 		start.setFocus();
 
 		nat = new Button(top, SWT.CHECK);
-		nat.setText("Be aware of NAT (Network Address Translation) during search");
+		nat.setText("Use NAT (Network Address Translation)");
 		nat.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		nat.setToolTipText("Some KNXnet/IP devices might not answer in this mode");
 

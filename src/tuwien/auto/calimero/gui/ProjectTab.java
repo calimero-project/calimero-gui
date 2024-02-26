@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2019, 2023 B. Malinowsky
+    Copyright (c) 2019, 2024 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -100,7 +100,7 @@ class ProjectTab extends BaseTabLayout {
 				if (e.keyCode == SWT.BS && e.stateMask == 0) {
 					final var items = list.getSelection();
 					for (final var item : items) {
-						projects.remove(item.getData("path"));
+						projects.remove((Path) item.getData("path"));
 						list.remove(list.indexOf(item));
 					}
 					list.redraw();
