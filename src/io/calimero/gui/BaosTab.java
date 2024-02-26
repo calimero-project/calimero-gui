@@ -91,6 +91,7 @@ import org.eclipse.swt.widgets.Text;
 import io.calimero.IndividualAddress;
 import io.calimero.KNXException;
 import io.calimero.KNXFormatException;
+import io.calimero.KNXIllegalArgumentException;
 import io.calimero.baos.BaosService;
 import io.calimero.baos.BaosService.ErrorCode;
 import io.calimero.baos.BaosService.Item;
@@ -164,7 +165,7 @@ class BaosTab extends BaseTabLayout {
 
 
 	BaosTab(final CTabFolder tf, final ConnectArguments args) {
-		super(tf, "BAOS view for " + args.friendlyName(), "Connecting to", true, args);
+		super(tf, "BAOS view for " + args.friendlyName(), "Connecting to", false, args);
 
 		final String prefix = "knx-baos_" + connect.id() + "_";
 		final String suffix = ".csv";
@@ -199,7 +200,12 @@ class BaosTab extends BaseTabLayout {
 			connect.remote = new InetSocketAddress(connect.remote.getAddress(), 12004);
 		final List<String> toolArgs = connect.getArgs(false);
 		asyncAddLog("Using command line: " + String.join(" ", toolArgs));
-		tool = new BaosClientTool(toolArgs.toArray(String[]::new));
+		try {
+			tool = new BaosClientTool(toolArgs.toArray(String[]::new));
+		} catch (KNXIllegalArgumentException e) {
+			asyncAddLog(e);
+			throw e;
+		}
 		startBaosClient();
 	}
 
@@ -700,7 +706,10 @@ class BaosTab extends BaseTabLayout {
 			}
 			catch (final Exception e) {
 				asyncAddLog(e);
-				Main.asyncExec(() -> setHeaderInfoPhase(statusInfo(2)));
+				Main.asyncExec(() -> {
+					setHeaderInfoPhase(statusInfo(2));
+					cancel.setEnabled(false);
+				});
 			}
 			finally {
 				tool.quit();
