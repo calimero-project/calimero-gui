@@ -93,11 +93,6 @@ public final class ConnectArguments {
 
 	DiscoverTab.Access access() { return access; }
 
-	public boolean useNat()
-	{
-		return nat;
-	}
-
 	public void ignoreRoutingProtocol() {
 		ignoreRouting = true;
 	}
@@ -113,7 +108,7 @@ public final class ConnectArguments {
 		if (!remoteKnxAddress.isEmpty())
 			return (remoteKnxAddress.split("\\.").length < 3 ? "line " : "device ") + remoteKnxAddress;
 		if (access instanceof final IpAccess ipAccess)
-			return "interface " + ipAccess.remote() + (useNat() ? " (UDP/NAT)" : "") + (tcp ? " (TCP)" : "");
+			return "interface " + ipAccess.remote() + (nat ? " (UDP/NAT)" : "") + (tcp ? " (TCP)" : "");
 		if (access instanceof final SerialAccess serAccess)
 			return "interface " + serAccess.port();
 		return access.name();
@@ -157,7 +152,7 @@ public final class ConnectArguments {
 				final InetAddress addr = ipAccess.remote().getAddress();
 				args.add(addr.getHostAddress());
 				if (access.protocol() == Protocol.Tunneling) {
-					if (useNat()) args.add("--nat");
+					if (nat) args.add("--nat");
 					if (tcp) args.add("--tcp");
 				}
 				if (access.protocol() == Protocol.Routing && isSecure(Protocol.Routing)) {
