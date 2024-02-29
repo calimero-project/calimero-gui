@@ -36,26 +36,16 @@
 
 package io.calimero.gui;
 
-import static io.calimero.DataUnitBuilder.fromHex;
-
 import java.io.IOException;
 import java.io.Writer;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.time.Duration;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HexFormat;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -89,24 +79,10 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
 import io.calimero.IndividualAddress;
-import io.calimero.KNXException;
 import io.calimero.KNXFormatException;
-import io.calimero.KNXIllegalArgumentException;
-import io.calimero.KNXTimeoutException;
-import io.calimero.KnxRuntimeException;
-import io.calimero.gui.ConnectArguments.Protocol;
 import io.calimero.internal.Executor;
-import io.calimero.link.KNXNetworkLink;
-import io.calimero.link.KNXNetworkLinkFT12;
-import io.calimero.link.KNXNetworkLinkIP;
-import io.calimero.link.KNXNetworkLinkTpuart;
-import io.calimero.link.KNXNetworkLinkUsb;
-import io.calimero.link.medium.KNXMediumSettings;
-import io.calimero.mgmt.Destination;
-import io.calimero.mgmt.ManagementClient;
-import io.calimero.mgmt.ManagementClientImpl;
-import io.calimero.mgmt.ManagementProcedures;
-import io.calimero.mgmt.ManagementProceduresImpl;
+import io.calimero.tools.Memory;
+import io.calimero.tools.Restart;
 
 /**
  * @author B. Malinowsky
@@ -126,13 +102,12 @@ class MemoryEditor extends BaseTabLayout
 
 	private final IndividualAddress device;
 	private Thread workerThread;
-	private KNXNetworkLink knxLink;
 
 	private final int viewerColumns = 16;
 	private static final int initialStartAddress = 0x100;
 	private int viewerStartOffset = initialStartAddress;
 
-	private final Map<Integer, Integer> modified = new HashMap<>();
+	private final Map<Integer, Integer> modified = new ConcurrentHashMap<>();
 
 	private static final Listener hexOnly = e -> {
 		final char[] chars = e.text.toLowerCase().toCharArray();
@@ -143,6 +118,21 @@ class MemoryEditor extends BaseTabLayout
 			}
 	};
 
+	private class MemoryTool extends Memory {
+		public MemoryTool(final String[] args) { super(args); }
+
+		@Override
+		protected void onCompletion(final Exception thrown, final boolean canceled) {
+			if (thrown != null)
+				asyncAddLog(thrown.getMessage());
+			if (canceled)
+				asyncAddLog("memory access canceled before completion");
+			else
+				asyncAddLog("memory access operation complete");
+		}
+	}
+
+
 	MemoryEditor(final CTabFolder tf, final ConnectArguments args)
 	{
 		super(tf, args.access().protocol() + " connection to " + args.access().name(), "Connecting to", true, args);
@@ -152,7 +142,7 @@ class MemoryEditor extends BaseTabLayout
 		}
 		catch (final KNXFormatException e) {
 			ia = null;
-			setHeaderInfoPhase(statusInfo(3));
+			setHeaderInfoPhase(statusInfo(2));
 			asyncAddLog(e.getMessage());
 		}
 		device = ia;
@@ -329,8 +319,6 @@ class MemoryEditor extends BaseTabLayout
 	{
 		if (workerThread != null)
 			workerThread.interrupt();
-		if (knxLink != null)
-			knxLink.close();
 	}
 
 	private void addAddressView()
@@ -526,83 +514,40 @@ class MemoryEditor extends BaseTabLayout
 		}
 	}
 
-	private KNXNetworkLink knxLink() throws KNXException, UnknownHostException, InterruptedException
-	{
-		if (knxLink != null && knxLink.isOpen())
-			return knxLink;
-		knxLink = createLink();
-		return knxLink;
-	}
-
-	private KNXNetworkLink createLink() throws KNXException, InterruptedException
-	{
-		final IndividualAddress localKnxAddress = connect.localKnxAddress.isEmpty()
-				? KNXMediumSettings.BackboneRouter : new IndividualAddress(connect.localKnxAddress);
-		final KNXMediumSettings medium = KNXMediumSettings.create(connect.access().medium(), localKnxAddress);
-
-		if (connect.access() instanceof final DiscoverTab.SerialAccess serAccess) {
-			return switch (serAccess.protocol()) {
-				case FT12 -> new KNXNetworkLinkFT12(serAccess.port(), medium);
-				case USB -> new KNXNetworkLinkUsb(serAccess.port(), medium);
-				case Tpuart -> new KNXNetworkLinkTpuart(serAccess.port(), medium, Collections.emptyList());
-				default -> throw new IllegalStateException("Unexpected value: " + serAccess.protocol());
-			};
-		}
-		else if (connect.access() instanceof final DiscoverTab.IpAccess ipAccess) {
-			final InetSocketAddress local = ipAccess.localEP();
-			final InetAddress addr = ipAccess.remote().getAddress();
-			if (addr.isMulticastAddress()) {
-				if (connect.isSecure(Protocol.Routing)) {
-					try {
-						final List<String> args = connect.getArgs(false);
-						final byte[] groupKey = fromHex(args.get(1 + args.indexOf("--group-key")));
-						final NetworkInterface nif = NetworkInterface.getByInetAddress(local.getAddress());
-						if (!local.getAddress().isAnyLocalAddress() && nif == null)
-							throw new KNXIllegalArgumentException(
-									local.getAddress() + " is not assigned to a network interface");
-						return KNXNetworkLinkIP.newSecureRoutingLink(nif, addr, groupKey, Duration.ofMillis(2000),
-								medium);
-					} catch (final SocketException e) {
-						throw new KNXIllegalArgumentException("getting network interface of " + local.getAddress(), e);
-					}
-				}
-				return KNXNetworkLinkIP.newRoutingLink(local.getAddress(), addr, medium);
-			}
-			if (connect.isSecure(Protocol.Tunneling)) {
-				final List<String> args = connect.getArgs(false);
-				final byte[] devAuth = fromHex(args.get(1 + args.indexOf("--device-key")));
-				final int userId = Integer.parseInt(args.get(1 + args.indexOf("--user")));
-				final byte[] userKey = fromHex(args.get(1 + args.indexOf("--user-key")));
-				return KNXNetworkLinkIP.newSecureTunnelingLink(local, ipAccess.remote(), connect.useNat(), devAuth,
-						userId, userKey, medium);
-			}
-			return KNXNetworkLinkIP.newTunnelingLink(local, ipAccess.remote(), connect.useNat(), medium);
-		}
-		else
-			throw new KnxRuntimeException("unsupported access protocol");
-	}
-
-	private void restart()
-	{
-		if (askUser("Restart KNX Device " + device, "Perform a confirmed restart in connection-less mode?") != SWT.YES)
+	private void restart() {
+		if (askUser("Restart KNX Device " + device, "Perform a confirmed restart of " + device
+				+ " in connection-less mode?") != SWT.YES)
 			return;
-		try {
-			try (ManagementClientImpl mgmt = new ManagementClientImpl(knxLink())) {
-				final Destination dst = mgmt.createDestination(device, false);
-				final int eraseCode = 1; // confirmed restart
-				try {
-					final int time = mgmt.restart(dst, eraseCode, 0);
-					asyncAddLog("Restarting device will take " + (time == 0 ? " ≤ 5 " : time) + " seconds");
+
+		final var tryBasicRestart = new AtomicBoolean();
+		final class RestartTool extends Restart {
+			public RestartTool(final String[] args) { super(args); }
+
+			@Override
+			protected void onCompletion(final Exception thrown, final boolean canceled) {
+				if (thrown != null) {
+					tryBasicRestart.set(true);
+					asyncAddLog(thrown);
 				}
-				catch (final KNXTimeoutException e) {
-					asyncAddLog("Resort to basic restart (" + e.getMessage() + ")");
-					mgmt.restart(dst);
-				}
+				if (canceled)
+					asyncAddLog("restart canceled before completion");
+				else
+					asyncAddLog("restart complete");
 			}
 		}
-		catch (KNXException | UnknownHostException | InterruptedException e) {
-			asyncAddLog(e);
-		}
+
+		final var args = connect.getArgs(false);
+		args.add("--confirmed");
+		final var confirmedRestart = new RestartTool(args.toArray(String[]::new));
+		runWorker(4, () -> {
+			confirmedRestart.run();
+			if (tryBasicRestart.get()) {
+				asyncAddLog("resort to basic restart");
+				args.remove(args.size() - 1);
+				final var basicRestart = new RestartTool(args.toArray(String[]::new));
+				basicRestart.run();
+			}
+		});
 	}
 
 	private int askUser(final String title, final String msg)
@@ -622,60 +567,48 @@ class MemoryEditor extends BaseTabLayout
 		return id;
 	}
 
-	private void writeModifiedMemory()
-	{
-		runWorker(() -> {
-			try (ManagementClient mgmt = new ManagementClientImpl(knxLink());
-					Destination dst = mgmt.createDestination(device, true)) {
-				Main.asyncExec(() -> setHeaderInfoPhase(statusInfo(1)));
-				for (final Iterator<Entry<Integer, Integer>> i = modified.entrySet().iterator(); i.hasNext();) {
-					final Entry<Integer, Integer> entry = i.next();
-					try {
-						final int v = entry.getValue();
-						asyncAddLog(String.format("apply W[%s]=%02x to device memory", address(entry.getKey()), v));
-						mgmt.writeMemory(dst, entry.getKey(), new byte[] { (byte) v });
-						i.remove();
-					}
-					catch (final KNXException e) {
-						asyncAddLog(e.getMessage());
-					}
-				}
+	private void writeModifiedMemory() {
+		final var i = modified.entrySet().iterator();
+		final var entry = new AtomicReference<Map.Entry<Integer, Integer>>();
+		final var tool = new MemoryTool(connect.getArgs(false).toArray(String[]::new)) {
+			@Override
+			protected Command fetchCommand() {
+				final var last = entry.get();
+				if (last != null)
+					modified.remove(last.getKey());
+				if (!i.hasNext())
+					return Done;
+				final var next = i.next();
+				entry.set(next);
+				asyncAddLog(String.format("apply W[%s]=%02x to device memory", address(next.getKey()), next.getValue()));
+				return new Write(next.getKey(), (byte) (int) next.getValue());
 			}
-			catch (final Exception e) {
-				asyncAddLog(e.getMessage());
-			}
-		});
+		};
+
+		runWorker(3, tool);
 	}
 
-	private void readMemory(final long startAddress, final int bytes)
-	{
-		runWorker(() -> {
-			try (ManagementProcedures mgmt = new ManagementProceduresImpl(knxLink())) {
-				Main.asyncExec(() -> setHeaderInfoPhase(statusInfo(1)));
-				final int stride = 1;
-				for (long addr = startAddress; addr < startAddress + bytes; addr += stride) {
-					final int min = (int) Math.min(stride, startAddress + bytes - addr);
-					try {
-						asyncAddLog("read device memory range 0x" + address(addr) + " to 0x" + address(addr + min));
-						final byte[] memory = mgmt.readMemory(device, addr, min);
-						asyncAddLog(HexFormat.ofDelimiter(" ").formatHex(memory));
-						final int start = (int) addr;
-						Main.asyncExec(() -> updateMemoryRange(start, memory));
-					}
-					catch (final KNXException e) {
-						asyncAddLog(e.getMessage());
-					}
-				}
+	private void readMemory(final long startAddress, final int bytes) {
+		final var args = connect.getArgs(false);
+		args.add("read");
+		args.add("0x" + Long.toHexString(startAddress));
+		args.add("" + bytes);
+
+		final var tool = new MemoryTool(args.toArray(String[]::new)) {
+			@Override
+			protected void onMemoryRead(final byte[] data) {
+				asyncAddLog(HexFormat.ofDelimiter(" ").formatHex(data));
+				Main.asyncExec(() -> updateMemoryRange((int) startAddress, data));
 			}
-			catch (final Exception e) {
-				asyncAddLog(e);
-			}
-		});
+		};
+
+		asyncAddLog("read device memory range 0x" + address(startAddress) + " to 0x" + address(startAddress + bytes));
+		runWorker(0, tool);
 	}
 
-	private void runWorker(final Runnable r)
+	private void runWorker(int phase, final Runnable r)
 	{
-		setHeaderInfoPhase(statusInfo(0));
+		setHeaderInfoPhase(statusInfo(phase));
 		workerThread = Executor.execute(() -> {
 			Main.asyncExec(() -> {
 				for (final Control c : editArea.getChildren())
@@ -686,7 +619,7 @@ class MemoryEditor extends BaseTabLayout
 			}
 			finally {
 				Main.asyncExec(() -> {
-					setHeaderInfoPhase(statusInfo(2));
+					setHeaderInfoPhase(statusInfo(1));
 					editArea.setEnabled(true);
 					for (final Control c : editArea.getChildren()) {
 						if (c != write || !modified.isEmpty())
@@ -753,13 +686,13 @@ class MemoryEditor extends BaseTabLayout
 			write.setEnabled(false);
 	}
 
-	// phase: 0=connecting, 1=reading, 2=completed, 3=error, 4=unknown
 	private static String statusInfo(final int phase) {
 		return switch (phase) {
-			case 0 -> "Connecting to";
-			case 1 -> "Reading memory of";
-			case 2 -> "Completed reading memory of";
-			case 3 -> "Error reading memory of";
+			case 0 -> "Reading memory of";
+			case 1 -> "Completed access to";
+			case 2 -> "Error reading memory of";
+			case 3 -> "Writing memory to";
+			case 4 -> "Restart";
 			default -> "Unknown";
 		};
 	}
