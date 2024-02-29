@@ -125,10 +125,11 @@ class LogTab extends BaseTabLayout
 
 	private static final String[] levels = new String[] { "All", "Trace", "Debug", "Info", "Warn", "Error", "Off" };
 
-	private static final int maxHistorySize = 1000;
-	private static final List<Object[]> logHistory = new ArrayList<>(maxHistorySize);
+	private record LogEntry(Instant instant, String name, Level level, String msg, Throwable throwable) {}
 
-	private static final Map<LogTab, java.util.List<Object[]>> logBuffer = new ConcurrentHashMap<>();
+	private static final int maxHistorySize = 1000;
+	private static final List<LogEntry> logHistory = new ArrayList<>(maxHistorySize);
+	private static final Map<LogTab, List<LogEntry>> logBuffer = new ConcurrentHashMap<>();
 
 	private static final LogNotifier notifier = LogTab::addToLogBuffer;
 
@@ -253,10 +254,10 @@ class LogTab extends BaseTabLayout
 			if (list.isDisposed())
 				return;
 
-			final List<Object[]> buf = logBuffer.get(this);
+			final List<LogEntry> buf = logBuffer.get(this);
 			synchronized (buf) {
 				for (final var entry : buf) {
-					if (matches((Level) entry[2]))
+					if (matches(entry.level()))
 						addListItem(logItemText(entry), new String[0], new String[0]);
 				}
 				buf.clear();
@@ -268,15 +269,14 @@ class LogTab extends BaseTabLayout
 		return msgLevel.getSeverity() >= logLevel().getSeverity();
 	}
 
-	private String[] logItemText(final Object[] logEntry) {
-		final var instant = (Instant) logEntry[0];
-		final String date = dateFormatter.format(instant);
-		final String time = timeFormatter.format(instant);
+	private String[] logItemText(final LogEntry logEntry) {
+		final String date = dateFormatter.format(logEntry.instant());
+		final String time = timeFormatter.format(logEntry.instant());
 
-		var msg = expandTabs((String) logEntry[3]);
-		final Throwable t = (Throwable) logEntry[4];
+		var msg = expandTabs(logEntry.msg());
+		final Throwable t = logEntry.throwable();
 		msg += t != null ? ": " + t.getMessage() : "";
-		return new String[] { date, time, logEntry[2].toString(), logEntry[1].toString(), msg };
+		return new String[] { date, time, logEntry.level().toString(), logEntry.name(), msg };
 	}
 
 	private void adjustLogLevel(final int level)
@@ -314,20 +314,19 @@ class LogTab extends BaseTabLayout
 	}
 
 	private static void addToLogBuffer(final String name, final Level level, final String msg, final Throwable thrown) {
-		final var now = Instant.now();
-		addToLogHistory(now, name, level, msg, thrown);
+		final var entry = new LogEntry(Instant.now(), name, level, msg, thrown);
+		addToLogHistory(entry);
 		logBuffer.forEach((k, v) -> {
-			v.add(new Object[] { now, name, level, msg, thrown });
+			v.add(entry);
 			k.asyncAddLog();
 		});
 	}
 
-	private static void addToLogHistory(final Instant now, final String name, final Level level,
-			final String msg, final Throwable thrown) {
+	private static void addToLogHistory(final LogEntry entry) {
 		synchronized (logHistory) {
 			if (logHistory.size() >= maxHistorySize)
 				logHistory.remove(0);
-			logHistory.add(new Object[] { now, name, level, msg, thrown });
+			logHistory.add(entry);
 		}
 	}
 }
