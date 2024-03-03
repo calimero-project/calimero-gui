@@ -596,9 +596,9 @@ class MemoryEditor extends BaseTabLayout
 
 		final var tool = new MemoryTool(args.toArray(String[]::new)) {
 			@Override
-			protected void onMemoryRead(final byte[] data) {
+			protected void onMemoryRead(final int startAddress, final byte[] data) {
 				asyncAddLog(HexFormat.ofDelimiter(" ").formatHex(data));
-				Main.asyncExec(() -> updateMemoryRange((int) startAddress, data));
+				Main.asyncExec(() -> updateMemoryRange(startAddress, data));
 			}
 		};
 
