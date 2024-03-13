@@ -34,7 +34,7 @@ mainClassName = 'tuwien.auto.calimero.gui.SwtChecker'
 
 // SWT is platform dependent
 def swtGroupId = 'org.eclipse.platform'
-def swtVersion = '3.124.200'
+def swtVersion = '3.125.0'
 def swtArtifact = 'org.eclipse.swt.'
 
 def os = System.getProperty("os.name").toLowerCase(Locale.ENGLISH)
