@@ -49,7 +49,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import io.calimero.serial.usb.Device;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.events.SelectionEvent;
@@ -76,6 +75,7 @@ import tuwien.auto.calimero.knxnetip.util.ServiceFamiliesDIB.ServiceFamily;
 import tuwien.auto.calimero.link.medium.KNXMediumSettings;
 import tuwien.auto.calimero.log.LogService.LogLevel;
 import tuwien.auto.calimero.serial.SerialConnectionFactory;
+import tuwien.auto.calimero.serial.usb.Device;
 import tuwien.auto.calimero.serial.usb.UsbConnection;
 import tuwien.auto.calimero.serial.usb.UsbConnectionFactory;
 import tuwien.auto.calimero.tools.Discover;

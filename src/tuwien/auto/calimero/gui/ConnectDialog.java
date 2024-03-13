@@ -36,8 +36,6 @@
 
 package tuwien.auto.calimero.gui;
 
-import static tuwien.auto.calimero.DataUnitBuilder.toHex;
-
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
