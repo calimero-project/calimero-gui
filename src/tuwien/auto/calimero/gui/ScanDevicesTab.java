@@ -52,7 +52,6 @@ import org.eclipse.swt.widgets.TableItem;
 import tuwien.auto.calimero.DeviceDescriptor.DD0;
 import tuwien.auto.calimero.IndividualAddress;
 import tuwien.auto.calimero.KNXIllegalArgumentException;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.internal.Executor;
 import tuwien.auto.calimero.tools.ScanDevices;
 

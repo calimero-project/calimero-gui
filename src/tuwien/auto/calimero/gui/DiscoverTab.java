@@ -64,8 +64,7 @@ import org.eclipse.swt.widgets.TableItem;
 import tuwien.auto.calimero.IndividualAddress;
 import tuwien.auto.calimero.KNXException;
 import tuwien.auto.calimero.SerialNumber;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments.Protocol;
+import tuwien.auto.calimero.gui.ConnectArguments.Protocol;
 import tuwien.auto.calimero.internal.Executor;
 import tuwien.auto.calimero.knxnetip.Discoverer.Result;
 import tuwien.auto.calimero.knxnetip.KNXnetIPConnection;
@@ -88,7 +87,7 @@ import tuwien.auto.calimero.tools.Discover;
 class DiscoverTab extends BaseTabLayout
 {
 	sealed interface Access {
-		ConnectDialog.ConnectArguments.Protocol protocol();
+		ConnectArguments.Protocol protocol();
 
 		String name();
 

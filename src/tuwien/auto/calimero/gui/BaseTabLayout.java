@@ -89,7 +89,6 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.gui.DiscoverTab.IpAccess;
 import tuwien.auto.calimero.gui.DiscoverTab.SerialAccess;
 import tuwien.auto.calimero.log.LogService.LogLevel;

@@ -84,7 +84,6 @@ import tuwien.auto.calimero.datapoint.StateDP;
 import tuwien.auto.calimero.dptxlator.DPT;
 import tuwien.auto.calimero.dptxlator.TranslatorTypes;
 import tuwien.auto.calimero.dptxlator.TranslatorTypes.MainType;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.internal.Executor;
 import tuwien.auto.calimero.process.LteProcessEvent;
 import tuwien.auto.calimero.process.ProcessEvent;

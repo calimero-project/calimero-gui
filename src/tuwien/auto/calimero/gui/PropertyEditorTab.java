@@ -104,7 +104,6 @@ import tuwien.auto.calimero.dptxlator.DPT;
 import tuwien.auto.calimero.dptxlator.DPTXlator;
 import tuwien.auto.calimero.dptxlator.PropertyTypes;
 import tuwien.auto.calimero.dptxlator.TranslatorTypes;
-import tuwien.auto.calimero.gui.ConnectDialog.ConnectArguments;
 import tuwien.auto.calimero.internal.Executor;
 import tuwien.auto.calimero.knxnetip.SecureConnection;
 import tuwien.auto.calimero.link.KNXNetworkLink;
