@@ -17,7 +17,7 @@ repositories {
 group = 'com.github.calimero'
 version = '2.6-SNAPSHOT'
 
-def date() {
+static def date() {
     new Date().format('yyyyMMdd')
 }
 
@@ -103,7 +103,7 @@ tasks.withType(Jar).configureEach {
         include 'LICENSE.txt'
         into "META-INF"
     }
-    if (name.equals('sourcesJar')) {
+    if (name == 'sourcesJar') {
         from("${projectDir}") {
             include 'README.md'
         }
