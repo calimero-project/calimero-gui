@@ -147,18 +147,14 @@ public final class ConnectArguments {
 		if (protocol == Protocol.Routing && ignoreRouting)
 			protocol = Protocol.Tunneling;
 		switch (protocol) {
-			case Routing, Tunneling -> {
+			case Routing -> {
 				final var ipAccess = (IpAccess) access;
 				args.add("--localhost");
 				args.add(ipAccess.localEP().getAddress().getHostAddress());
 
-				final InetAddress addr = ipAccess.remote().getAddress();
+				final InetAddress addr = ipAccess.multicast().get().getAddress();
 				args.add(addr.getHostAddress());
-				if (access.protocol() == Protocol.Tunneling) {
-					if (nat) args.add("--nat");
-					if (tcp) args.add("--tcp");
-				}
-				if (access.protocol() == Protocol.Routing && isSecure(Protocol.Routing)) {
+				if (isSecure(Protocol.Routing)) {
 					String key = config("group.key", addr.getHostAddress());
 					if (key.isEmpty()) {
 						final String[] tempKey = new String[1];
@@ -173,7 +169,21 @@ public final class ConnectArguments {
 					args.add("--group-key");
 					args.add(key);
 				}
-				else if (access.protocol() == Protocol.Tunneling && isSecure(Protocol.Tunneling)) {
+			}
+
+			case Tunneling -> {
+				final var ipAccess = (IpAccess) access;
+				args.add("--localhost");
+				args.add(ipAccess.localEP().getAddress().getHostAddress());
+
+				final InetAddress addr = ipAccess.remote().getAddress();
+				args.add(addr.getHostAddress());
+				args.add("-p");
+				args.add("" + ipAccess.remote().getPort());
+				if (tcp) args.add("--tcp");
+				else if (nat) args.add("--nat");
+
+				if (isSecure(Protocol.Tunneling)) {
 					final String user = "" + KeyringTab.user();
 					final String userPwd = config("user." + user, user);
 					if (userPwd.isEmpty()) {
@@ -197,12 +207,7 @@ public final class ConnectArguments {
 						args.add("--device-key");
 						args.add(config("device.key", ""));
 					}
-					args.add("--knx-address");
-					args.add("0.0.0");
 				}
-
-				args.add("-p");
-				args.add("" + ipAccess.remote().getPort());
 			}
 			case USB -> args.add("--usb");
 			case FT12 -> args.add("--ft12");
