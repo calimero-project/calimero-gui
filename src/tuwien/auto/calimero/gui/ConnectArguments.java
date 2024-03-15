@@ -107,8 +107,11 @@ public final class ConnectArguments {
 	public String friendlyName() {
 		if (!remoteKnxAddress.isEmpty())
 			return (remoteKnxAddress.split("\\.").length < 3 ? "line " : "device ") + remoteKnxAddress;
-		if (access instanceof final IpAccess ipAccess)
-			return "interface " + ipAccess.remote() + (nat ? " (UDP/NAT)" : "") + (tcp ? " (TCP)" : "");
+		if (access instanceof final IpAccess ipAccess) {
+			if (ipAccess.protocol() == Protocol.Routing)
+				return "multicast group " + ipAccess.multicast().get().getAddress();
+			return "interface " + ipAccess.remote() + (tcp ? " (TCP)" : (nat ? " (UDP/NAT)" : ""));
+		}
 		if (access instanceof final SerialAccess serAccess)
 			return "interface " + serAccess.port();
 		return access.name();
