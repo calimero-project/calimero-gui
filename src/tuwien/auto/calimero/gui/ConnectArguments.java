@@ -237,6 +237,9 @@ public final class ConnectArguments {
 		for (final var service : ipAccess.securedServices().keySet()) {
 			if (service == ServiceFamily.DeviceManagement && protocol == Protocol.DeviceManagement)
 				return true;
+			// TODO we never actually set DeviceManagement as protocol, only Tunneling -> allow Tunneling also for DevMgmt
+			if (service == ServiceFamily.DeviceManagement && protocol == Protocol.Tunneling)
+				return true;
 			if (service == ServiceFamily.Tunneling && protocol == Protocol.Tunneling)
 				return true;
 			if (service == ServiceFamily.Routing && protocol == Protocol.Routing)
