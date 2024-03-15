@@ -78,7 +78,7 @@ class ConnectDialog {
 		shell.setLayout(new GridLayout());
 		shell.setText("Open connection");
 
-		final boolean confirm = !access.name().isEmpty();
+		final boolean confirm = !access.name().equals(DiscoverTab.UnknownAccess.name());
 		final boolean serial = access instanceof SerialAccess;
 
 		final Label nameLabel = new Label(shell, SWT.NONE);
@@ -301,16 +301,17 @@ class ConnectDialog {
 				final String p = portData.getText();
 				if (h.isEmpty() && p.isEmpty())
 					return;
-				final String n = confirm ? access.name() : h.isEmpty() ? p : h;
 				final boolean natChecked = serial ? false : ipType.getSelectionIndex() == IpType.UdpNat.ordinal();
 
 				ConnectArguments args;
 				if (usb.getSelection()) {
 					final String knxAddress = knxAddr.getText();
+					final String n = confirm ? access.name() : p;
 					args = new ConnectArguments(new SerialAccess(Protocol.USB, n, access.medium(), p,
 							access.serialNumber()), "", knxAddress);
 				}
 				else if (tpuart.getSelection()) {
+					final String n = confirm ? access.name() : p;
 					// process communication and bus monitoring don't require local knx address
 					final String lka = procComm.getSelection() || monitor.getSelection() ? "" : localKnxAddress.getText();
 					final String remoteKnxAddress = knxAddr.getText();
@@ -342,6 +343,7 @@ class ConnectDialog {
 						hostIA = ipAccess.hostIA();
 					}
 
+					final String n = confirm ? access.name() : h;
 					final String knxAddress = knxAddr.getText();
 					args = new ConnectArguments(new IpAccess(useRouting(), n, access.medium(),
 							new InetSocketAddress(local, 0), remote, mcast,
@@ -350,6 +352,7 @@ class ConnectDialog {
 						args.localKnxAddress = localKnxAddress.getText();
 				}
 				else {
+					final String n = confirm ? access.name() : p;
 					final String knxAddress = knxAddr.getText();
 					args = new ConnectArguments(
 							new SerialAccess(Protocol.FT12, n, access.medium(), p, access.serialNumber()), "", knxAddress);
