@@ -15,7 +15,7 @@ repositories {
 }
 
 group = 'com.github.calimero'
-version = '2.6-SNAPSHOT'
+version = '2.6-rc1'
 
 static def date() {
     new Date().format('yyyyMMdd')
