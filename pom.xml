@@ -27,7 +27,7 @@
 	</developers>
 	<properties>
 		<swt.groupId>org.eclipse.platform</swt.groupId>
-		<swt.version>3.124.200</swt.version>
+		<swt.version>3.125.0</swt.version>
 	</properties>
 	<profiles>
 		<profile>
