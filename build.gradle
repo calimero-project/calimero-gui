@@ -116,12 +116,20 @@ tasks.withType(Jar).configureEach {
     }
 }
 
+def gitHash = "git -C $projectDir rev-parse --verify --short HEAD".execute().text.trim()
+def buildDate = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z")
+        .withZone(ZoneId.of("UTC"))
+        .format(Instant.now())
+
 jar {
   dependsOn configurations.runtimeClasspath
   manifest {
     attributes(
-      'Class-Path': (configurations.runtimeClasspath - configurations.provided + files('swt.jar')).collect { it.getName() }.join(' '),
-      'Main-Class': application.mainClass
+      'Main-Class': application.mainClass,
+      'Implementation-Version': project.version,
+      'Revision': "${gitHash}",
+      'Build-Date': "${buildDate}",
+      'Class-Path': (configurations.runtimeClasspath - configurations.provided + files('swt.jar')).collect { it.getName() }.join(' ')
     )
   }
 }

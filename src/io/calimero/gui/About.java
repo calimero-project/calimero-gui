@@ -38,12 +38,6 @@ package io.calimero.gui;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Paths;
-import java.time.Instant;
-import java.time.ZoneId;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -58,7 +52,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Shell;
 
-import io.calimero.Settings;
+import io.calimero.internal.Manifest;
 
 /**
  * @author B. Malinowsky
@@ -91,7 +85,7 @@ class About {
 
 	private static final String license = "The Calimero library, tools, GUI, and documentation "
 			+ "are licensed under\nthe GPL, with the Classpath Exception.";
-	private static final String copyright = "© 2006, 2022.";
+	private static final String copyright = "© 2006, 2024.";
 
 	private static final String swtLink = "http://www.eclipse.org/swt/";
 	private static final String swtInfo = "This GUI uses the <A href=\"" + swtLink + "\">Standard Widget Toolkit (SWT)</A>";
@@ -161,26 +155,13 @@ class About {
 		final Label bar = new Label(shell, SWT.HORIZONTAL | SWT.SEPARATOR);
 		bar.setLayoutData(new GridData(GridData.FILL, SWT.NONE, false, false));
 
-		long modified = 0;
-		try {
-			final Class<? extends About> cl = getClass();
-			final URL url = cl.getClassLoader().getResource(cl.getCanonicalName().replace('.', '/') + ".class");
-			if (url.getProtocol().equals("file"))
-				modified = Paths.get(url.toURI()).toFile().lastModified();
-			else if (url.getProtocol().equals("jar")) {
-				final String path = url.getPath();
-				// win: create uri of the substring first, otherwise the first slash (/C:/...) is not parsed correctly
-				modified = Paths.get(URI.create(path.substring(0, path.indexOf("!")))).toFile().lastModified();
-			}
-		}
-		catch (URISyntaxException | RuntimeException ignore) {}
-		String compiled = "";
-		if (modified != 0)
-			compiled = ", build date " + Instant.ofEpochMilli(modified).atZone(ZoneId.systemDefault()).toLocalDate();
+		final var buildInfo = Manifest.buildInfo(About.class);
+		final StringBuilder compiled = new StringBuilder("Version ").append(buildInfo);
+		buildInfo.buildDate().ifPresent(buildDate -> compiled.append("\nBuild date ").append(buildDate));
 
 		final Label compiledLabel = new Label(shell, SWT.NONE);
 		compiledLabel.setFont(Main.font);
-		compiledLabel.setText("Compiled with " + Settings.getLibraryHeader(false) + compiled);
+		compiledLabel.setText(compiled.toString());
 
 		final Button close = new Button(shell, SWT.NONE);
 		close.setLayoutData(new GridData(SWT.RIGHT, SWT.BOTTOM, false, true));
