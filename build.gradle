@@ -37,7 +37,7 @@ application {
 
 // SWT is platform dependent
 def swtGroupId = 'org.eclipse.platform'
-def swtVersion = '3.126.0'
+def swtVersion = '3.127.0'
 def swtArtifact = 'org.eclipse.swt.'
 
 def os = System.getProperty("os.name").toLowerCase(Locale.ENGLISH)
