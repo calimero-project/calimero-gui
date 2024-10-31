@@ -6,11 +6,11 @@ import java.util.Date
 import java.util.Locale
 
 plugins {
-	id("com.github.ben-manes.versions") version "0.51.0"
 	java
 	application
 	`maven-publish`
 	signing
+	id("com.github.ben-manes.versions") version "0.51.0"
 	eclipse
 }
 
