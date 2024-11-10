@@ -195,9 +195,6 @@ tasks.startScripts {
 
 tasks.withType<JavaExec>().configureEach {
 	jvmArgs(addReads)
-}
-
-tasks.withType<JavaExec> {
 	if (os.contains("mac")) {
 		jvmArgs("-XstartOnFirstThread")
 	}
