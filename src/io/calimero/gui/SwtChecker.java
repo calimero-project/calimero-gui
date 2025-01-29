@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2016, 2024 B. Malinowsky
+    Copyright (c) 2016, 2025 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -65,7 +65,7 @@ import io.calimero.log.LogService;
 public class SwtChecker
 {
 	private static final String swtArtifactId = "org.eclipse.swt.";
-	private static final String swtVersion = "3.127.0";
+	private static final String swtVersion = "3.128.0";
 	private static final String baseDownloadUrl = "https://repo.maven.apache.org/maven2/org/eclipse/platform";
 
 	private final Logger logger;
