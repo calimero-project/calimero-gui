@@ -1,5 +1,5 @@
 /*
-    Calimero GUI - A graphical user interface for the Calimero 2 tools
+    Calimero GUI - A graphical user interface for the Calimero 3 tools
     Copyright (c) 2006, 2023 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
