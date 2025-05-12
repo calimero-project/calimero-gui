@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 3 tools
-    Copyright (c) 2019, 2024 B. Malinowsky
+    Copyright (c) 2019, 2025 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -190,7 +190,7 @@ class KeyringTab extends BaseTabLayout {
 			final TableItem current = (TableItem) e.item;
 
 			if (current.getChecked()) {
-				user = Integer.parseInt(current.getText(2));
+				user = Integer.parseUnsignedInt(current.getText(2));
 				try {
 					address = new IndividualAddress(current.getText(1));
 				}

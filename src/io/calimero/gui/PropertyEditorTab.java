@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 3 tools
-    Copyright (c) 2015, 2024 B. Malinowsky
+    Copyright (c) 2015, 2025 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -512,7 +512,7 @@ class PropertyEditorTab extends BaseTabLayout
 		override.addSelectionListener(adapt(e -> elems.setEnabled(override.getSelection())));
 
 		set.addSelectionListener(adapt(e -> writeValues(objectIndex, pid, value.getText(),
-				override.getSelection() ? Integer.parseInt(elems.getText()) : -1, p)));
+				override.getSelection() ? Integer.parseUnsignedInt(elems.getText()) : -1, p)));
 
 		singleLineLabel("(Maximum elements " + (d.maxElements() > 0 ? d.maxElements() : "unknown") + ")");
 
@@ -767,7 +767,7 @@ class PropertyEditorTab extends BaseTabLayout
 			final String io = (String) event.item.getData(ObjectIndex);
 			final String objType = (String) event.item.getData(ObjectType);
 			final String header = "Interface Object " + io + " - "
-					+ PropertyClient.getObjectTypeName(Integer.parseInt(objType)) + " (Object Type "
+					+ PropertyClient.getObjectTypeName(Integer.parseUnsignedInt(objType)) + " (Object Type "
 					+ objType + ")";
 			final GC gc = new GC(table);
 			final Point extent = gc.stringExtent(header);
@@ -802,9 +802,9 @@ class PropertyEditorTab extends BaseTabLayout
 					else if (e.type == SWT.Traverse) {
 						switch (e.detail) {
 						case SWT.TRAVERSE_RETURN:
-							final int objectIndex = Integer.parseInt((String) item.getData(ObjectIndex));
-							final int objectType = Integer.parseInt((String) item.getData(ObjectType));
-							final int pid = Integer.parseInt(item.getText(Columns.Pid.ordinal()));
+							final int objectIndex = Integer.parseUnsignedInt((String) item.getData(ObjectIndex));
+							final int objectType = Integer.parseUnsignedInt((String) item.getData(ObjectType));
+							final int pid = Integer.parseUnsignedInt(item.getText(Columns.Pid.ordinal()));
 							final var definition = getDefinition(objectType, pid).orElse(unknown);
 							writeValues(objectIndex, pid, text.getText(), -1, definition);
 							// fall through
@@ -849,9 +849,9 @@ class PropertyEditorTab extends BaseTabLayout
 	{
 		bounds.removeAll();
 
-		final Optional<PropertyClient.Property> opt = getDefinition(Integer.parseInt(objType), Integer.parseInt(pid));
-		if (opt.isPresent()) {
-			final PropertyClient.Property p = opt.get();
+		final var optProp = getDefinition(Integer.parseUnsignedInt(objType), Integer.parseUnsignedInt(pid));
+		if (optProp.isPresent()) {
+			final PropertyClient.Property p = optProp.get();
 			p.dpt().flatMap(dpt -> createTranslator(0, dpt)).or(() -> createTranslator(p.pdt()))
 					.ifPresentOrElse(t -> {
 						final DPT dpt = t.getType();

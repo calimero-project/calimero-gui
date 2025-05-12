@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 3 tools
-    Copyright (c) 2006, 2024 B. Malinowsky
+    Copyright (c) 2006, 2025 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -325,7 +325,7 @@ class ConnectDialog {
 					// if no/invalid port is supplied for KNXnet/IP, we use default port
 					int port;
 					try {
-						port = Integer.parseInt(p);
+						port = Integer.parseUnsignedInt(p);
 					} catch (final NumberFormatException ex) {
 						port = KNXnetIPConnection.DEFAULT_PORT;
 					}

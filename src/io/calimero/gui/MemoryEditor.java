@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 3 tools
-    Copyright (c) 2017, 2024 B. Malinowsky
+    Copyright (c) 2017, 2025 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -247,7 +247,7 @@ class MemoryEditor extends BaseTabLayout
 			if (start.getText().isEmpty() || bytes.getText().isEmpty())
 				return;
 			read.setEnabled(false);
-			readMemory(Long.parseLong(start.getText(), 16), Integer.parseInt(bytes.getText()));
+			readMemory(Long.parseUnsignedLong(start.getText(), 16), Integer.parseUnsignedInt(bytes.getText()));
 		}));
 
 		bytes.addTraverseListener(traverseEvent -> {
@@ -485,8 +485,8 @@ class MemoryEditor extends BaseTabLayout
 	{
 		if (value.isEmpty())
 			return;
-		final int v = Integer.parseInt(value, 16);
-		if (v != Integer.parseInt(item.getText(column), 16)) {
+		final int v = Integer.parseUnsignedInt(value, 16);
+		if (v != Integer.parseUnsignedInt(item.getText(column), 16)) {
 			final int location = viewerStartOffset + row * viewerColumns + column;
 			addToModifiedList(location, v);
 			item.setText(column, value);
@@ -498,12 +498,12 @@ class MemoryEditor extends BaseTabLayout
 		if (text.isEmpty())
 			binary.setText("");
 		else
-			binary.setText("0b" + Integer.toBinaryString((1 << 8) | Integer.parseInt(text, 16)).substring(1));
+			binary.setText("0b" + Integer.toBinaryString((1 << 8) | Integer.parseUnsignedInt(text, 16)).substring(1));
 	}
 
 	private void setViewerStartOffset()
 	{
-		final int offset = Integer.parseInt(setStartOffset.getText(), 16);
+		final int offset = Integer.parseUnsignedInt(setStartOffset.getText(), 16);
 		while (viewerStartOffset > offset) {
 			viewerStartOffset -= viewerColumns;
 			addMemoryRow(true);
