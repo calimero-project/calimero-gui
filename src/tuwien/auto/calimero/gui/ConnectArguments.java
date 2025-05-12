@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2024 B. Malinowsky
+    Copyright (c) 2006, 2025 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -309,7 +309,7 @@ public final class ConnectArguments {
 		}
 
 		if (key.startsWith("user")) {
-			final int user = Integer.parseInt(value);
+			final int user = Integer.parseUnsignedInt(value);
 			byte[] pwdData = null;
 			if (user == 1) {
 				final var device = keyring.devices().get(hostIA);
