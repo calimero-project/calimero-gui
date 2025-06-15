@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2024 B. Malinowsky
+    Copyright (c) 2006, 2025 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -152,7 +152,7 @@ class DiscoverTab extends BaseTabLayout
 				+ "are listed here.\nSelect an interface to open the connection dialog.");
 		enableColumnAdjusting();
 		setLogLevel(LogLevel.DEBUG);
-		addLogIncludeFilter(".*calimero\\.(knxnetip\\.Discoverer|usb).*");
+		addLogIncludeFilter(".*calimero\\.(knxnetip\\.Discoverer|usb)(?s).*");
 		discover();
 	}
 
