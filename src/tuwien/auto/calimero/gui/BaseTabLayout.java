@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2024 B. Malinowsky
+    Copyright (c) 2006, 2025 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -447,8 +447,11 @@ class BaseTabLayout
 				final boolean atEnd = last >= items;
 
 				synchronized (buf) {
-					final var entries = buf.stream().filter(s -> matches(s, level, include, exclude))
-							.map(BaseTabLayout::expandTabs).toArray(String[]::new);
+					final var entries = buf.stream()
+							.filter(s -> matches(s, level, include, exclude))
+							.map(BaseTabLayout::expandTabs)
+							.flatMap(s -> Arrays.stream(s.split("\n")))
+							.toArray(String[]::new);
 					buf.clear();
 					if (entries.length == 0)
 						return;
