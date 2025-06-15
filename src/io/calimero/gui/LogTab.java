@@ -257,8 +257,11 @@ class LogTab extends BaseTabLayout
 			final List<LogEntry> buf = logBuffer.get(this);
 			synchronized (buf) {
 				for (final var entry : buf) {
-					if (matches(entry.level()))
-						addListItem(logItemText(entry), new String[0], new String[0]);
+					if (matches(entry.level())) {
+						final var items = logEntryToListItems(entry);
+						for (final var item : items)
+							addListItem(item, new String[0], new String[0]);
+					}
 				}
 				buf.clear();
 			}
@@ -269,14 +272,23 @@ class LogTab extends BaseTabLayout
 		return msgLevel.getSeverity() >= logLevel().getSeverity();
 	}
 
-	private String[] logItemText(final LogEntry logEntry) {
+	private List<String[]> logEntryToListItems(final LogEntry logEntry) {
 		final String date = dateFormatter.format(logEntry.instant());
 		final String time = timeFormatter.format(logEntry.instant());
 
-		var msg = expandTabs(logEntry.msg());
+		final var msg = expandTabs(logEntry.msg());
+		final var lines = msg.split("\n");
+
+		final var list = new ArrayList<String[]>();
+		final String[] first = { date, time, logEntry.level().toString(), logEntry.name(), lines[0] };
+		list.add(first);
+		for (int i = 1; i < lines.length; ++i)
+			list.add(new String[] { "", "", "", "", lines[i] });
+
 		final Throwable t = logEntry.throwable();
-		msg += t != null ? ": " + t.getMessage() : "";
-		return new String[] { date, time, logEntry.level().toString(), logEntry.name(), msg };
+		if (t != null)
+			list.add(new String[] { "", "", "", "", t.toString() });
+		return list;
 	}
 
 	private void adjustLogLevel(final int level)
@@ -292,7 +304,9 @@ class LogTab extends BaseTabLayout
 		Main.asyncExec(() -> {
 			synchronized (logHistory) {
 				for (final var entry : logHistory) {
-					addListItem(logItemText(entry), new String[0], new String[0]);
+					final var items = logEntryToListItems(entry);
+					for (final var item : items)
+						addListItem(item, new String[0], new String[0]);
 				}
 			}
 		});

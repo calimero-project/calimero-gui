@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 3 tools
-    Copyright (c) 2006, 2024 B. Malinowsky
+    Copyright (c) 2006, 2025 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -394,7 +394,9 @@ class BaseTabLayout implements LogNotifier
 
 	@Override
 	public void log(final String name, final Level level, final String msg, final Throwable thrown) {
-		final String s = level + " - " + name + ": " + msg + (thrown != null ? ": " + thrown : "");
+		final boolean endsWithLineTerminator = msg.endsWith("\n");
+		final String sep = endsWithLineTerminator ? "" : ": ";
+		final String s = level + " - " + name + ": " + msg + (thrown != null ? sep + thrown : "");
 		logBuffer.add(s);
 		asyncAddLog();
 	}
@@ -428,8 +430,11 @@ class BaseTabLayout implements LogNotifier
 			final boolean atEnd = last >= items;
 
 			synchronized (logBuffer) {
-				final var entries = logBuffer.stream().filter(s -> matches(s, level))
-						.map(BaseTabLayout::expandTabs).toArray(String[]::new);
+				final var entries = logBuffer.stream()
+						.filter(s -> matches(s, level))
+						.map(BaseTabLayout::expandTabs)
+						.flatMap(s -> Arrays.stream(s.split("\n")))
+						.toArray(String[]::new);
 				logBuffer.clear();
 				if (entries.length == 0)
 					return;
