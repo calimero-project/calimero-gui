@@ -336,14 +336,17 @@ class ConnectDialog {
 					var mcast = Optional.<InetSocketAddress>empty();
 					Map<ServiceFamily, Integer> securedServices = Map.of();
 					IndividualAddress hostIA = null;
+					var protocol = useRouting();
 					if (access instanceof final IpAccess ipAccess) {
 						mcast = ipAccess.multicast();
 						securedServices = ipAccess.securedServices();
 						hostIA = ipAccess.hostIA();
 					}
+					else if (protocol == Protocol.Routing)
+						mcast = Optional.of(remote);
 
 					final String knxAddress = knxAddr.getText();
-					args = new ConnectArguments(new IpAccess(useRouting(), n, access.medium(),
+					args = new ConnectArguments(new IpAccess(protocol, n, access.medium(),
 							new InetSocketAddress(local, 0), remote, mcast,
 							securedServices, hostIA, access.serialNumber()), natChecked, tcp, "", knxAddress);
 					if (!localKnxAddress.getText().isEmpty())
