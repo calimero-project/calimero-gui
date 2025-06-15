@@ -49,7 +49,7 @@ application {
 
 // SWT is platform dependent
 val swtGroupId = "org.eclipse.platform"
-val swtVersion = "3.129.0"
+val swtVersion = "3.130.0"
 var swtArtifact = "org.eclipse.swt."
 
 val os = System.getProperty("os.name").lowercase(Locale.ENGLISH)
