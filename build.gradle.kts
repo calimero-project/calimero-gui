@@ -107,6 +107,7 @@ dependencies {
 	}
 	implementation("$swtGroupId:$swtArtifact:$swtVersion")
 	implementation("org.slf4j:slf4j-api:2.0.17")
+	runtimeOnly("org.slf4j:slf4j-jdk-platform-logging:2.0.17")
 	runtimeOnly("org.slf4j:slf4j-simple:2.0.17")
 }
 
