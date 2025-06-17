@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 2 tools
-    Copyright (c) 2006, 2024 B. Malinowsky
+    Copyright (c) 2006, 2025 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -163,6 +163,11 @@ public class Main
 	 */
 	public static void main(final String[] args)
 	{
+		// we have to configure slf4j before any logging takes place
+		System.setProperty("org.slf4j.simpleLogger.logFile", "System.out");
+		System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "trace");
+		System.setProperty("org.slf4j.simpleLogger.showLogName", "true");
+
 		// use current system theme on macOS, i.e., light/dark appearance
 		System.setProperty("org.eclipse.swt.display.useSystemTheme", "true");
 		display = new Display();

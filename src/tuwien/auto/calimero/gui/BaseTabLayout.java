@@ -124,10 +124,6 @@ class BaseTabLayout
 	static final PrintStream oldSystemErr;
 
 	static {
-		System.setProperty("org.slf4j.simpleLogger.logFile", "System.out");
-		System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "trace");
-		System.setProperty("org.slf4j.simpleLogger.showLogName", "true");
-
 		final PrintStream oldSystemOut = System.out;
 		final PrintStream redirector = new StreamRedirector(oldSystemOut);
 		System.setOut(redirector);
