@@ -59,8 +59,8 @@ import tuwien.auto.calimero.link.medium.KNXMediumSettings;
 import tuwien.auto.calimero.secure.Keyring;
 import tuwien.auto.calimero.secure.Keyring.Interface;
 
-public final class ConnectArguments {
-	public enum Protocol {
+final class ConnectArguments {
+	enum Protocol {
 		Unknown, DeviceManagement, Tunneling, Routing, FT12, USB, Tpuart
 	}
 

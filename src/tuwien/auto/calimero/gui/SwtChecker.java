@@ -79,7 +79,7 @@ public class SwtChecker
 		}
 	}
 
-	public SwtChecker()
+	private SwtChecker()
 	{
 		logger = LoggerFactory.getLogger("swt-checker");
 	}
@@ -95,7 +95,7 @@ public class SwtChecker
 		Win_x86_64,
 	}
 
-	public static boolean isSwtOnClasspath()
+	private static boolean isSwtOnClasspath()
 	{
 		try {
 			// this already fails if swt is not available
@@ -114,7 +114,7 @@ public class SwtChecker
 		}
 	}
 
-	public void downloadToLibDir() throws IOException, URISyntaxException
+	private void downloadToLibDir() throws IOException, URISyntaxException
 	{
 		logger.warn("No loadable SWT library on classpath (maybe first start?), trying to download SWT ...");
 		final Platform platform = platform();
