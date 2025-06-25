@@ -168,13 +168,13 @@ distributions {
 tasks.startScripts {
 	doLast {
 		// on OS X, SWT needs to run on first thread
-		unixScript.writeText(unixScript.readText().replace("DEFAULT_JVM_OPTS='",
+		unixScript.writeText(unixScript.readText().replace("DEFAULT_JVM_OPTS=\"\"",
 			"""
 			MACOS_JVM_OPTS=""
 			if [ "`uname`" = Darwin ] ; then
 				MACOS_JVM_OPTS="-XstartOnFirstThread"
 			fi
-			DEFAULT_JVM_OPTS="${'$'}{MACOS_JVM_OPTS}"' """.trimIndent()))
+			DEFAULT_JVM_OPTS="${'$'}{MACOS_JVM_OPTS}" """.trimIndent()))
 	}
 }
 
