@@ -64,6 +64,11 @@ public class SwtChecker
 
 	private final Logger logger;
 
+	/**
+	 * The main entry routine checking for the correct SWT library on the classpath.
+	 *
+	 * @param args none
+	 */
 	public static void main(final String[] args)
 	{
 		if (isSwtOnClasspath())

@@ -63,6 +63,8 @@ import tuwien.auto.calimero.GroupAddress;
 import tuwien.auto.calimero.GroupAddress.Presentation;
 
 /**
+ * Contains the main entry routine of this GUI.
+ *
  * @author B. Malinowsky
  */
 public class Main
