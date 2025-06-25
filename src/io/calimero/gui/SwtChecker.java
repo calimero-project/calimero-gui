@@ -96,7 +96,7 @@ public class SwtChecker
 		Win_x86_64,
 	}
 
-	public SwtChecker() {
+	private SwtChecker() {
 		LoggerFinder.addLogNotifier((name, level, msg, thrown) -> {
 			if (name.startsWith("io.calimero") || level.compareTo(Level.INFO) >= 0) {
 				System.out.println(msg);
@@ -107,7 +107,7 @@ public class SwtChecker
 		logger = LogService.getLogger("io.calimero.gui.swt-checker");
 	}
 
-	public static boolean isSwtOnClasspath()
+	private static boolean isSwtOnClasspath()
 	{
 		try {
 			// this already fails if swt is not available
@@ -126,7 +126,7 @@ public class SwtChecker
 		}
 	}
 
-	public void downloadToLibDir() throws IOException, URISyntaxException
+	private void downloadToLibDir() throws IOException, URISyntaxException
 	{
 		logger.log(WARNING, "No loadable SWT library on classpath (maybe first start?), trying to download SWT ...");
 		final Platform platform = platform();

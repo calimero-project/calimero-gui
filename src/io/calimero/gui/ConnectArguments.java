@@ -60,7 +60,7 @@ import io.calimero.secure.Keyring;
 import io.calimero.secure.Keyring.Interface;
 
 final class ConnectArguments {
-	public enum Protocol {
+	enum Protocol {
 		Unknown, DeviceManagement, Tunneling, Routing, FT12, USB, Tpuart
 	}
 
