@@ -116,6 +116,7 @@ java {
 		languageVersion.set(JavaLanguageVersion.of(17))
 	}
 	withSourcesJar()
+	withJavadocJar()
 }
 
 tasks.withType<Jar>().configureEach {
