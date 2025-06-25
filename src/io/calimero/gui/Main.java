@@ -63,6 +63,8 @@ import io.calimero.GroupAddress;
 import io.calimero.GroupAddress.Presentation;
 
 /**
+ * Contains the main entry routine of this GUI.
+ *
  * @author B. Malinowsky
  */
 public class Main
