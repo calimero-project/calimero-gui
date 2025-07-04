@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 3 tools
-    Copyright (c) 2006, 2024 B. Malinowsky
+    Copyright (c) 2006, 2025 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -266,8 +266,8 @@ class ProcCommTab extends BaseTabLayout
 		dpt.add("");
 		final Map<Integer, MainType> allMainTypes = TranslatorTypes.getAllMainTypes();
 		allMainTypes.forEach((i, main) -> {
-			dpt.add(main.getDescription());
-			dpt.setData(main.getDescription(), new Object[] { main, null });
+			dpt.add(main.description());
+			dpt.setData(main.description(), new Object[] { main, null });
 			try {
 				new TreeMap<>(main.getSubTypes()).forEach((id, sub) -> {
 					final boolean noUnit = sub.getUnit().isEmpty();
@@ -494,8 +494,8 @@ class ProcCommTab extends BaseTabLayout
 			final int current = dp.getMainNumber();
 			final MainType mt = (MainType) dptData[0];
 			final DPT dpt = (DPT) dptData[1];
-			if (mt.getMainNumber() != current || (dpt != null && !dpt.getID().equals(dp.getDPT())))
-				dp.setDPT(mt.getMainNumber(),
+			if (mt.mainNumber() != current || (dpt != null && !dpt.getID().equals(dp.getDPT())))
+				dp.setDPT(mt.mainNumber(),
 						dpt != null ? dpt.getID() : mt.getSubTypes().entrySet().iterator().next().getValue().getID());
 		}
 		return model.get(main);
