@@ -102,6 +102,7 @@ import io.calimero.KNXTimeoutException;
 import io.calimero.Settings;
 import io.calimero.dptxlator.DPT;
 import io.calimero.dptxlator.DPTXlator;
+import io.calimero.dptxlator.DptId;
 import io.calimero.dptxlator.PropertyTypes;
 import io.calimero.dptxlator.TranslatorTypes;
 import io.calimero.internal.Executor;
@@ -649,7 +650,7 @@ class PropertyEditorTab extends BaseTabLayout
 	{
 		final var optDptid = Optional.ofNullable(PropertyTypes.getAllPropertyTypes().get(p.pdt()));
 		final int typeSize = optDptid.flatMap(dptid -> dptSize(dptid.getMainNumber(), dptid.getDPT()))
-					.or(() -> p.dpt().flatMap(dpt -> dptSize(0, dpt)))
+					.or(() -> p.dpt().flatMap(dpt -> dptSize(dpt)))
 					.orElse(1);
 
 		final String data;
@@ -681,6 +682,10 @@ class PropertyEditorTab extends BaseTabLayout
 		// TODO we should wait until description got updated by "desc" command
 		final int readBack = Math.max(elements, findDescription(objectIndex, pid).currentElements());
 		runCommand("get", objectIndex, pid, "1", readBack);
+	}
+
+	private static Optional<Integer> dptSize(DptId dpt) {
+		return createTranslator(0, dpt.toString()).map(DPTXlator::getTypeSize).map(size -> Math.max(1, size));
 	}
 
 	private static Optional<Integer> dptSize(final int main, final String dpt) {
@@ -852,7 +857,7 @@ class PropertyEditorTab extends BaseTabLayout
 		final var optProp = getDefinition(Integer.parseUnsignedInt(objType), Integer.parseUnsignedInt(pid));
 		if (optProp.isPresent()) {
 			final PropertyClient.Property p = optProp.get();
-			p.dpt().flatMap(dpt -> createTranslator(0, dpt)).or(() -> createTranslator(p.pdt()))
+			p.dpt().flatMap(dpt -> createTranslator(0, dpt.toString())).or(() -> createTranslator(p.pdt()))
 					.ifPresentOrElse(t -> {
 						final DPT dpt = t.getType();
 						bounds.add(dpt.getLowerValue());
