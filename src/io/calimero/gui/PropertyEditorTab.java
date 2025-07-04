@@ -685,7 +685,7 @@ class PropertyEditorTab extends BaseTabLayout
 	}
 
 	private static Optional<Integer> dptSize(DptId dpt) {
-		return createTranslator(0, dpt.toString()).map(DPTXlator::getTypeSize).map(size -> Math.max(1, size));
+		return createTranslator(dpt).map(DPTXlator::getTypeSize).map(size -> Math.max(1, size));
 	}
 
 	private static Optional<Integer> dptSize(final int main, final String dpt) {
@@ -695,6 +695,15 @@ class PropertyEditorTab extends BaseTabLayout
 	private static Optional<DPTXlator> createTranslator(final int main, final String dptId) {
 		try {
 			return Optional.of(TranslatorTypes.createTranslator(main, dptId));
+		}
+		catch (final KNXException ignore) {
+			return Optional.empty();
+		}
+	}
+
+	private static Optional<DPTXlator> createTranslator(final DptId dptId) {
+		try {
+			return Optional.of(TranslatorTypes.createTranslator(dptId));
 		}
 		catch (final KNXException ignore) {
 			return Optional.empty();
@@ -857,7 +866,7 @@ class PropertyEditorTab extends BaseTabLayout
 		final var optProp = getDefinition(Integer.parseUnsignedInt(objType), Integer.parseUnsignedInt(pid));
 		if (optProp.isPresent()) {
 			final PropertyClient.Property p = optProp.get();
-			p.dpt().flatMap(dpt -> createTranslator(0, dpt.toString())).or(() -> createTranslator(p.pdt()))
+			p.dpt().flatMap(dpt -> createTranslator(dpt)).or(() -> createTranslator(p.pdt()))
 					.ifPresentOrElse(t -> {
 						final DPT dpt = t.getType();
 						bounds.add(dpt.getLowerValue());
