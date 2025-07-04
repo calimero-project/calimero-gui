@@ -649,7 +649,7 @@ class PropertyEditorTab extends BaseTabLayout
 		final PropertyClient.Property p)
 	{
 		final var optDptid = Optional.ofNullable(PropertyTypes.getAllPropertyTypes().get(p.pdt()));
-		final int typeSize = optDptid.flatMap(dptid -> dptSize(dptid.getMainNumber(), dptid.getDPT()))
+		final int typeSize = optDptid.flatMap(dptid -> dptSize(dptid))
 					.or(() -> p.dpt().flatMap(dpt -> dptSize(dpt)))
 					.orElse(1);
 
@@ -686,19 +686,6 @@ class PropertyEditorTab extends BaseTabLayout
 
 	private static Optional<Integer> dptSize(DptId dpt) {
 		return createTranslator(dpt).map(DPTXlator::getTypeSize).map(size -> Math.max(1, size));
-	}
-
-	private static Optional<Integer> dptSize(final int main, final String dpt) {
-		return createTranslator(main, dpt).map(DPTXlator::getTypeSize).map(size -> Math.max(1, size));
-	}
-
-	private static Optional<DPTXlator> createTranslator(final int main, final String dptId) {
-		try {
-			return Optional.of(TranslatorTypes.createTranslator(main, dptId));
-		}
-		catch (final KNXException ignore) {
-			return Optional.empty();
-		}
 	}
 
 	private static Optional<DPTXlator> createTranslator(final DptId dptId) {
