@@ -96,7 +96,6 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
 import io.calimero.gui.logging.LogNotifier;
-import io.calimero.gui.logging.LoggerFinder;
 import io.calimero.internal.Executor;
 
 /**
@@ -223,8 +222,8 @@ class BaseTabLayout implements LogNotifier
 		timeFormatter = tfmt.withZone(ZoneId.systemDefault());
 
 
-		LoggerFinder.addLogNotifier(this);
-		Executor.scheduledExecutor().schedule(() -> LoggerFinder.removeLogNotifier(this), 1, TimeUnit.SECONDS);
+		LogNotifier.add(this);
+		Executor.scheduledExecutor().schedule(() -> LogNotifier.remove(this), 1, TimeUnit.SECONDS);
 	}
 
 	static Table newTable(final Composite parent, final int style, final Sash bottomSash)
@@ -348,7 +347,7 @@ class BaseTabLayout implements LogNotifier
 	 * @param e dispose event
 	 */
 	protected void onDispose(final DisposeEvent e) {
-		LoggerFinder.removeLogNotifier(this);
+		LogNotifier.remove(this);
 	}
 
 	/**

@@ -56,7 +56,7 @@ import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.Optional;
 
-import io.calimero.gui.logging.LoggerFinder;
+import io.calimero.gui.logging.LogNotifier;
 import io.calimero.log.LogService;
 
 /**
@@ -102,7 +102,7 @@ public class SwtChecker
 	}
 
 	private SwtChecker() {
-		LoggerFinder.addLogNotifier((name, level, msg, thrown) -> {
+		LogNotifier.add((name, level, msg, thrown) -> {
 			if (name.startsWith("io.calimero") || level.compareTo(Level.INFO) >= 0) {
 				System.out.println(msg);
 				if (thrown != null)

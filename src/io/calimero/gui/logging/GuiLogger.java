@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 3 tools
-    Copyright (c) 2022, 2023 B. Malinowsky
+    Copyright (c) 2022, 2025 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -40,14 +40,17 @@ import java.text.MessageFormat;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 final class GuiLogger implements System.Logger {
+	static final Set<LogNotifier> notifiables = ConcurrentHashMap.newKeySet();
+
 	private final String name;
 	private final Set<LogNotifier> subscribers;
 
-	GuiLogger(final String name, final Set<LogNotifier> subscribers) {
+	GuiLogger(final String name) {
 		this.name = name;
-		this.subscribers = Set.copyOf(subscribers);
+		this.subscribers = Set.copyOf(notifiables);
 	}
 
 	@Override

@@ -53,4 +53,18 @@ public interface LogNotifier {
 	 * @param thrown a {@code Throwable} associated with the log message, can be {@code null}
 	 */
 	void log(String name, Level level, String msg, Throwable thrown);
+
+	/**
+	 * Adds a callback to be notified about any subsequent log event.
+	 *
+	 * @param n the notifier to add
+	 */
+	static void add(final LogNotifier n) { GuiLogger.notifiables.add(n); }
+
+	/**
+	 * Removes a log notifier (if it was previously added).
+	 *
+	 * @param n the notifier to remove
+	 */
+	static void remove(final LogNotifier n) { GuiLogger.notifiables.remove(n); }
 }

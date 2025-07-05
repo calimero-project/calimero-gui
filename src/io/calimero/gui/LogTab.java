@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 3 tools
-    Copyright (c) 2006, 2024 B. Malinowsky
+    Copyright (c) 2006, 2025 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -75,8 +75,6 @@ import org.eclipse.swt.widgets.Scale;
 import org.eclipse.swt.widgets.TableColumn;
 
 import io.calimero.gui.logging.LogNotifier;
-import io.calimero.gui.logging.LoggerFinder;
-
 
 /**
  * @author B. Malinowsky
@@ -138,7 +136,7 @@ class LogTab extends BaseTabLayout
 
 
 	static void initLogging() {
-		LoggerFinder.addLogNotifier(LogTab.notifier);
+		LogNotifier.add(LogTab.notifier);
 	}
 
 	LogTab(final CTabFolder tf)

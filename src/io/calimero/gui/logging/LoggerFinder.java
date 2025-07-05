@@ -36,32 +36,13 @@
 
 package io.calimero.gui.logging;
 
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
 /**
  * {@code LoggerFinder} implementation which creates {@link System.Logger}s for routing log messages to the log views
  * of the graphical user interface.
  */
 public final class LoggerFinder extends System.LoggerFinder {
-	private static final Set<LogNotifier> logNotifiers = ConcurrentHashMap.newKeySet();
-
 	@Override
 	public System.Logger getLogger(final String name, final Module module) {
-		return new GuiLogger(name, logNotifiers);
+		return new GuiLogger(name);
 	}
-
-	/**
-	 * Adds a callback to be notified about any subsequent log event.
-	 *
-	 * @param n the notifier to add
-	 */
-	public static void addLogNotifier(final LogNotifier n) { logNotifiers.add(n); }
-
-	/**
-	 * Removes a log notifier (if it was previously added).
-	 *
-	 * @param n the notifier to remove
-	 */
-	public static void removeLogNotifier(final LogNotifier n) { logNotifiers.remove(n); }
 }
