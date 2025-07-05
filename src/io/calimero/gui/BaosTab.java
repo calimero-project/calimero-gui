@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 3 tools
-    Copyright (c) 2020, 2024 B. Malinowsky
+    Copyright (c) 2020, 2025 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -307,8 +307,8 @@ class BaosTab extends BaseTabLayout {
 
 		final Map<Integer, MainType> allMainTypes = TranslatorTypes.getAllMainTypes();
 		allMainTypes.forEach((i, main) -> {
-			dpDpt.add(main.getDescription());
-			dpDpt.setData(main.getDescription(), new Object[] { main, null });
+			dpDpt.add(main.description());
+			dpDpt.setData(main.description(), new Object[] { main, null });
 			try {
 				new TreeMap<>(main.getSubTypes()).forEach((id, sub) -> {
 					final boolean noUnit = sub.getUnit().isEmpty();
