@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 3 tools
-    Copyright (c) 2022, 2022 B. Malinowsky
+    Copyright (c) 2022, 2025 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -38,7 +38,19 @@ package io.calimero.gui.logging;
 
 import java.lang.System.Logger.Level;
 
+/**
+ * Interface for receiving notifications about log message events.
+ */
 @FunctionalInterface
 public interface LogNotifier {
+	/**
+	 * Logs a message associated with a given throwable.
+	 *
+	 * @param name the name of the logger
+	 * @param level the log message level
+	 * @param msg the string message (or a key in the message catalog, if this logger is a {@link
+	 * LoggerFinder#getLocalizedLogger(java.lang.String, java.util.ResourceBundle, java.lang.Module) localized logger})
+	 * @param thrown a {@code Throwable} associated with the log message, can be {@code null}
+	 */
 	void log(String name, Level level, String msg, Throwable thrown);
 }

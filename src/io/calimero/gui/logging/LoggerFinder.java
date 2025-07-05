@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 3 tools
-    Copyright (c) 2022, 2022 B. Malinowsky
+    Copyright (c) 2022, 2025 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -39,6 +39,10 @@ package io.calimero.gui.logging;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * {@code LoggerFinder} implementation which creates {@link System.Logger}s for routing log messages to the log views
+ * of the graphical user interface.
+ */
 public final class LoggerFinder extends System.LoggerFinder {
 	private static final Set<LogNotifier> logNotifiers = ConcurrentHashMap.newKeySet();
 
@@ -47,7 +51,17 @@ public final class LoggerFinder extends System.LoggerFinder {
 		return new GuiLogger(name, logNotifiers);
 	}
 
+	/**
+	 * Adds a callback to be notified about any subsequent log event.
+	 *
+	 * @param n the notifier to add
+	 */
 	public static void addLogNotifier(final LogNotifier n) { logNotifiers.add(n); }
 
+	/**
+	 * Removes a log notifier (if it was previously added).
+	 *
+	 * @param n the notifier to remove
+	 */
 	public static void removeLogNotifier(final LogNotifier n) { logNotifiers.remove(n); }
 }
