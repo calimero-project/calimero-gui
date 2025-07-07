@@ -188,7 +188,8 @@ public class Main
 		}
 		finally {
 			System.setErr(LogTab.oldSystemErr);
-			display.dispose();
+			if (display != null)
+				display.dispose();
 		}
 	}
 
