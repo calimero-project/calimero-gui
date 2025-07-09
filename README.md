@@ -1,4 +1,4 @@
-Calimero Graphical User Interface [![CI with Gradle](https://github.com/calimero-project/calimero-gui/actions/workflows/gradle.yml/badge.svg)](https://github.com/calimero-project/calimero-gui/actions/workflows/gradle.yml)
+Calimero Graphical User Interface [![CI with Gradle](https://github.com/calimero-project/calimero-gui/actions/workflows/gradle.yml/badge.svg)](https://github.com/calimero-project/calimero-gui/actions/workflows/gradle.yml) [![](https://jitpack.io/v/calimero-project/calimero-gui.svg)](https://jitpack.io/#calimero-project/calimero-gui) [![](https://img.shields.io/badge/jitpack-master-brightgreen?label=JitPack)](https://jitpack.io/#calimero-project/calimero-gui/master)
 =================================
 
 ~~~ sh
