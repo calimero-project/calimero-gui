@@ -63,7 +63,7 @@ In the following commands, use your specific library versions.
 
 Either, relying on the classpath in the MANIFEST of the `.jar` file (requires exact match of names and versions of all dependencies)
 
-	java -jar calimero-gui-3.0-SNAPSHOT.jar
+	java -jar calimero-gui-3.0-M1.jar
 
 If all dependencies are resolved, you can also directly start the GUI by opening it in Nautilus, Windows File Explorer, etc.
 
@@ -73,8 +73,8 @@ Or, assuming all dependencies (of any compliant version) are in the current work
 
 Or, as example of using the JRE `-classpath`/`-cp` option to qualify all dependencies
 
-	java -cp "calimero-gui-3.0-SNAPSHOT.jar:calimero-core-3.0-SNAPSHOT.jar\
-	:calimero-tools-3.0-SNAPSHOT.jar:org.eclipse.swt.gtk.linux.x86_64-3.123.0.jar"\
+	java -cp "calimero-gui-3.0-M1.jar:calimero-core-3.0-M1.jar\
+	:calimero-tools-3.0-M1.jar:org.eclipse.swt.gtk.linux.x86_64-3.123.0.jar"\
 	io.calimero.gui.Main
 
 ### Run As Standalone Application
