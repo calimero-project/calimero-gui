@@ -195,13 +195,6 @@
 			<groupId>${swt.groupId}</groupId>
 			<artifactId>${swt.artifactId}</artifactId>
 			<version>${swt.version}</version>
-			<exclusions>
-				<exclusion>
-					<!-- exclude swt meta package, because it relies on ${osgi.platform} property -->
-					<groupId>${swt.groupId}</groupId>
-					<artifactId>org.eclipse.swt</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.usb4java</groupId>
