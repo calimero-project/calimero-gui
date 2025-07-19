@@ -40,16 +40,6 @@ Execution
 
 	./gradlew run
 
-### Using Maven
-
-On macOS (takes care of the Cocoa thread restrictions)
-
-	mvn exec:exec
-
-On Linux/Windows
-
-	mvn exec:java
-
 ### Using Java
 
 The graphical user interface has the following 
