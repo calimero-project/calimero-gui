@@ -71,4 +71,4 @@ Or, as example of using the JRE `-classpath`/`-cp` option to qualify all depende
 * Run `gradlew build`
 * In the `build/distributions` directory, extract either the `.zip` or `.tar` file
 * Open `<extracted folder>/bin`
-* Start `calimero-gui` (Linux/MacOS) or `calimero-gui.bat` (Windows)
+* Start `calimero-gui` (Linux/macOS) or `calimero-gui.bat` (Windows)
