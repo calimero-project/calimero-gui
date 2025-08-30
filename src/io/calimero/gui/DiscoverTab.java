@@ -259,7 +259,7 @@ class DiscoverTab extends BaseTabLayout
 					asyncAddLog("KNXnet/IP discovery finished");
 				}
 			};
-			Executor.execute(r);
+			Executor.execute(r, "KNXnet/IP discovery");
 
 			final Runnable usb = () -> {
 				try {
@@ -310,7 +310,7 @@ class DiscoverTab extends BaseTabLayout
 					asyncAddLog("error: " + e.getMessage());
 				}
 			};
-			Executor.execute(usb);
+			Executor.execute(usb, "USB discovery");
 		}
 		catch (final Exception e) {
 			log.add("error: " + e.getMessage());
