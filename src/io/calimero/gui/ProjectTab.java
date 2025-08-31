@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 3 tools
-    Copyright (c) 2019, 2024 B. Malinowsky
+    Copyright (c) 2019, 2025 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -76,7 +76,7 @@ class ProjectTab extends BaseTabLayout {
 			if (projects.size() != 1)
 				return;
 
-			importDatapoints(projects.get(0));
+			importDatapoints(projects.getFirst());
 		}
 		catch (final IOException | KNXFormatException | RuntimeException e) {
 			System.out.println("Error during lookup of KNX projects: " + e);

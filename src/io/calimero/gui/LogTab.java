@@ -337,7 +337,7 @@ class LogTab extends BaseTabLayout
 	private static void addToLogHistory(final LogEntry entry) {
 		synchronized (logHistory) {
 			if (logHistory.size() >= maxHistorySize)
-				logHistory.remove(0);
+				logHistory.removeFirst();
 			logHistory.add(entry);
 		}
 	}

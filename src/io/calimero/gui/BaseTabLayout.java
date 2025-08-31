@@ -544,7 +544,7 @@ class BaseTabLayout implements LogNotifier
 		list.setRedraw(false);
 		int added = 0;
 		while (itemBuffer.size() > 0 && added < 500) {
-			final Object[][] e = itemBuffer.remove(0);
+			final Object[][] e = itemBuffer.removeFirst();
 			final String[] itemText = (String[]) e[0];
 			final String[] keys = (String[]) e[1];
 			final Object[] data = e[2];

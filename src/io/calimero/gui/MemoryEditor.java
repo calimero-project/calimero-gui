@@ -543,7 +543,7 @@ class MemoryEditor extends BaseTabLayout
 			confirmedRestart.run();
 			if (tryBasicRestart.get()) {
 				asyncAddLog("resort to basic restart");
-				args.remove(args.size() - 1);
+				args.removeLast();
 				final var basicRestart = new RestartTool(args.toArray(String[]::new));
 				basicRestart.run();
 			}

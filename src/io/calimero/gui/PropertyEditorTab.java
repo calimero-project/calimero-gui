@@ -1036,7 +1036,7 @@ class PropertyEditorTab extends BaseTabLayout
 							synchronized (commands) {
 								while (commands.isEmpty())
 									commands.wait();
-								command = commands.remove(0);
+								command = commands.removeFirst();
 							}
 							asyncAddLog(String.join(" ", command));
 							try {

@@ -148,7 +148,7 @@ tasks.named<Jar>("jar") {
 			"Implementation-Version" to project.version,
 			"Revision" to gitHash.get(),
 			"Build-Date" to buildDate,
-			"Class-Path" to (configurations.runtimeClasspath.get() - configurations["provided"] + files("swt.jar")).map { it.name }.joinToString(" ")
+			"Class-Path" to (configurations.runtimeClasspath.get() - configurations["provided"] + files("swt.jar")).joinToString(" ") { it.name }
 		)
 	}
 }
