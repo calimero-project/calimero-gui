@@ -99,6 +99,7 @@ public class SwtChecker
 		macOS_AArch64,
 		Win_x86,
 		Win_x86_64,
+		Win_AArch64
 	}
 
 	private SwtChecker() {
@@ -160,7 +161,7 @@ public class SwtChecker
 		final boolean aarch64 = "aarch64".equals(arch);
 		logger.log(INFO, "Architecture {0}", arch);
 		if (os.contains("win"))
-			return is64bit ? Platform.Win_x86_64 : Platform.Win_x86;
+			return aarch64 ? Platform.Win_AArch64 : is64bit ? Platform.Win_x86_64 : Platform.Win_x86;
 		if (os.contains("mac"))
 			return aarch64 ? Platform.macOS_AArch64 : Platform.macOS_x86_64;
 		if (os.contains("linux"))
@@ -178,6 +179,7 @@ public class SwtChecker
 			case macOS_AArch64 -> "cocoa.macosx.aarch64";
 			case Win_x86 -> "win32.win32.x86";
 			case Win_x86_64 -> "win32.win32.x86_64";
+			case Win_AArch64 -> "win32.win32.aarch64";
 			case Unknown -> "";
 		};
 	}
