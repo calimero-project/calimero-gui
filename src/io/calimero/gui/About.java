@@ -119,7 +119,7 @@ class About {
 				asg.setImage(img);
 			}
 		}
-		catch (final IOException e) {}
+		catch (final IOException ignore) {}
 
 		final SelectionAdapter openLink = new SelectionAdapter() {
 			@Override

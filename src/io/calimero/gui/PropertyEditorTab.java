@@ -713,7 +713,7 @@ class PropertyEditorTab extends BaseTabLayout
 					.collect(toList());
 			return altFormatted(values);
 		}
-		catch (final RuntimeException e) {}
+		catch (final RuntimeException ignore) {}
 		return onError;
 	}
 
@@ -723,7 +723,7 @@ class PropertyEditorTab extends BaseTabLayout
 			final List<BigInteger> list = values.stream().map(v -> new BigInteger(1, v)).collect(toList());
 			return altFormatted(list);
 		}
-		catch (final RuntimeException e) {}
+		catch (final RuntimeException ignore) {}
 		return onError;
 	}
 

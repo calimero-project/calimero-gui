@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 3 tools
-    Copyright (c) 2006, 2024 B. Malinowsky
+    Copyright (c) 2006, 2025 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -353,7 +353,7 @@ class DiscoverTab extends BaseTabLayout
 			mcast = Optional.of(new InetSocketAddress(InetAddress.getByAddress(device.getMulticastAddress()),
 					KNXnetIPConnection.DEFAULT_PORT));
 		}
-		catch (final UnknownHostException e) {}
+		catch (final UnknownHostException ignore) {}
 
 		Map<ServiceFamily, Integer> secureServices = Map.of();
 		String itemText = newItem;

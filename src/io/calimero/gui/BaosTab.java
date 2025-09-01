@@ -318,7 +318,7 @@ class BaosTab extends BaseTabLayout {
 					dpDpt.setData(s, new Object[] { main, sub });
 				});
 			}
-			catch (final KNXException e) {}
+			catch (final KNXException ignore) {}
 		});
 		dpDpt.addSelectionListener(adapt(e -> {
 			final var dpt = selectedDpt();
@@ -613,7 +613,7 @@ class BaosTab extends BaseTabLayout {
 		try {
 			spinner.setSelection(Integer.parseInt(currentValue));
 		}
-		catch (final NumberFormatException e) {}
+		catch (final NumberFormatException ignore) {}
 		final Supplier<String> formatter = () -> String.format("%02x", Integer.parseInt(spinner.getText()));
 		spinner.setData(formatter);
 		return spinner;
@@ -802,7 +802,7 @@ class BaosTab extends BaseTabLayout {
 		try {
 			return InetAddress.getByAddress(data).getHostAddress();
 		}
-		catch (final UnknownHostException e) {}
+		catch (final UnknownHostException ignore) {}
 		return "n/a";
 	}
 
