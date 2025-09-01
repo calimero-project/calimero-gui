@@ -277,7 +277,7 @@ class ProcCommTab extends BaseTabLayout
 					dpt.setData(s, new Object[] { main, sub });
 				});
 			}
-			catch (final KNXException e) {}
+			catch (final KNXException ignore) {}
 		});
 		dpt.addSelectionListener(new SelectionAdapter() {
 			@Override

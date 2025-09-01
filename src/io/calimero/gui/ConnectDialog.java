@@ -94,7 +94,7 @@ class ConnectDialog {
 		try {
 			localhost = InetAddress.getLocalHost();
 		}
-		catch (final UnknownHostException uhe) {}
+		catch (final UnknownHostException ignore) {}
 
 		final Text hostData;
 		final Text localhostData;
@@ -390,7 +390,7 @@ class ConnectDialog {
 					return InetAddress.getByName(hostData.getText()).isMulticastAddress()
 							? Protocol.Routing : Protocol.Tunneling;
 				}
-				catch (final UnknownHostException e) {}
+				catch (final UnknownHostException ignore) {}
 				return Protocol.Tunneling;
 			}
 		});
