@@ -181,14 +181,14 @@ tasks.startScripts {
 
 		// on OS X, SWT needs to run on first thread
 		unixScript.replace("DEFAULT_JVM_OPTS='",
-			"""
+			$$"""
 			MACOS_JVM_OPTS=""
 			if [ "`uname`" = Darwin ] ; then
 				MACOS_JVM_OPTS="-XstartOnFirstThread"
 			fi
-			DEFAULT_JVM_OPTS="${'$'}{MACOS_JVM_OPTS}"' """.trimIndent())
+			DEFAULT_JVM_OPTS="${MACOS_JVM_OPTS}"' """.trimIndent())
 		// add dependency on downloaded swt.jar (adding files('swt.jar') to classpath doesn't work)
-		unixScript.replace("MODULE_PATH=\$APP_HOME", "MODULE_PATH=\$APP_HOME/lib/swt.jar:\$APP_HOME")
+		unixScript.replace($$"MODULE_PATH=$APP_HOME", $$"MODULE_PATH=$APP_HOME/lib/swt.jar:$APP_HOME")
 		windowsScript.replace("MODULE_PATH=%APP_HOME%", "MODULE_PATH=%APP_HOME%\\lib\\swt.jar;%APP_HOME%")
 	}
 }
