@@ -58,7 +58,7 @@ import io.calimero.internal.Manifest;
  * @author B. Malinowsky
  */
 class About {
-	private static final String title = "Graphical User Interface for KNX Access";
+	private static final String title = "About Calimero";
 
 	// @formatter:off
 	private static final String about =
