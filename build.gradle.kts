@@ -10,7 +10,7 @@ plugins {
 	application
 	`maven-publish`
 	signing
-	id("com.github.ben-manes.versions") version "0.52.0"
+	id("com.github.ben-manes.versions") version "0.53.0"
 	eclipse
 }
 
