@@ -137,8 +137,7 @@ class ProcCommTab extends BaseTabLayout
 					}
 					else {
 						final Datapoint dp = model.get(e.getDestination());
-						value = dp != null && dp.getDPT() != null ? asString(asdu, dp.getMainNumber(), dp.getDPT())
-								: "n/a";
+						value = dp != null && dp.getDPT() != null ? asString(asdu, dp.dptId()) : "n/a";
 					}
 				}
 
@@ -329,7 +328,7 @@ class ProcCommTab extends BaseTabLayout
 					final Datapoint dp = model.get(selectedDpAddress());
 					if (dp == null)
 						return;
-					final MainType t = TranslatorTypes.getMainType(dp.getMainNumber());
+					final MainType t = TranslatorTypes.getMainType(dp.dptId().mainNumber());
 					if (t != null) {
 						final String[] items = dpt.getItems();
 						for (int i = 0; i < items.length; i++) {
@@ -491,12 +490,13 @@ class ProcCommTab extends BaseTabLayout
 
 		if (dptData != null) {
 			final Datapoint dp = model.get(main);
-			final int current = dp.getMainNumber();
 			final MainType mt = (MainType) dptData[0];
 			final DPT dpt = (DPT) dptData[1];
-			if (mt.mainNumber() != current || (dpt != null && !dpt.getID().equals(dp.getDPT())))
-				dp.setDPT(mt.mainNumber(),
-						dpt != null ? dpt.getID() : mt.getSubTypes().entrySet().iterator().next().getValue().getID());
+			if (mt.mainNumber() != dp.dptId().mainNumber() || (dpt != null && !dpt.getID().equals(dp.getDPT()))) {
+				model.remove(dp);
+				model.add(new StateDP(dp.getMainAddress(), dp.getName(), mt.mainNumber(),
+						dpt != null ? dpt.getID() : mt.getSubTypes().entrySet().iterator().next().getValue().getID()));
+			}
 		}
 		return model.get(main);
 	}
