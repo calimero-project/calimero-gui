@@ -41,6 +41,9 @@ package io.calimero.gui.logging;
  * of the graphical user interface.
  */
 public final class LoggerFinder extends System.LoggerFinder {
+	/** Default constructor for a new LoggerFinder instance. */
+	public LoggerFinder() {}
+
 	@Override
 	public System.Logger getLogger(final String name, final Module module) {
 		return new GuiLogger(name);

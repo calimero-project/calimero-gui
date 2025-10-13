@@ -145,8 +145,8 @@ class ProcCommTab extends BaseTabLayout
 				final String date = dateFormatter.format(now);
 				final String time = timeFormatter.format(now);
 				final String dst;
-				if (e instanceof LteProcessEvent)
-					dst = lteTag(((LteProcessEvent) e).extFrameFormat(), e.getDestination());
+				if (e instanceof final LteProcessEvent lteEvent)
+					dst = lteTag(lteEvent.extFrameFormat(), e.getDestination());
 				else
 					dst = e.getDestination().toString();
 
@@ -405,8 +405,8 @@ class ProcCommTab extends BaseTabLayout
 							if (editArea.isDisposed())
 								return;
 							for (final Control c : editArea.getChildren()) {
-								if (c instanceof Button) {
-									final var text = ((Button) c).getText();
+								if (c instanceof final Button btn) {
+									final var text = btn.getText();
 									if (text.equals("Read") || text.equals("Write"))
 										c.setEnabled(false);
 								}
