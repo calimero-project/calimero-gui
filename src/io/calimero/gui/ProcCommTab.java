@@ -46,6 +46,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import io.calimero.KnxRuntimeException;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.events.DisposeEvent;
@@ -131,13 +132,19 @@ class ProcCommTab extends BaseTabLayout
 				final byte[] asdu = e.getASDU();
 				String value = "[empty]";
 				if (asdu.length > 0) {
-					if ((sc & 0b1111111100) == 0b1111101000) {
-						// group property service
-						value = decodeLteFrame((LteProcessEvent) e);
+					try {
+						if ((sc & 0b1111111100) == 0b1111101000) {
+							// group property service
+							value = decodeLteFrame((LteProcessEvent) e);
+						}
+						else {
+							final Datapoint dp = model.get(e.getDestination());
+							value = dp != null ? asString(asdu, dp.dptId()) : "n/a";
+						}
 					}
-					else {
-						final Datapoint dp = model.get(e.getDestination());
-						value = dp != null && dp.getDPT() != null ? asString(asdu, dp.dptId()) : "n/a";
+					catch (KNXException | KnxRuntimeException ex) {
+						value = "n/a";
+						asyncAddLog(ex.toString());
 					}
 				}
 
@@ -158,7 +165,7 @@ class ProcCommTab extends BaseTabLayout
 				++eventCounterFiltered;
 				asyncAddListItem(item, null, null);
 			}
-			catch (KNXException | RuntimeException e1) {
+			catch (RuntimeException e1) {
 				asyncAddLog(e1);
 			}
 		}
