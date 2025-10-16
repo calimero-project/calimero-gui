@@ -92,7 +92,7 @@ configurations {
 
 configurations.all {
 	resolutionStrategy.dependencySubstitution {
-		substitute(module("org.eclipse.platform:org.eclipse.swt.\${osgi.platform}"))
+		substitute(module($$"org.eclipse.platform:org.eclipse.swt.${osgi.platform}"))
 			.using(module("$swtGroupId:$swtArtifact:$swtVersion"))
 	}
 }
