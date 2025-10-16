@@ -254,12 +254,11 @@ public class Main
 		return item;
 	}
 
-	private Label addToolbarLabel(final ToolBar tb, final String text)
+	private void addToolbarLabel(final ToolBar tb, final String text)
 	{
 		final Label l = new Label(tb, SWT.NONE);
 		l.setText(text);
 		addNonToolItem(tb, l);
-		return l;
 	}
 
 	private void addToolItem(final ToolBar tb, final String text, final Runnable selected)

@@ -183,7 +183,7 @@ class ProjectTab extends BaseTabLayout {
 		}
 	}
 
-	private void openProject(final SelectionEvent e) {
+	private void openProject(final SelectionEvent __) {
 		final FileDialog dlg = new FileDialog(Main.shell, SWT.OPEN);
 		dlg.setFilterNames(new String[] { "KNX Project Files (*.knxproj)", "All Files (*.*)" });
 		dlg.setFilterExtensions(new String[] { "*.knxproj", "*.*" });

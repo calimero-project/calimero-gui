@@ -421,7 +421,7 @@ class BaosTab extends BaseTabLayout {
 		sashForm.setMaximizedControl(list);
 	}
 
-	private void readAllProperties(final SelectionEvent e) {
+	private void readAllProperties(final SelectionEvent __) {
 		for (final var property : Property.values()) {
 			if (property != Property.Invalid)
 				executeCommand("get property " + property.id());

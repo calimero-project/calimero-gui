@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 3 tools
-    Copyright (c) 2006, 2024 B. Malinowsky
+    Copyright (c) 2006, 2025 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -184,8 +184,8 @@ class MonitorTab extends BaseTabLayout
 
 						// let's see if we can decode a group-addressed asdu based on datapoint information
 						final var dst = f.getDestination();
-						if (dst instanceof GroupAddress && datapoints.contains((GroupAddress) dst)) {
-							final var datapoint = datapoints.get((GroupAddress) dst);
+						if (dst instanceof final GroupAddress ga && datapoints.contains(ga)) {
+							final var datapoint = datapoints.get(ga);
 							try {
 								final var translator = TranslatorTypes.createTranslator(datapoint.getDPT(), asdu);
 								item.add(translator.getValue());

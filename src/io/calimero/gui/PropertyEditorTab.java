@@ -649,8 +649,8 @@ class PropertyEditorTab extends BaseTabLayout
 		final PropertyClient.Property p)
 	{
 		final var optDptid = Optional.ofNullable(PropertyTypes.getAllPropertyTypes().get(p.pdt()));
-		final int typeSize = optDptid.flatMap(dptid -> dptSize(dptid))
-					.or(() -> p.dpt().flatMap(dpt -> dptSize(dpt)))
+		final int typeSize = optDptid.flatMap(PropertyEditorTab::dptSize)
+					.or(() -> p.dpt().flatMap(PropertyEditorTab::dptSize))
 					.orElse(1);
 
 		final String data;
@@ -745,9 +745,9 @@ class PropertyEditorTab extends BaseTabLayout
 		return l;
 	}
 
-	private Label singleLineLabel(final String text)
+	private void singleLineLabel(final String text)
 	{
-		return label(text, true);
+		label(text, true);
 	}
 
 	private void onItemPaint(final Event event)
@@ -853,7 +853,7 @@ class PropertyEditorTab extends BaseTabLayout
 		final var optProp = getDefinition(Integer.parseUnsignedInt(objType), Integer.parseUnsignedInt(pid));
 		if (optProp.isPresent()) {
 			final PropertyClient.Property p = optProp.get();
-			p.dpt().flatMap(dpt -> createTranslator(dpt)).or(() -> createTranslator(p.pdt()))
+			p.dpt().flatMap(PropertyEditorTab::createTranslator).or(() -> createTranslator(p.pdt()))
 					.ifPresentOrElse(t -> {
 						final DPT dpt = t.getType();
 						bounds.add(dpt.getLowerValue());
