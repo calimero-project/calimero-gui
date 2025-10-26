@@ -178,7 +178,7 @@ class DiscoverTab extends BaseTabLayout
 			// switch to routing if preferred and available
 			if (preferRouting.getSelection() && access.protocol() == Protocol.Tunneling && ipAccess.multicast().isPresent()) {
 				ipAccess = new IpAccess(Protocol.Routing, ipAccess.name(), ipAccess.medium(),
-						ipAccess.localEP, ipAccess.remote, ipAccess.multicast, ipAccess.securedServices, ipAccess.hostIA,
+						ipAccess.localEP, ipAccess.multicast.get(), ipAccess.multicast, ipAccess.securedServices, ipAccess.hostIA,
 						ipAccess.serialNumber);
 			}
 			return Optional.of(new ConnectArguments(ipAccess, nat.getSelection(), preferTcp.getSelection(), "", ""));
