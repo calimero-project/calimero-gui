@@ -465,8 +465,10 @@ class ProcCommTab extends BaseTabLayout
 		final TreeSet<Datapoint> set = new TreeSet<>(
 				Comparator.comparingInt(dp -> dp.getMainAddress().getRawAddress()));
 		set.addAll(model.getDatapoints());
-		for (final Datapoint dp : set)
-			points.add(dp.getMainAddress().toString() + "\t" + dp.getName());
+		for (final Datapoint dp : set) {
+			final var dpName = dp.getName().isEmpty() || "-".equals(dp.getName()) ? "" : " - " + dp.getName();
+			points.add(dp.getMainAddress() + dpName);
+		}
 	}
 
 	private void saveDatapoints() {
