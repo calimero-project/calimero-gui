@@ -276,6 +276,8 @@ class LogTab extends BaseTabLayout
 
 		final var msg = expandTabs(logEntry.msg());
 		final var lines = msg.split("\n");
+		if (lines.length == 0)
+			return List.of();
 
 		final var list = new ArrayList<String[]>();
 		final String[] first = { date, time, logEntry.level().toString(), logEntry.name(), lines[0] };
