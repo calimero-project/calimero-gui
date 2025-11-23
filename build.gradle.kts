@@ -196,6 +196,7 @@ tasks.startScripts {
 
 tasks.withType<JavaExec>().configureEach {
 	jvmArgs(addReads)
+	jvmArgs("--enable-native-access=ALL-UNNAMED")
 	if (os.contains("mac")) {
 		jvmArgs("-XstartOnFirstThread")
 	}
