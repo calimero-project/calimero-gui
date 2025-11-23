@@ -10,6 +10,7 @@ plugins {
 	application
 	`maven-publish`
 	signing
+	id("org.graalvm.buildtools.native") version "0.11.3"
 	id("com.github.ben-manes.versions") version "0.53.0"
 	eclipse
 }
@@ -197,6 +198,34 @@ tasks.withType<JavaExec>().configureEach {
 	jvmArgs(addReads)
 	if (os.contains("mac")) {
 		jvmArgs("-XstartOnFirstThread")
+	}
+}
+
+graalvmNative {
+//	toolchainDetection.set(true) // only works reliably if a single JDK is installed, which is GraalVM
+	agent {
+//		enabled = true
+		defaultMode = "standard"
+	}
+	binaries {
+		named("main") {
+//			verbose = true
+			mainClass.set("io.calimero.gui.Main")
+			buildArgs.addAll(
+				listOf(
+					"--enable-sbom=export",
+					"--future-defaults=all",
+					"--emit build-report",
+					"--initialize-at-build-time",
+					"-march=native",
+					"-Os",
+					"--no-fallback",
+					"--exact-reachability-metadata",
+					"-H:+ReportExceptionStackTraces",
+				)
+			)
+			jvmArgs.addAll("--enable-native-access=ALL-UNNAMED", "-XstartOnFirstThread")
+		}
 	}
 }
 

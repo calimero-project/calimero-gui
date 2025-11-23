@@ -1,0 +1,407 @@
+{
+  "reflection": [
+    {
+      "type": "io.calimero.gui.ProcCommTab$4"
+    },
+    {
+      "type": "sun.security.x509.X509CertInfo",
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "allDeclaredConstructors": true
+    },
+    {
+      "type": "sun.security.x509.X509CertImpl",
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "allDeclaredConstructors": true
+    },
+    {
+      "type": "sun.security.x509.AuthorityInfoAccessExtension",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.Boolean",
+            "java.lang.Object"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.security.x509.AuthorityKeyIdentifierExtension",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.Boolean",
+            "java.lang.Object"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.security.x509.BasicConstraintsExtension",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.Boolean",
+            "java.lang.Object"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.security.x509.CRLDistributionPointsExtension",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.Boolean",
+            "java.lang.Object"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.security.x509.CertificatePoliciesExtension",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.Boolean",
+            "java.lang.Object"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.security.x509.ExtendedKeyUsageExtension",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.Boolean",
+            "java.lang.Object"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.security.x509.KeyUsageExtension",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.Boolean",
+            "java.lang.Object"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.security.x509.SubjectKeyIdentifierExtension",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.Boolean",
+            "java.lang.Object"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.security.provider.X509Factory",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.eclipse.swt.SWT",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        },
+        {
+          "name": "getPlatform",
+          "parameterTypes": []
+        },
+        {
+          "name": "getVersion",
+          "parameterTypes": []
+        },
+        {
+          "name": "isLoadable",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.eclipse.swt.graphics.Region",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "regionToRects",
+          "parameterTypes": [
+            "long",
+            "long",
+            "long",
+            "long"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "org.eclipse.swt.internal.cocoa.NSOperatingSystemVersion",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "majorVersion"
+        },
+        {
+          "name": "minorVersion"
+        },
+        {
+          "name": "patchVersion"
+        }
+      ]
+    },
+    {
+      "type": "org.eclipse.swt.internal.cocoa.NSPoint",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "x"
+        },
+        {
+          "name": "y"
+        }
+      ]
+    },
+    {
+      "type": "org.eclipse.swt.internal.cocoa.NSRange",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "length"
+        },
+        {
+          "name": "location"
+        }
+      ]
+    },
+    {
+      "type": "org.eclipse.swt.internal.cocoa.NSRect",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "height"
+        },
+        {
+          "name": "width"
+        },
+        {
+          "name": "x"
+        },
+        {
+          "name": "y"
+        }
+      ]
+    },
+    {
+      "type": "org.eclipse.swt.internal.cocoa.NSSize",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "height"
+        },
+        {
+          "name": "width"
+        }
+      ]
+    },
+    {
+      "type": "org.eclipse.swt.internal.cocoa.objc_super",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "receiver"
+        },
+        {
+          "name": "super_class"
+        }
+      ]
+    },
+    {
+      "type": "org.eclipse.swt.widgets.Display",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "applicationProc",
+          "parameterTypes": [
+            "long",
+            "long"
+          ]
+        },
+        {
+          "name": "applicationProc",
+          "parameterTypes": [
+            "long",
+            "long",
+            "long"
+          ]
+        },
+        {
+          "name": "applicationProc",
+          "parameterTypes": [
+            "long",
+            "long",
+            "long",
+            "long"
+          ]
+        },
+        {
+          "name": "applicationProc",
+          "parameterTypes": [
+            "long",
+            "long",
+            "long",
+            "long",
+            "long",
+            "long"
+          ]
+        },
+        {
+          "name": "cursorSetProc",
+          "parameterTypes": [
+            "long",
+            "long"
+          ]
+        },
+        {
+          "name": "dialogProc",
+          "parameterTypes": [
+            "long",
+            "long",
+            "long"
+          ]
+        },
+        {
+          "name": "dialogProc",
+          "parameterTypes": [
+            "long",
+            "long",
+            "long",
+            "long"
+          ]
+        },
+        {
+          "name": "dialogProc",
+          "parameterTypes": [
+            "long",
+            "long",
+            "long",
+            "long",
+            "long"
+          ]
+        },
+        {
+          "name": "observerProc",
+          "parameterTypes": [
+            "long",
+            "long",
+            "long"
+          ]
+        },
+        {
+          "name": "windowProc",
+          "parameterTypes": [
+            "long",
+            "long"
+          ]
+        },
+        {
+          "name": "windowProc",
+          "parameterTypes": [
+            "long",
+            "long",
+            "long"
+          ]
+        },
+        {
+          "name": "windowProc",
+          "parameterTypes": [
+            "long",
+            "long",
+            "long",
+            "long"
+          ]
+        },
+        {
+          "name": "windowProc",
+          "parameterTypes": [
+            "long",
+            "long",
+            "long",
+            "long",
+            "long"
+          ]
+        },
+        {
+          "name": "windowProc",
+          "parameterTypes": [
+            "long",
+            "long",
+            "long",
+            "long",
+            "long",
+            "long"
+          ]
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "module": "io.calimero.gui",
+      "glob": "META-INF/MANIFEST.MF"
+    },
+    {
+      "module": "io.calimero.gui",
+      "glob": "logo-small.png"
+    },
+    {
+      "glob": "org/eclipse/swt/internal/Library.class"
+    },
+    {
+      "glob": "org/eclipse/swt/internal/SWTMessages_en.properties"
+    },
+    {
+      "glob": "org/eclipse/swt/internal/SWTMessages_en_GB.properties"
+    },
+    {
+      "module": "org.eclipse.swt.cocoa.macosx.aarch64",
+      "glob": "org/eclipse/swt/internal/Library.class"
+    },
+    {
+      "module": "org.eclipse.swt.cocoa.macosx.aarch64",
+      "glob": "org/eclipse/swt/internal/SWTMessages.properties"
+    },
+    {
+      "module": "org.eclipse.swt.cocoa.macosx.aarch64",
+      "glob": "org/eclipse/swt/internal/SWTMessages_en.properties"
+    },
+    {
+      "module": "org.eclipse.swt.cocoa.macosx.aarch64",
+      "glob": "org/eclipse/swt/internal/SWTMessages_en_GB.properties"
+    },
+    {
+      "bundle": "org.eclipse.swt.internal.SWTMessages"
+    }
+  ]
+}
