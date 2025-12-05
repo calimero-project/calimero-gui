@@ -173,7 +173,7 @@ public class Main
 			display = new Display();
 			shell = new Shell(display);
 			final FontData[] fontData = shell.getFont().getFontData();
-			final String os = System.getProperty("os.name", "generic").toLowerCase(Locale.ENGLISH);
+			final String os = System.getProperty("os.name", "generic").toLowerCase(Locale.ROOT);
 			if (!os.contains("windows")) {
 				int height = fontData[0].getHeight();
 				height -= (int) (0.15 * height);

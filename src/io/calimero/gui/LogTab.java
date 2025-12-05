@@ -170,7 +170,7 @@ class LogTab extends BaseTabLayout
 		workArea.layout(true, true);
 		enableColumnAdjusting();
 
-		final int cmd = System.getProperty("os.name").toLowerCase(Locale.ENGLISH).contains("mac") ? SWT.COMMAND : SWT.CTRL;
+		final int cmd = System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("mac") ? SWT.COMMAND : SWT.CTRL;
 		list.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(final KeyEvent e) {

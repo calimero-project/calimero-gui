@@ -53,7 +53,7 @@ val swtGroupId = "org.eclipse.platform"
 val swtVersion = "3.131.0"
 var swtArtifact = "org.eclipse.swt."
 
-val os = System.getProperty("os.name").lowercase(Locale.ENGLISH)
+val os = System.getProperty("os.name").lowercase(Locale.ROOT)
 swtArtifact += when {
 	os.contains("windows") -> "win32.win32."
 	os.contains("linux")   -> "gtk.linux."

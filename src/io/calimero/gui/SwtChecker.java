@@ -152,7 +152,7 @@ public class SwtChecker
 
 	private Platform platform()
 	{
-		final String os = System.getProperty("os.name", "unknown").toLowerCase(Locale.ENGLISH);
+		final String os = System.getProperty("os.name", "unknown").toLowerCase(Locale.ROOT);
 		// data model prop gives us the jvm bitness
 		final String model = System.getProperty("sun.arch.data.model");
 		final String arch = System.getProperty("os.arch");
