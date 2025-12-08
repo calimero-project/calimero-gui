@@ -342,7 +342,7 @@ class ProcCommTab extends BaseTabLayout
 							final Object[] data = (Object[]) dpt.getData(item);
 							if (data == null)
 								continue;
-							if (data[0] == t && data[1] != null && ((DPT) data[1]).getID().equals(dp.getDPT())) {
+							if (data[0] == t && data[1] != null && ((DPT) data[1]).dptId().equals(dp.dptId())) {
 								dpt.select(i);
 								break;
 							}
@@ -500,7 +500,7 @@ class ProcCommTab extends BaseTabLayout
 			final Datapoint dp = model.get(main);
 			final MainType mt = (MainType) dptData[0];
 			final DPT dpt = (DPT) dptData[1];
-			if (mt.mainNumber() != dp.dptId().mainNumber() || (dpt != null && !dpt.getID().equals(dp.getDPT()))) {
+			if (mt.mainNumber() != dp.dptId().mainNumber() || (dpt != null && !dpt.dptId().equals(dp.dptId()))) {
 				model.remove(dp);
 				model.add(new StateDP(dp.getMainAddress(), dp.getName(), mt.mainNumber(),
 						dpt != null ? dpt.getID() : mt.getSubTypes().entrySet().iterator().next().getValue().getID()));
