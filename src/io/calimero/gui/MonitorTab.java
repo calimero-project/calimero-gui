@@ -187,7 +187,7 @@ class MonitorTab extends BaseTabLayout
 						if (dst instanceof final GroupAddress ga && datapoints.contains(ga)) {
 							final var datapoint = datapoints.get(ga);
 							try {
-								final var translator = TranslatorTypes.createTranslator(datapoint.getDPT(), asdu);
+								final var translator = TranslatorTypes.createTranslator(datapoint.dptId(), asdu);
 								item.add(translator.getValue());
 							}
 							catch (KNXIllegalArgumentException | KNXException ignore) {}
