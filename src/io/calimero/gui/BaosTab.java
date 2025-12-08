@@ -300,7 +300,7 @@ class BaosTab extends BaseTabLayout {
 				String value = dpValue.getText();
 				final var dpt = selectedDpt();
 				if (dpt.isPresent())
-					value = dpt.get().getID() + " " + value;
+					value = dpt.get().dptId() + " " + value;
 				executeCommand("set value " + id + " 1 " + dpCommand.getSelectionIndex() + " " + value);
 			}
 		}));
