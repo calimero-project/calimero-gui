@@ -142,6 +142,57 @@
       ]
     },
     {
+      "type": "org.eclipse.swt.dnd.DropTarget",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "dropTargetProc",
+          "parameterTypes": [
+            "long",
+            "long"
+          ]
+        },
+        {
+          "name": "dropTargetProc",
+          "parameterTypes": [
+            "long",
+            "long",
+            "long"
+          ]
+        },
+        {
+          "name": "dropTargetProc",
+          "parameterTypes": [
+            "long",
+            "long",
+            "long",
+            "long",
+            "long",
+            "long"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "org.eclipse.swt.widgets.FileDialog",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "_performKeyEquivalent",
+          "parameterTypes": [
+            "long",
+            "long",
+            "long"
+          ]
+        }
+      ]
+    },
+
+    {
+      "type": "java/lang/Throwable",
+      "jniAccessible": true
+    },
+    {
       "type": "org.eclipse.swt.graphics.Region",
       "jniAccessible": true,
       "methods": [
@@ -368,11 +419,9 @@
   ],
   "resources": [
     {
-      "module": "io.calimero.gui",
       "glob": "META-INF/MANIFEST.MF"
     },
     {
-      "module": "io.calimero.gui",
       "glob": "logo-small.png"
     },
     {
