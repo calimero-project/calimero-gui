@@ -133,8 +133,8 @@ final class ConnectArguments {
 				KeyringTab.keyring().map(Keyring::devices).filter(devices -> devices.containsKey(device))
 						.ifPresent(__ -> KeyringTab.keyringPassword());
 			}
-			catch (final KNXFormatException e) {
-				e.printStackTrace();
+			catch (final KNXFormatException ok) {
+				// if we didn't get a valid IA, keyring doesn't matter
 			}
 		}
 
