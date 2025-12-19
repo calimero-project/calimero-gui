@@ -229,6 +229,10 @@ class ConnectDialog {
 		memory.setText("KNX device memory editor");
 		memory.setToolTipText("Uses Remote Property Services");
 
+		final Button progmode = new Button(mode, SWT.RADIO);
+		progmode.setText("KNX devices in programming mode");
+		progmode.setToolTipText("Uses Local Device Management or Remote Property Services");
+
 		final Button baos = new Button(mode, SWT.RADIO);
 		baos.setText("BAOS view");
 		baos.setToolTipText("Connection to a BAOS device");
@@ -378,6 +382,8 @@ class ConnectDialog {
 				}
 				else if (procComm.getSelection())
 					new ProcCommTab(tf, args);
+				else if (progmode.getSelection())
+					new ProgmodeTab(tf, args);
 				else if (baos.getSelection())
 					new BaosTab(tf, args);
 
