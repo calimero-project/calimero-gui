@@ -100,7 +100,9 @@ configurations.all {
 
 dependencies {
 	implementation("io.calimero:calimero-core:$version")
-	implementation("io.calimero:calimero-tools:$version")
+	implementation("io.calimero:calimero-tools:$version") {
+		exclude(group = "org.slf4j")
+	}
 	runtimeOnly("io.calimero:calimero-tools:$version") {
 		capabilities {
 			requireCapability("io.calimero:calimero-tools-serial")
