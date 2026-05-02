@@ -277,6 +277,42 @@
       ]
     },
     {
+      "type": "org.eclipse.swt.internal.cocoa.CGRect",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "size"
+        },
+        {
+          "name": "origin"
+        }
+      ]
+    },
+    {
+      "type": "org.eclipse.swt.internal.cocoa.CGSize",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "height"
+        },
+        {
+          "name": "width"
+        }
+      ]
+    },
+    {
+      "type": "org.eclipse.swt.internal.cocoa.CGPoint",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "x"
+        },
+        {
+          "name": "y"
+        }
+      ]
+    },
+    {
       "type": "org.eclipse.swt.internal.cocoa.objc_super",
       "jniAccessible": true,
       "fields": [
@@ -408,6 +444,36 @@
           "parameterTypes": [
             "long",
             "long",
+            "long",
+            "long",
+            "long",
+            "long"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "org.eclipse.swt.accessibility.SWTAccessibleDelegate",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "accessibleProc",
+          "parameterTypes": [
+            "long",
+            "long"
+          ]
+        },
+        {
+          "name": "accessibleProc",
+          "parameterTypes": [
+            "long",
+            "long",
+            "long"
+          ]
+        },
+        {
+          "name": "accessibleProc",
+          "parameterTypes": [
             "long",
             "long",
             "long",
