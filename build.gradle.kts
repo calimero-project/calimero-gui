@@ -76,10 +76,7 @@ sourceSets {
 }
 
 tasks.withType<JavaCompile>().configureEach {
-	options.compilerArgs = listOf(
-		"-Xlint:all",
-		"--add-reads", "io.calimero.gui=ALL-UNNAMED" // usb4java-javax
-	)
+	options.compilerArgs = listOf("-Xlint:all")
 }
 
 tasks.named<JavaCompile>("compileJava") {
@@ -173,11 +170,17 @@ distributions {
 val addReads = listOf(
 	"--add-reads", "io.calimero.core=io.calimero.tools", // @LinkEvent
 	"--add-reads", "io.calimero.serial.provider.rxtx=ALL-UNNAMED",
-	"--add-reads", "io.calimero.usb.provider.javax=ALL-UNNAMED"
+	"--add-reads", "io.calimero.usb.provider.javax=ALL-UNNAMED" // javax.usb:usb-api
+)
+
+// avoid jvm warning about native access
+val enableNativeAccess = listOf(
+	"--enable-native-access=io.calimero.serial.provider.jni,serial.ffm,org.usb4java,$swtArtifact",
+	"--enable-native-access=ALL-UNNAMED", // libs used by rxtx
 )
 
 tasks.startScripts {
-	defaultJvmOpts = addReads
+	defaultJvmOpts = addReads + enableNativeAccess
 
 	doLast {
 		fun File.replace(replace: String, with: String) = writeText(readText().replace(replace, with))
@@ -198,7 +201,7 @@ tasks.startScripts {
 
 tasks.withType<JavaExec>().configureEach {
 	jvmArgs(addReads)
-	jvmArgs("--enable-native-access=ALL-UNNAMED")
+	jvmArgs(enableNativeAccess)
 	if (os.contains("mac")) {
 		jvmArgs("-XstartOnFirstThread")
 	}
