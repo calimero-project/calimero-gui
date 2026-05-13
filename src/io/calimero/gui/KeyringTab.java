@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 3 tools
-    Copyright (c) 2019, 2025 B. Malinowsky
+    Copyright (c) 2019, 2026 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -207,8 +207,8 @@ class KeyringTab extends BaseTabLayout {
 
 	private void loadKeyring(final SelectionEvent e) {
 		final FileDialog dlg = new FileDialog(Main.shell, SWT.OPEN);
-		dlg.setFilterNames(new String[] { "KNX Keyring Files (*.knxkeys)", "All Files (*.*)" });
-		dlg.setFilterExtensions(new String[] { "*.knxkeys", "*.*" });
+		dlg.setFilterNames("KNX Keyring Files (*.knxkeys)", "All Files (*.*)");
+		dlg.setFilterExtensions("*.knxkeys", "*.*");
 		final var resource = dlg.open();
 		if (resource == null)
 			return;

@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 3 tools
-    Copyright (c) 2019, 2025 B. Malinowsky
+    Copyright (c) 2019, 2026 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -185,8 +185,8 @@ class ProjectTab extends BaseTabLayout {
 
 	private void openProject(final SelectionEvent __) {
 		final FileDialog dlg = new FileDialog(Main.shell, SWT.OPEN);
-		dlg.setFilterNames(new String[] { "KNX Project Files (*.knxproj)", "All Files (*.*)" });
-		dlg.setFilterExtensions(new String[] { "*.knxproj", "*.*" });
+		dlg.setFilterNames("KNX Project Files (*.knxproj)", "All Files (*.*)");
+		dlg.setFilterExtensions("*.knxproj", "*.*");
 		final var resource = dlg.open();
 		if (resource != null)
 			addProject(Path.of(resource));
