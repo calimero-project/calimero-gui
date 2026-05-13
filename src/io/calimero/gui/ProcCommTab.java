@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 3 tools
-    Copyright (c) 2006, 2025 B. Malinowsky
+    Copyright (c) 2006, 2026 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -485,7 +485,7 @@ class ProcCommTab extends BaseTabLayout
 
 	private String defaultDatapointsFilename() {
 		final String fileName = ".datapoints_" + connect.access().serialNumber() + ".xml";
-		return fileName.replaceAll(":", "-");
+		return fileName.replace(":", "-");
 	}
 
 	private Datapoint fetchDatapoint(final GroupAddress main, final Object[] dptData)
