@@ -354,11 +354,13 @@ class DiscoverTab extends BaseTabLayout
 			return;
 
 		var mcast = Optional.<InetSocketAddress>empty();
-		try {
-			mcast = Optional.of(new InetSocketAddress(InetAddress.getByAddress(device.getMulticastAddress()),
-					KNXnetIPConnection.DEFAULT_PORT));
+		if (r.getServiceFamilies().families().containsKey(ServiceFamily.Routing)) {
+			try {
+				mcast = Optional.of(new InetSocketAddress(InetAddress.getByAddress(device.getMulticastAddress()),
+						KNXnetIPConnection.DEFAULT_PORT));
+			}
+			catch (final UnknownHostException ignore) {}
 		}
-		catch (final UnknownHostException ignore) {}
 
 		Map<ServiceFamily, Integer> secureServices = Map.of();
 		String itemText = newItem;
