@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 3 tools
-    Copyright (c) 2006, 2025 B. Malinowsky
+    Copyright (c) 2006, 2026 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -154,6 +154,11 @@ class DiscoverTab extends BaseTabLayout
 		enableColumnAdjusting();
 		setLogLevel(DEBUG);
 		discover();
+	}
+
+	Access access() {
+		return Arrays.stream(list.getItems()).filter(TableItem::getChecked).findFirst()
+				.map(item -> (Access) item.getData("access")).orElse(UnknownAccess);
 	}
 
 	Optional<ConnectArguments> defaultInterface()

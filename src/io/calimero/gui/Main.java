@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 3 tools
-    Copyright (c) 2006, 2025 B. Malinowsky
+    Copyright (c) 2006, 2026 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -89,8 +89,9 @@ public class Main
 		addLauncherBar();
 		tf = new CTabFolder(shell, SWT.NONE | SWT.BORDER);
 
-		addToolItem(header, "Connect ...", () -> new ConnectDialog(tf, DiscoverTab.UnknownAccess, discoverTab().nat.getSelection(),
-				discoverTab().preferRouting.getSelection(), discoverTab().preferTcp.getSelection()));
+		addToolItem(header, "Connect ...", () -> new ConnectDialog(tf, discoverTab().access(),
+				discoverTab().nat.getSelection(), discoverTab().preferRouting.getSelection(),
+				discoverTab().preferTcp.getSelection()));
 		addToolItem(header, "Show log", () -> new LogTab(tf));
 		addToolItem(header, "Show keyring", () -> new KeyringTab(tf));
 		addToolItem(header, "Show projects", () -> new ProjectTab(tf));
