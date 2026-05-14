@@ -4,7 +4,6 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Date
-import java.util.Locale
 
 plugins {
 	java
@@ -49,21 +48,18 @@ application {
 	mainClass.set("io.calimero.gui.SwtChecker")
 }
 
+val os = org.gradle.internal.os.OperatingSystem.current()!!
+val arch = System.getProperty("os.arch")!!
+
 // SWT is platform dependent
 val swtGroupId = "org.eclipse.platform"
 val swtVersion = "3.133.0"
-var swtArtifact = "org.eclipse.swt."
-
-val os = System.getProperty("os.name").lowercase(Locale.ROOT)
-swtArtifact += when {
-	os.contains("windows") -> "win32.win32."
-	os.contains("linux")   -> "gtk.linux."
-	os.contains("mac")     -> "cocoa.macosx."
-	else                   -> ""
-}
-
-val arch = System.getProperty("os.arch")
-swtArtifact += when (arch) {
+var swtArtifact = "org.eclipse.swt." + when {
+	os.isWindows -> "win32.win32."
+	os.isLinux   -> "gtk.linux."
+	os.isMacOsX  -> "cocoa.macosx."
+	else -> error("unsupported OS $os")
+} + when (arch) {
 	"aarch64"         -> "aarch64"
 	"amd64", "x86_64" -> "x86_64"
 	else              -> "x86"
@@ -203,7 +199,7 @@ tasks.startScripts {
 tasks.withType<JavaExec>().configureEach {
 	jvmArgs(addReads)
 	jvmArgs(enableNativeAccess)
-	if (os.contains("mac")) {
+	if (os.isMacOsX) {
 		jvmArgs("-XstartOnFirstThread")
 	}
 }
@@ -308,8 +304,6 @@ tasks.register<Copy>("preparePackageJars") {
 	dependsOn("jar")
 	from(configurations.runtimeClasspath, jarTask)
 	into(packageDir.get().dir("libs"))
-
-	val os = org.gradle.internal.os.OperatingSystem.current()
 	exclude(
 		when {
 			os.isLinux   -> listOf("darwin", "win")
@@ -329,7 +323,6 @@ tasks.register<Copy>("preparePackageJars") {
 
 tasks.register<Copy>("copySerialNativeLib") {
 	val serialNativeDir = file("../serial-native/bin/")
-	val os = org.gradle.internal.os.OperatingSystem.current()
 	from(serialNativeDir) {
 		val libArch = if (arch == "aarch64") "aarch64" else "x86_64"
 		include(when {
@@ -357,7 +350,6 @@ tasks.register<Exec>("package") {
 	group = "build"
 	description = "Packages a self-contained Java application for the main binary"
 	dependsOn("runtime", "cleanPackageApp", "preparePackageJars", "copySerialNativeLib")
-	val os = org.gradle.internal.os.OperatingSystem.current()
 	finalizedBy(if (os.isWindows) "zipAppImage" else "tarAppImage") // for Linux/Win, where jpackage creates an app folder
 
 	val baseArgs = listOf("jpackage",
