@@ -413,7 +413,7 @@ class ConnectDialog {
 		final VerifyListener onlyFiveDigits = e -> {
 			final String text = ((Text) e.widget).getText();
 			final String newText = text.substring(0, e.start).concat(e.text).concat(text.substring(e.end));
-			if (!newText.matches("\\d{0,5}"))
+			if (!newText.matches("\\d{0,5}") || Integer.parseUnsignedInt(newText) > 0xffff)
 				e.doit = false;
 		};
 
