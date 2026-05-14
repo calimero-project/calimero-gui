@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 3 tools
-    Copyright (c) 2017, 2025 B. Malinowsky
+    Copyright (c) 2017, 2026 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -288,11 +288,9 @@ class MemoryEditor extends BaseTabLayout
 	protected void saveAs(final String resource)
 	{
 		asyncAddLog("Export data in CSV format to " + resource);
-		try {
+		try (final Writer w = Files.newBufferedWriter(Paths.get(resource), StandardCharsets.UTF_8)) {
 			final char comma = ' ';
 			final char delim = '\n';
-
-			final Writer w = Files.newBufferedWriter(Paths.get(resource), StandardCharsets.UTF_8);
 			w.write("Start Offset ");
 			w.write(Integer.toHexString(viewerStartOffset));
 			w.write(delim);
@@ -305,7 +303,6 @@ class MemoryEditor extends BaseTabLayout
 					w.append(comma).append(ti.getText(k));
 				w.write('\n');
 			}
-			w.close();
 			asyncAddLog("Export completed successfully");
 		}
 		catch (final IOException e) {

@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 3 tools
-    Copyright (c) 2006, 2025 B. Malinowsky
+    Copyright (c) 2006, 2026 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -708,12 +708,10 @@ class BaseTabLayout implements LogNotifier
 	protected void saveAs(final String resource)
 	{
 		asyncAddLog("Export data in CSV format to " + resource);
-		try {
+		try (final Writer w = Files.newBufferedWriter(Paths.get(resource), StandardCharsets.UTF_8)) {
 			final char comma = ',';
 			final char quote = '\"';
 			final char delim = '\n';
-
-			final Writer w = Files.newBufferedWriter(Paths.get(resource), StandardCharsets.UTF_8);
 			// write list header
 			w.append(list.getColumn(0).getText());
 			for (int i = 1; i < list.getColumnCount(); i++)
@@ -728,7 +726,6 @@ class BaseTabLayout implements LogNotifier
 					w.append(comma).append(quote).append(ti.getText(k)).append(quote);
 				w.write('\n');
 			}
-			w.close();
 			asyncAddLog("Export completed successfully");
 		}
 		catch (final IOException e) {
