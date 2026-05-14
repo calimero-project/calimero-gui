@@ -729,7 +729,6 @@ class BaseTabLayout implements LogNotifier
 			asyncAddLog("Export completed successfully");
 		}
 		catch (final IOException e) {
-			e.printStackTrace();
 			asyncAddLog("Export aborted with error: " + e.getMessage());
 		}
 	}

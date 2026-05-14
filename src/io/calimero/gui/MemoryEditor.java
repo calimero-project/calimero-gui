@@ -306,7 +306,6 @@ class MemoryEditor extends BaseTabLayout
 			asyncAddLog("Export completed successfully");
 		}
 		catch (final IOException e) {
-			e.printStackTrace();
 			asyncAddLog("Export aborted with error: " + e.getMessage());
 		}
 	}
@@ -603,7 +602,7 @@ class MemoryEditor extends BaseTabLayout
 		runWorker(0, tool);
 	}
 
-	private void runWorker(int phase, final Runnable r)
+	private void runWorker(final int phase, final Runnable r)
 	{
 		setHeaderInfoPhase(statusInfo(phase));
 		workerThread = Executor.execute(() -> {
