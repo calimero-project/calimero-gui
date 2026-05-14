@@ -232,7 +232,9 @@ graalvmNative {
 					"-H:+ReportExceptionStackTraces",
 				)
 			)
-			jvmArgs.addAll("--enable-native-access=ALL-UNNAMED", "-XstartOnFirstThread")
+			jvmArgs.addAll("--enable-native-access=ALL-UNNAMED")
+			if (os.isMacOsX)
+				jvmArgs.add("-XstartOnFirstThread")
 		}
 	}
 }
