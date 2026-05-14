@@ -37,16 +37,20 @@
 package io.calimero.gui;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.util.StringJoiner;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.TextTransfer;
+import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.program.Program;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
@@ -59,67 +63,123 @@ import io.calimero.internal.Manifest;
  */
 class About {
 	private static final String title = "About Calimero";
+	private static final String features = """
+			Process communication
+			Group && network monitoring
+			Device scan && diagnostics
+			KNX property && memory editor
+			KNX IP Secure && Data Secure""";
+	private static final String access = "KNXnet/IP · FT1.2 · USB · TP-UART · KNX RF";
 
-	// @formatter:off
-	private static final String about =
-			"""
-			• Process Communication
-			• Group && Network Monitoring
-			• Device Scan && Device Information
-			• KNX Property Editor
-			• KNX Device Memory Editor
-			• KNXnet/IP
-			• FT1.2 (BCU2), USB, TP-UART, KNX RF USB
-			• KNX IP Secure && KNX Data Secure
-			""";
-	// @formatter:on
 	private static final String repositoryLink = "https://github.com/calimero-project/calimero-gui";
+	private static final String repository = "<a href=\"" + repositoryLink + "\">GitHub</a>";
+	private static final String sfDiscussionLink = "<a href=\"https://sourceforge.net/p/calimero/discussion/\">SourceForge</a>";
+	private static final String projectEmail = "<a href=\"mailto:calimero.project@gmail.com\">calimero.project@gmail.com</a>";
 
-	private static final String repository = "Software repository: <A>" + repositoryLink + "</A>";
-	private static final String ghIssuesLink = "https://github.com/calimero-project/calimero-gui/issues";
-	private static final String sfDiscussionLink = "https://sourceforge.net/p/calimero/discussion/";
-	private static final String projectEmail = "<A href=\"mailto:calimero.project@gmail.com\">calimero.project@gmail.com</A>";
+	private static final String contact = repository + "  ·  " + sfDiscussionLink + "  ·  " + projectEmail;
 
-	private static final String contrib = "Issues/feature requests:\n        Github – <A>" + ghIssuesLink
-			+ "</A>\n        SourceForge – <A>" + sfDiscussionLink + "</A>" + "\n        Project email – " + projectEmail;
+	private static final String license = "Licensed under the GPL with the Classpath Exception";
+	private static final String copyright = "© 2006–2026 Boris Malinowsky";
 
-	private static final String license = "The Calimero library, tools, GUI, and documentation "
-			+ "are licensed under\nthe GPL, with the Classpath Exception.";
-	private static final String copyright = "© 2006, 2026.";
+	private static final String swtLink = "https://www.eclipse.org/swt/";
+	private static final String swtInfo = "Uses the <A href=\"" + swtLink + "\">Standard Widget Toolkit (SWT)</A>";
 
-	private static final String swtLink = "http://www.eclipse.org/swt/";
-	private static final String swtInfo = "This GUI uses the <A href=\"" + swtLink + "\">Standard Widget Toolkit (SWT)</A>";
 
 	About(final Shell parent) {
-		final Shell shell = new Shell(parent, SWT.CLOSE);
-		shell.setMinimumSize(400, 320);
-		shell.setLayout(new GridLayout());
+		final var shell = new Shell(parent, SWT.CLOSE);
 		shell.setText(title);
 
-		final Composite c = new Composite(shell, SWT.NONE | SWT.TOP);
-		c.setLayout(new GridLayout());
+		final var shellLayout = new GridLayout();
+		shellLayout.marginWidth = 20;
+		shellLayout.marginHeight = 16;
+		shellLayout.verticalSpacing = 12;
+		shell.setLayout(shellLayout);
 
-		final Composite split = new Composite(c, SWT.NONE);
-		final GridData splitGridData = new GridData(SWT.FILL, SWT.TOP, true, false);
-		split.setLayoutData(splitGridData);
-		split.setLayout(new GridLayout(2, false));
+		final var c = new Composite(shell, SWT.NONE);
+		final var cLayout = new GridLayout();
+		cLayout.marginWidth = 0;
+		cLayout.marginHeight = 0;
+		cLayout.verticalSpacing = 12;
+		c.setLayout(cLayout);
 
-		final Label top = new Label(split, SWT.LEFT);
-		top.setFont(Main.font);
-		top.setText(about);
-		final GridData layoutData = new GridData(SWT.LEFT, SWT.CENTER, true, false);
-		layoutData.horizontalIndent = -5;
-		top.setLayoutData(layoutData);
+		final var split = new Composite(c, SWT.NONE);
+		split.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 
-		final Label asg = new Label(split, SWT.FILL);
-		asg.setLayoutData(new GridData(SWT.RIGHT, SWT.TOP, true, false));
-		try (InputStream is = getClass().getResourceAsStream("/logo-small.png")) {
+		final var splitLayout = new GridLayout(2, false);
+		splitLayout.marginWidth = 0;
+		splitLayout.marginHeight = 0;
+		splitLayout.horizontalSpacing = 35;
+		split.setLayout(splitLayout);
+
+		final Label logo = new Label(split, SWT.NONE);
+		logo.setLayoutData(new GridData(SWT.CENTER, SWT.TOP, false, false));
+
+		try (var is = getClass().getResourceAsStream("/logo-small.png")) {
 			if (is != null) {
-				final Image img = new Image(Main.display, is);
-				asg.setImage(img);
+				final var img = new Image(Main.display, is);
+				logo.setImage(img);
+				logo.addDisposeListener(e -> img.dispose());
 			}
 		}
 		catch (final IOException ignore) {}
+
+		final var info = new Composite(split, SWT.NONE);
+		info.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+
+		final var infoLayout = new GridLayout();
+		infoLayout.marginWidth = 0;
+		infoLayout.marginHeight = 0;
+		infoLayout.marginBottom = 20;
+		infoLayout.verticalSpacing = 15;
+		info.setLayout(infoLayout);
+
+		final var buildInfo = Manifest.buildInfo(About.class);
+
+		final var header = new Composite(info, SWT.NONE);
+		header.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+		final var topGL = new GridLayout();
+		topGL.marginWidth = 0;
+		topGL.verticalSpacing = 2;
+		header.setLayout(topGL);
+
+		final Label app = new Label(header, SWT.NONE);
+		app.setText("Calimero " + buildInfo.version());
+
+		final FontData[] appFD = app.getFont().getFontData();
+		appFD[0].setHeight(appFD[0].getHeight() + 3);
+		appFD[0].setStyle(SWT.BOLD);
+		final Font titleFont = new Font(Main.display, appFD);
+		app.setFont(titleFont);
+		app.addDisposeListener(e -> titleFont.dispose());
+
+		final FontData[] detailFD = shell.getFont().getFontData();
+		detailFD[0].setHeight(detailFD[0].getHeight() - 2);
+		final Font detailFont = new Font(Main.display, detailFD);
+		shell.addDisposeListener(e -> detailFont.dispose());
+
+		final var joiner = new StringJoiner("   ·   ");
+		buildInfo.revision().ifPresent(rev -> joiner.add("#" + rev));
+		buildInfo.buildDate().ifPresent(date -> joiner.add("Built " + date.replaceAll(":\\d{2} UTC$", " UTC")));
+		if (joiner.length() > 0) {
+			final Label build = new Label(header, SWT.NONE);
+			build.setText(joiner.toString());
+			build.setFont(detailFont);
+			build.setCursor(Main.display.getSystemCursor(SWT.CURSOR_HAND));
+			build.setToolTipText("Click to copy");
+
+			final var clipboard = new Clipboard(Main.display);
+			shell.addDisposeListener(__ -> clipboard.dispose());
+			build.addListener(SWT.MouseDown, __ -> clipboard.setContents(new Object[] { build.getText() },
+					new Transfer[] { TextTransfer.getInstance() }));
+		}
+
+		final Label features = new Label(info, SWT.WRAP);
+		features.setText(About.features);
+		features.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
+		final Label protocols = new Label(info, SWT.WRAP);
+		protocols.setText(About.access);
+		protocols.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
 		final SelectionAdapter openLink = new SelectionAdapter() {
 			@Override
@@ -128,61 +188,48 @@ class About {
 			}
 		};
 
-		final Link contribLinks = new Link(c, SWT.NONE);
-		contribLinks.setFont(Main.font);
-		contribLinks.setText(repository + "\n" + contrib);
+		final var rightAlignedBlock = new Composite(c, SWT.NONE);
+		final var rightAlignedGL = new GridLayout(1, false);
+		rightAlignedGL.marginWidth = 0;
+		rightAlignedBlock.setLayout(rightAlignedGL);
+		rightAlignedBlock.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false));
+
+		final Link contribLinks = new Link(rightAlignedBlock, SWT.NONE);
+		contribLinks.setText(contact);
 		contribLinks.addSelectionListener(openLink);
 
-		final Label author = new Label(c, SWT.NONE);
-		author.setFont(Main.font);
-		author.setText("\nAuthor Boris Malinowsky. " + copyright);
-		author.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
+		final var footer = new Composite(rightAlignedBlock, SWT.NONE);
+		footer.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		final var footerLayout = new GridLayout();
+		footerLayout.marginWidth = 0;
+		footerLayout.verticalSpacing = 2;
+		footer.setLayout(footerLayout);
 
-		final Label licenseLabel = new Label(c, SWT.NONE);
-		licenseLabel.setFont(Main.font);
-		licenseLabel.setText(license + " " + copyright);
+		final Label licenseLabel = new Label(footer, SWT.WRAP);
+		licenseLabel.setFont(detailFont);
+		licenseLabel.setText(license);
+		licenseLabel.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
 
-		final int version = SWT.getVersion();
-		final int major = version / 1000;
-		final int minor = version % 1000;
-		final Link swtUsage = new Link(c, SWT.NONE);
-		swtUsage.setFont(Main.font);
-		swtUsage.setText(swtInfo + ", version " + major + "." + minor + ".");
-		swtUsage.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
+		final Label copyright = new Label(footer, SWT.NONE);
+		copyright.setFont(detailFont);
+		copyright.setText(About.copyright);
+		copyright.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
+
+		final int swtVersion = SWT.getVersion();
+		final int major = swtVersion / 1000;
+		final int minor = swtVersion % 1000;
+
+		final Link swtUsage = new Link(rightAlignedBlock, SWT.NONE);
+		swtUsage.setFont(detailFont);
+		swtUsage.setText(swtInfo + " version " + major + "." + minor);
 		swtUsage.setToolTipText(swtLink);
 		swtUsage.addSelectionListener(openLink);
 
-		final Label bar = new Label(shell, SWT.HORIZONTAL | SWT.SEPARATOR);
-		bar.setLayoutData(new GridData(GridData.FILL, SWT.NONE, false, false));
-
-		final var buildInfo = Manifest.buildInfo(About.class);
-		final StringBuilder compiled = new StringBuilder("Version ").append(buildInfo);
-		buildInfo.buildDate().ifPresent(buildDate -> compiled.append("\nBuild date ").append(buildDate));
-
-		final Label compiledLabel = new Label(shell, SWT.NONE);
-		compiledLabel.setFont(Main.font);
-		compiledLabel.setText(compiled.toString());
-
-		final Button close = new Button(shell, SWT.NONE);
-		close.setLayoutData(new GridData(SWT.RIGHT, SWT.BOTTOM, false, true));
-		close.setFont(Main.font);
-		close.setText("Close");
-		close.setFocus();
-		close.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(final SelectionEvent e) {
-				shell.dispose();
-			}
-		});
-
-		shell.setDefaultButton(close);
 		shell.pack();
 		shell.open();
 	}
 
 	private static void openLinkInBrowser(final String href) {
-		final Program p = Program.findProgram(".html");
-		if (p != null)
-			p.execute(href);
+		Program.launch(href);
 	}
 }
