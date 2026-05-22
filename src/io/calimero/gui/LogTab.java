@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 3 tools
-    Copyright (c) 2006, 2025 B. Malinowsky
+    Copyright (c) 2006, 2026 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -60,18 +60,14 @@ import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Sash;
-import org.eclipse.swt.widgets.Scale;
 import org.eclipse.swt.widgets.TableColumn;
 
 import io.calimero.gui.logging.LogNotifier;
@@ -131,17 +127,13 @@ class LogTab extends BaseTabLayout
 
 	private static final LogNotifier notifier = LogTab::addToLogBuffer;
 
-	private Label loglevel;
-	private Scale scale;
-
-
 	static void initLogging() {
 		LogNotifier.add(LogTab.notifier);
 	}
 
 	LogTab(final CTabFolder tf)
 	{
-		super(tf, "Logging", "Shows log output of all open tabs");
+		super(tf, "Logging", null);
 		logBuffer.put(this, Collections.synchronizedList(new ArrayList<>()));
 
 		log.dispose();
@@ -199,46 +191,40 @@ class LogTab extends BaseTabLayout
 	{
 		super.initWorkAreaTop();
 
-		((GridLayout) top.getLayout()).numColumns = 4;
-		((GridLayout) top.getLayout()).makeColumnsEqualWidth = false;
-		((GridLayout) top.getLayout()).horizontalSpacing = 10 * ((GridLayout) top.getLayout()).horizontalSpacing;
+		final var topLayout = (GridLayout) top.getLayout();
+		topLayout.numColumns = 2;
+		topLayout.marginWidth = 12;
+		topLayout.marginHeight = 8;
+		topLayout.horizontalSpacing = 20;
+		top.setLayout(topLayout);
+
+		final var logLevels = new Composite(top, SWT.NONE);
+		final var rl = new RowLayout(SWT.HORIZONTAL);
+		rl.marginLeft = 0;
+		rl.marginRight = 0;
+		rl.marginTop = 0;
+		rl.spacing = 8;
+		logLevels.setLayout(rl);
+
+		for (int i = 1; i < levels.length - 1; i++) {
+			final var button = new Button(logLevels, SWT.RADIO);
+			button.setText(levels[i]);
+			button.setData("ordinal", i);
+			if (i == TRACE.ordinal())
+				button.setSelection(true);
+			button.addListener(SWT.Selection, e -> {
+				if (button.getSelection())
+					setLogLevel(Level.values()[(int) button.getData("ordinal")]);
+			});
+		}
+		setLogLevel(Level.values()[TRACE.ordinal()]);
 
 		final Button clear = new Button(top, SWT.NONE);
 		clear.setText("Clear log");
-		clear.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(final SelectionEvent e)
-			{
-				list.removeAll();
-				list.redraw();
-			}
+		clear.addListener(SWT.Selection, __ -> {
+			list.removeAll();
+			list.redraw();
 		});
-		loglevel = new Label(top, SWT.NONE);
-
-		final Composite scaleArea = new Composite(top, SWT.NONE);
-		final GridLayout layout = new GridLayout(3, false);
-		layout.marginWidth = 0;
-		scaleArea.setLayout(layout);
-		scaleArea.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-
-		final Label logMin = new Label(scaleArea, SWT.NONE);
-		logMin.setText(levels[1]);
-
-		scale = new Scale(scaleArea, SWT.HORIZONTAL);
-		scale.setLayoutData(new GridData(SWT.FILL, SWT.DEFAULT, true, false));
-		// trace, debug, info, warn, error
-		scale.setMinimum(TRACE.ordinal());
-		scale.setMaximum(ERROR.ordinal());
-		scale.setIncrement(1);
-		scale.setPageIncrement(1);
-		scale.addListener(SWT.Selection, event -> adjustLogLevel(scale.getSelection()));
-
-		final Label logMax = new Label(scaleArea, SWT.NONE);
-		logMax.setText(levels[levels.length - 2]);
-
-		scale.setSelection(TRACE.ordinal());
-		adjustLogLevel(TRACE.ordinal());
-		scaleArea.layout(true);
 	}
 
 	@Override
@@ -289,15 +275,6 @@ class LogTab extends BaseTabLayout
 		if (t != null)
 			list.add(new String[] { "", "", "", "", t.toString() });
 		return list;
-	}
-
-	private void adjustLogLevel(final int level)
-	{
-		final String name = levels[level];
-		loglevel.setText("Verbosity: " + name);
-		scale.setToolTipText(name);
-		setLogLevel(Level.values()[level]);
-		top.layout();
 	}
 
 	private void populateHistory() {
