@@ -4,6 +4,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Date
+import java.util.jar.JarFile
 
 plugins {
 	java
@@ -210,6 +211,14 @@ tasks.named<JavaExec>("run") {
 	outputs.upToDateWhen { false }
 }
 
+val appName = "Calimero"
+
+// graalvm native image uses jdk 25, so we can include serial-ffm which requires java 23
+val nativeImageSerialFfm by configurations.creating
+dependencies {
+	nativeImageSerialFfm("io.calimero:calimero-serial-ffm:$version")
+}
+
 graalvmNative {
 //	toolchainDetection.set(true) // only works reliably if a single JDK is installed, which is GraalVM
 	agent {
@@ -219,9 +228,19 @@ graalvmNative {
 	binaries {
 		named("main") {
 //			verbose = true
-			mainClass.set("io.calimero.gui.Main")
+			mainClass.set(appName) // yes, this sets the output name for some reason
+
+			val modulePathJars = (classpath.files + nativeImageSerialFfm.files).filter { file ->
+				file.exists() && file.name.endsWith(".jar") &&
+						JarFile(file).use { jar ->
+							jar.getEntry("module-info.class") != null ||
+									jar.manifest?.mainAttributes?.getValue("Automatic-Module-Name") != null
+						}
+			}
 			buildArgs.addAll(
 				listOf(
+					"--module-path", modulePathJars.joinToString(File.pathSeparator),
+					"--module", "io.calimero.gui/io.calimero.gui.Main",
 					"--enable-sbom=export",
 //					"--future-defaults=all",
 					"--emit build-report",
@@ -233,14 +252,12 @@ graalvmNative {
 					"-H:+ReportExceptionStackTraces",
 				)
 			)
-			jvmArgs.addAll("--enable-native-access=ALL-UNNAMED")
-			if (os.isMacOsX)
-				jvmArgs.add("-XstartOnFirstThread")
+			buildArgs.addAll(addReads)
+			buildArgs.addAll(enableNativeAccess)
 		}
 	}
 }
 
-val appName = "Calimero"
 val packageDir = layout.buildDirectory.dir("package")
 val runtimeDir = packageDir.map { it.dir("runtime") }
 val appDir = packageDir.map { it.dir("app") }

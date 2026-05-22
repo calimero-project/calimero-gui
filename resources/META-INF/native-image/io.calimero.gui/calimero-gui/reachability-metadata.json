@@ -3565,9 +3565,11 @@
   ],
   "resources": [
     {
+      "module": "io.calimero.gui",
       "glob": "META-INF/MANIFEST.MF"
     },
     {
+      "module": "io.calimero.gui",
       "glob": "logo-small.png"
     },
     {
@@ -3586,7 +3588,12 @@
       "glob": "org/eclipse/swt/internal/SWTMessages_en_US.properties"
     },
     {
-      "glob": "org/eclipse/swt/internal/gtk/.*"
+      "module": "org.eclipse.swt.gtk.linux.x86_64",
+      "glob": "org/eclipse/swt/internal/gtk/*"
+    },
+    {
+      "module": "org.eclipse.swt.gtk.linux.aarch64",
+      "glob": "org/eclipse/swt/internal/gtk/*"
     },
     {
       "bundle": "org.eclipse.swt.internal.SWTMessages"
