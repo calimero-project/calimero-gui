@@ -460,7 +460,7 @@ class ConnectDialog {
 			// programmatically setting a selection does not invoke selection listeners :(
 			tcp.notifyListeners(SWT.Selection, new Event());
 		}
-		if (useNat) {
+		else if (useNat) {
 			nat.setSelection(true);
 			// programmatically setting a selection does not invoke selection listeners :(
 			nat.notifyListeners(SWT.Selection, new Event());
