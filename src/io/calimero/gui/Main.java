@@ -47,6 +47,7 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -149,7 +150,9 @@ public class Main
 
 		discoverTab = new DiscoverTab(tf);
 		shell.pack();
-		shell.setSize(shell.getSize().x + 150, shell.getSize().y + 100);
+		final Point size = shell.getSize();
+		shell.setMinimumSize(size);
+		shell.setSize(size.x + 150, size.y + 100);
 		shell.open();
 
 		KeyringTab.keyring();
