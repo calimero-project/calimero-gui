@@ -42,8 +42,10 @@ import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.eclipse.swt.SWT;
@@ -97,6 +99,9 @@ class ConnectDialog {
 			throw new InternalError(e);
 		}
 	}
+
+
+	private static final Set<String> serialPortHistory = new HashSet<>();
 
 	private record TunnelingControls(Text localHost, Text localPort, Text remoteHost, Text remotePort, Button tcp, Button nat) {}
 	private record RoutingControls(Combo netif, Text multicast) {}
@@ -341,6 +346,7 @@ class ConnectDialog {
 					final String port = tpuartControls.serialPort.getText();
 					if (port.isEmpty())
 						return;
+					serialPortHistory.add(port);
 					final String name = confirm ? access.name() : port;
 					// process communication and bus monitoring don't require local knx address
 					final String lka = procComm.getSelection() || monitor.getSelection() ? "" : localKnxAddress.getText();
@@ -352,6 +358,7 @@ class ConnectDialog {
 					final String port = ft12Controls.serialPort.getText();
 					if (port.isEmpty())
 						return;
+					serialPortHistory.add(port);
 					final String name = confirm ? access.name() : port;
 					final String rka = remoteKnxAddress.getText();
 					args = new ConnectArguments(new SerialAccess(Protocol.FT12, name, access.medium(), port,
@@ -515,6 +522,7 @@ class ConnectDialog {
 		serialPort.setToolTipText("Specify the serial port of the " + (tpuart ? "TP-UART" : "FT1.2") + " controller");
 		if (access instanceof final SerialAccess serialAccess)
 			serialPort.setText(serialAccess.port());
+		new SuggestionPopup(serialPort, serialPortHistory);
 
 		if (tpuart)
 			tpuartControls = new SerialControls(serialPort);
