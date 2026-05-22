@@ -166,6 +166,7 @@ distributions {
 
 val addReads = listOf(
 	"--add-reads", "io.calimero.core=io.calimero.tools", // @LinkEvent
+	"--add-reads", "io.calimero.tools=ALL-UNNAMED", // zip4j
 	"--add-reads", "io.calimero.serial.provider.rxtx=ALL-UNNAMED",
 	"--add-reads", "io.calimero.usb.provider.javax=ALL-UNNAMED" // javax.usb:usb-api
 )
