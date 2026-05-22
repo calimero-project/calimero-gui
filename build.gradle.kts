@@ -242,7 +242,7 @@ graalvmNative {
 					"--module-path", modulePathJars.joinToString(File.pathSeparator),
 					"--module", "io.calimero.gui/io.calimero.gui.Main",
 					"--enable-sbom=export",
-//					"--future-defaults=all",
+					"--future-defaults=all",
 					"--emit build-report",
 					"--initialize-at-build-time",
 					"-march=native",
