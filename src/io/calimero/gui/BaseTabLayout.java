@@ -759,7 +759,10 @@ class BaseTabLayout implements LogNotifier
 					onSelection.accept(e);
 				}
 				catch (final RuntimeException rte) {
-					asyncAddLog(rte.getMessage());
+					if (rte.getMessage() != null)
+						asyncAddLog(rte.getMessage());
+					else
+						asyncAddLog(rte);
 				}
 			}
 		};
