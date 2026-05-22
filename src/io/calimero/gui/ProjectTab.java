@@ -38,6 +38,7 @@ package io.calimero.gui;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
@@ -67,12 +68,12 @@ import io.calimero.tools.KnxProject;
 import io.calimero.xml.XmlOutputFactory;
 
 class ProjectTab extends BaseTabLayout {
-	private static List<Path> projects;
+	private static final List<Path> projects = new ArrayList<>();
 	private static KnxProject selected;
 
 	static void findProjects() {
 		try {
-			projects = KnxProject.list(Path.of("."));
+			projects.addAll(KnxProject.list(Path.of(".")));
 			if (projects.size() != 1)
 				return;
 
@@ -127,7 +128,7 @@ class ProjectTab extends BaseTabLayout {
 		path.setText("Location");
 		path.setWidth(600);
 
-		populateList(projects);
+		populateList();
 
 		workArea.layout(true, true);
 	}
@@ -210,7 +211,7 @@ class ProjectTab extends BaseTabLayout {
 		addListItem(path);
 	}
 
-	private void populateList(final List<Path> projects) {
+	private void populateList() {
 		projects.forEach(this::addListItem);
 		if (projects.size() == 1)
 			list.getItem(0).setChecked(true);
