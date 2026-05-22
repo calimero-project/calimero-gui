@@ -118,6 +118,8 @@ class BaseTabLayout implements LogNotifier
 	private final CTabFolder tf;
 	private Label infoLabel;
 
+	private int lastSashNumerator = 70; // percent
+
 	// debounce the menu right click on OS X
 	private static final long bounce = 50; //ms
 	private long timeLastMenu;
@@ -180,7 +182,7 @@ class BaseTabLayout implements LogNotifier
 		splitted.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		final Sash sash = new Sash(splitted, SWT.HORIZONTAL | SWT.SMOOTH);
 		final FormData sashData = new FormData();
-		sashData.top = new FormAttachment(70);
+		sashData.top = new FormAttachment(lastSashNumerator);
 		sashData.left = new FormAttachment(0);
 		sashData.right = new FormAttachment(100);
 		sash.setLayoutData(sashData);
@@ -188,6 +190,23 @@ class BaseTabLayout implements LogNotifier
 			final int numerator = Math.round(e.y * 100.0f / splitted.getBounds().height);
 			sashData.top = new FormAttachment(numerator);
 			splitted.layout();
+		});
+		final int collapsedNumerator = 98;
+		sash.addListener(SWT.MouseDown, e -> {
+			if (sashData.top.numerator < collapsedNumerator)
+				lastSashNumerator = sashData.top.numerator;
+		});
+		sash.addListener(SWT.MouseDoubleClick, e -> {
+			if (e.button == 1) {
+				final boolean collapsed = sashData.top.numerator >= collapsedNumerator;
+				if (collapsed) // restore previous non-collapsed position
+					sashData.top = new FormAttachment(lastSashNumerator, 0);
+				else { // collapse
+					lastSashNumerator = sashData.top.numerator;
+					sashData.top      = new FormAttachment(100, -sash.getSize().y);
+				}
+				splitted.layout();
+			}
 		});
 
 		list = newTable(splitted, SWT.BORDER | SWT.FULL_SELECTION | SWT.V_SCROLL, sash);
