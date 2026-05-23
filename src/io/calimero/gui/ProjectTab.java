@@ -36,12 +36,18 @@
 
 package io.calimero.gui;
 
+import static java.lang.System.Logger.Level.DEBUG;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
+import io.calimero.gui.logging.LogNotifier;
+import io.calimero.internal.Executor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.dnd.DND;
@@ -54,7 +60,6 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -74,6 +79,14 @@ class ProjectTab extends BaseTabLayout {
 
 	private static final List<Path> projects = new ArrayList<>();
 	private static KnxProject selected;
+
+	static {
+		// KnxProject uses a static logger so add our notifier at class init
+		final LogNotifier notifier = (name, level, msg, thrown) -> Optional.ofNullable(currentTab).ifPresent(
+				t -> t.log(name, level, msg, thrown));
+		LogNotifier.add(notifier);
+		Executor.scheduledExecutor().schedule(() -> LogNotifier.remove(notifier), 1, TimeUnit.SECONDS);
+	}
 
 	static void findProjects() {
 		try {
@@ -99,8 +112,6 @@ class ProjectTab extends BaseTabLayout {
 	private ProjectTab(final CTabFolder tf) {
 		super(tf, "KNX Projects", "Available projects (*.knxproj)");
 		currentTab = this;
-
-		log.dispose();
 
 		final Composite parent = list.getParent();
 		final int style = list.getStyle();
@@ -143,13 +154,9 @@ class ProjectTab extends BaseTabLayout {
 
 		populateList();
 
-		workArea.layout(true, true);
-	}
+		setLogLevel(DEBUG);
 
-	@Override
-	protected void initTableBottom(final Composite parent, final Sash sash) {
-		((FormData) sash.getLayoutData()).top = new FormAttachment(100);
-		sash.setEnabled(false);
+		workArea.layout(true, true);
 	}
 
 	@Override
@@ -158,7 +165,6 @@ class ProjectTab extends BaseTabLayout {
 
 		((GridLayout) top.getLayout()).numColumns = 3;
 		((GridLayout) top.getLayout()).makeColumnsEqualWidth = false;
-		((GridLayout) top.getLayout()).horizontalSpacing = ((GridLayout) top.getLayout()).horizontalSpacing;
 
 		final var open = new Button(top, SWT.NONE);
 		open.setText("Add project ...");
