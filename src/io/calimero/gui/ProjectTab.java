@@ -39,6 +39,7 @@ package io.calimero.gui;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
@@ -49,6 +50,7 @@ import org.eclipse.swt.dnd.DropTargetAdapter;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.FileTransfer;
 import org.eclipse.swt.dnd.TextTransfer;
+import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.SelectionEvent;
@@ -68,6 +70,8 @@ import io.calimero.tools.KnxProject;
 import io.calimero.xml.XmlOutputFactory;
 
 class ProjectTab extends BaseTabLayout {
+	private static volatile ProjectTab currentTab;
+
 	private static final List<Path> projects = new ArrayList<>();
 	private static KnxProject selected;
 
@@ -84,8 +88,17 @@ class ProjectTab extends BaseTabLayout {
 		}
 	}
 
-	ProjectTab(final CTabFolder tf) {
+	public static void show(final CTabFolder tf) {
+		final var tab = currentTab;
+		if (tab != null)
+			Arrays.stream(tf.getItems()).filter(t -> t == tab.tab).findFirst().ifPresent(tf::setSelection);
+		else
+			new ProjectTab(tf);
+	}
+
+	private ProjectTab(final CTabFolder tf) {
 		super(tf, "KNX Projects", "Available projects (*.knxproj)");
+		currentTab = this;
 
 		log.dispose();
 
@@ -151,6 +164,12 @@ class ProjectTab extends BaseTabLayout {
 		open.setText("Add project ...");
 		open.addSelectionListener(selected(this::openProject));
 		open.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false));
+	}
+
+	@Override
+	protected void onDispose(final DisposeEvent e) {
+		currentTab = null;
+		super.onDispose(e);
 	}
 
 	KnxProject selected() { return selected; }

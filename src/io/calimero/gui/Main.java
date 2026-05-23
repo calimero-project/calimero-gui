@@ -95,7 +95,7 @@ public class Main
 				discoverTab().preferTcp.getSelection()));
 		addToolItem(header, "Show log", () -> new LogTab(tf));
 		addToolItem(header, "Show keyring", () -> new KeyringTab(tf));
-		addToolItem(header, "Show projects", () -> new ProjectTab(tf));
+		addToolItem(header, "Show projects", () -> ProjectTab.show(tf));
 		addToolItem(header, "About", () -> new About(shell));
 
 		new ToolItem(header, SWT.SEPARATOR);
