@@ -170,7 +170,7 @@ class ProjectTab extends BaseTabLayout {
 						imported = importDatapoints(path);
 						current.setData("project", imported);
 					}
-					catch (final KNXFormatException | RuntimeException e) {
+					catch (IOException | KNXFormatException | RuntimeException e) {
 						System.out.println("Error importing datapoints from " + path);
 						e.printStackTrace();
 					}
@@ -222,7 +222,7 @@ class ProjectTab extends BaseTabLayout {
 				new String[] { "path" }, new Object[] { path });
 	}
 
-	private static KnxProject importDatapoints(final Path path) throws KNXFormatException {
+	private static KnxProject importDatapoints(final Path path) throws IOException, KNXFormatException {
 		System.out.println("Import KNX project \"" + path + "\"");
 		final var project = KnxProject.from(path);
 
