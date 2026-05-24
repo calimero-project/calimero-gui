@@ -1,6 +1,6 @@
 /*
     Calimero GUI - A graphical user interface for the Calimero 3 tools
-    Copyright (c) 2015, 2025 B. Malinowsky
+    Copyright (c) 2015, 2026 B. Malinowsky
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -1010,7 +1010,7 @@ class PropertyEditorTab extends BaseTabLayout
 			try {
 				final Property tool = new Property(args.toArray(new String[0])) {
 					@Override
-					protected void runCommand(final String... cmd) throws InterruptedException {
+					protected void runCommand(final String... cmd) throws IOException, InterruptedException {
 						toolLink = link();
 						if (init) {
 							Main.asyncExec(() -> setHeaderInfoPhase(statusInfo(1)));
