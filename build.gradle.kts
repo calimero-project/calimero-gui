@@ -396,6 +396,7 @@ tasks.register<Exec>("package") {
 	).flatMap { listOf("--java-options", it) }
 
 	val nativeDir = provider { packageDir.get().dir("native") }
+	val os = os
 	doFirst {
 		val nativeArgs =
 			if (!nativeDir.get().asFile.exists()) emptyList()
