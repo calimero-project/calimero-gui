@@ -165,6 +165,7 @@ distributions {
 	}
 }
 
+// note, task 'package' --add-reads options need to be kept in sync with this
 val addReads = listOf(
 	"--add-reads", "io.calimero.core=io.calimero.tools", // @LinkEvent
 	"--add-reads", "io.calimero.tools=ALL-UNNAMED", // zip4j
@@ -388,7 +389,9 @@ tasks.register<Exec>("package") {
 	val javaOptionArgs = (
 			enableNativeAccess +
 			listOf(
+				"--enable-native-access=nrjavaserial",
 				"--add-reads=io.calimero.core=io.calimero.tools", // @LinkEvent
+				"--add-reads=io.calimero.tools=zip4j",
 				"--add-reads=io.calimero.serial.provider.rxtx=nrjavaserial",
 				"--add-reads=io.calimero.usb.provider.javax=usb.api"
 			) +
