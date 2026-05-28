@@ -425,7 +425,13 @@ val osName = when {
 
 tasks.register<Zip>("zipAppImage") {
 	dependsOn("package")
-	from(appDir.get().dir(appName), appDir.get().dir("$appName.app"))
+	from(appDir.get().dir(appName))
+	from(appDir) {
+		include("$appName.app/**")
+		filesMatching("**/$appName") { // preserve executable bit
+			permissions { unix("rwxr-xr-x") }
+		}
+	}
 	archiveFileName.set("${project.name}-${osName}-$arch-pkg.zip")
 	destinationDirectory.set(file(appDir))
 }
