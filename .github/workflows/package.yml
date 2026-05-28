@@ -14,14 +14,23 @@ jobs:
         include:
           - os: ubuntu-latest
             arch: amd64
+            type: jvm
           - os: ubuntu-24.04-arm
             arch: aarch64
+            type: jvm
           - os: windows-latest
             arch: amd64
+            type: jvm
           - os: windows-11-arm
             arch: arm64
+            type: jvm
           - os: macos-latest
             arch: aarch64
+            type: jvm
+          # Native image builds
+          - os: ubuntu-latest
+            arch: amd64
+            type: native
 
     runs-on: ${{ matrix.os }}
 
@@ -29,17 +38,32 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Setup JDK 21
+        if: matrix.type == 'jvm'
         uses: actions/setup-java@v5
         with:
-          distribution: temurin
           java-version: 21
+          distribution: temurin
+
+      - name: Setup GraalVM (native image)
+        if: matrix.type == 'native'
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: 25
+          distribution: graalvm-community
+          components: native-image
 
       - name: Make gradlew executable
         if: runner.os != 'Windows'
         run: chmod +x gradlew
 
       - name: Build package
+        if: matrix.type == 'jvm'
         run: ./gradlew package
+        shell: bash
+
+      - name: Build native image
+        if: matrix.type == 'native'
+        run: ./gradlew nativeCompile
         shell: bash
 
       - name: Upload build artifact
@@ -49,6 +73,8 @@ jobs:
           path: |
             build/package/app/*.tar.gz
             build/package/app/*.zip
+            build/native/nativeCompile/*.tar.gz
+            build/native/nativeCompile/*.zip
 
   release:
     if: startsWith(github.ref, 'refs/tags/')
