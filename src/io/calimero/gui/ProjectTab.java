@@ -48,6 +48,7 @@ import java.util.concurrent.TimeUnit;
 
 import io.calimero.gui.logging.LogNotifier;
 import io.calimero.internal.Executor;
+import io.calimero.tools.DatapointImporter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.dnd.DND;
@@ -72,7 +73,6 @@ import org.eclipse.swt.widgets.TableItem;
 
 import io.calimero.KNXFormatException;
 import io.calimero.tools.KnxProject;
-import io.calimero.xml.XmlOutputFactory;
 
 class ProjectTab extends BaseTabLayout {
 	private static volatile ProjectTab currentTab;
@@ -248,21 +248,17 @@ class ProjectTab extends BaseTabLayout {
 	}
 
 	private static KnxProject importDatapoints(final Path path) throws IOException, KNXFormatException {
+		final String output = path.getFileName().toString().replace(".knxproj", ".xml");
+		final var importer = new DatapointImporter(path.toString(), output) {
+			@Override
+			protected Optional<char[]> projectPassword() {
+				final var dlg = PasswordDialog.forProject(path);
+				return dlg.show() ? Optional.of(dlg.password()) : Optional.empty();
+			}
+		};
+
 		System.out.println("Import KNX project \"" + path + "\"");
-		final var project = KnxProject.from(path);
-
-		if (project.encrypted()) {
-			final var dlg = PasswordDialog.forProject(path);
-			if (dlg.show())
-				project.decrypt(dlg.password());
-			else
-				return null;
-		}
-
-		final var datapoints = project.datapoints();
-		try (var writer = new XmlOutputFactory().createXMLWriter(project.name() + ".xml")) {
-			datapoints.save(writer);
-		}
-		return project;
+		importer.run();
+		return null;
 	}
 }
