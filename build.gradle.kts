@@ -242,7 +242,6 @@ graalvmNative {
 			}
 			buildArgs.addAll(
 				listOf(
-					"--module-path", modulePathJars.joinToString(File.pathSeparator),
 					"--enable-sbom=export",
 					"--future-defaults=all",
 //					"--emit build-report",
@@ -260,6 +259,7 @@ graalvmNative {
 			buildArgs.addAll(addReads)
 			buildArgs.addAll(enableNativeAccess)
 			buildArgs.addAll("--module", "io.calimero.gui/io.calimero.gui.Main")
+			buildArgs.addAll("--module-path", modulePathJars.joinToString(File.pathSeparator))
 		}
 	}
 }
