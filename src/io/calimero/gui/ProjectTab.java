@@ -97,7 +97,7 @@ class ProjectTab extends BaseTabLayout {
 			importDatapoints(projects.getFirst());
 		}
 		catch (final IOException | KNXFormatException | RuntimeException e) {
-			System.out.println("Error during lookup of KNX projects: " + e);
+			System.err.println("Error during lookup of KNX projects: " + e);
 		}
 	}
 
@@ -196,7 +196,7 @@ class ProjectTab extends BaseTabLayout {
 						current.setData("project", imported);
 					}
 					catch (IOException | KNXFormatException | RuntimeException e) {
-						System.out.println("Error importing datapoints from " + path);
+						System.err.println("Error importing datapoints from " + path);
 						e.printStackTrace();
 					}
 				}
