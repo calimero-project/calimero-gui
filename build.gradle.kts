@@ -231,7 +231,7 @@ graalvmNative {
 			imageName.set(appName)
 
 //			verbose = true
-			mainClass.set(null) // yes, this sets the output name for some reason
+			mainClass.set("io.calimero.gui.Main") // yes, this sets the output name for some reason
 
 			val modulePathJars = (classpath.files + nativeImageSerialFfm.files).filter { file ->
 				file.exists() && file.name.endsWith(".jar") &&
@@ -243,7 +243,6 @@ graalvmNative {
 			buildArgs.addAll(
 				listOf(
 					"--module-path", modulePathJars.joinToString(File.pathSeparator),
-					"--module", "io.calimero.gui/io.calimero.gui.Main",
 					"--enable-sbom=export",
 					"--future-defaults=all",
 //					"--emit build-report",
@@ -260,6 +259,7 @@ graalvmNative {
 			)
 			buildArgs.addAll(addReads)
 			buildArgs.addAll(enableNativeAccess)
+			buildArgs.addAll("--module", "io.calimero.gui/io.calimero.gui.Main")
 		}
 	}
 }
