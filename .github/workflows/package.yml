@@ -50,7 +50,6 @@ jobs:
         with:
           java-version: 25
           distribution: graalvm-community
-          components: native-image
 
       - name: Make gradlew executable
         if: runner.os != 'Windows'
@@ -63,7 +62,7 @@ jobs:
 
       - name: Build native image
         if: matrix.type == 'native'
-        run: ./gradlew nativeCompile
+        run: ./gradlew --info nativeCompile
         shell: bash
 
       - name: Upload build artifact
