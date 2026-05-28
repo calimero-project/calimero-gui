@@ -240,9 +240,11 @@ graalvmNative {
 			}
 			buildArgs.addAll(
 				listOf(
+					"--module-path", modulePathJars.joinToString(File.pathSeparator),
+					"--module", "io.calimero.gui/io.calimero.gui.Main",
 					"--enable-sbom=export",
 					"--future-defaults=all",
-					"--emit build-report",
+//					"--emit build-report",
 					"--initialize-at-build-time",
 					"-march=native",
 					"-Os",
@@ -251,8 +253,6 @@ graalvmNative {
 					"-H:+ReportExceptionStackTraces",
 					"-H:+UnlockExperimentalVMOptions",
 					"-H:-EnableLoggingFeature",
-					"--module-path", modulePathJars.joinToString(File.pathSeparator),
-					"--module", "io.calimero.gui/io.calimero.gui.Main",
 				)
 			)
 			buildArgs.addAll(addReads)
