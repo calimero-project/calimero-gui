@@ -14,23 +14,19 @@ jobs:
         include:
           - os: ubuntu-latest
             arch: amd64
-            type: jvm
+            type: [jvm, native]
           - os: ubuntu-24.04-arm
             arch: aarch64
-            type: jvm
+            type: [jvm, native]
           - os: windows-latest
             arch: amd64
-            type: jvm
+            type: [jvm, native]
           - os: windows-11-arm
-            arch: arm64
+            arch: aarch64
             type: jvm
           - os: macos-latest
             arch: aarch64
-            type: jvm
-          # Native image builds
-          - os: ubuntu-latest
-            arch: amd64
-            type: native
+            type: [jvm, native]
 
     runs-on: ${{ matrix.os }}
 
