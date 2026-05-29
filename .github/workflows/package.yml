@@ -34,14 +34,14 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Setup JDK 21
-        if: matrix.type == 'jvm'
+        if: ${{ matrix.type == 'jvm' }}
         uses: actions/setup-java@v5
         with:
           java-version: 21
           distribution: temurin
 
       - name: Setup GraalVM (native image)
-        if: matrix.type == 'native'
+        if: ${{ matrix.type == 'native' }}
         uses: graalvm/setup-graalvm@v1
         with:
           java-version: 25
@@ -52,15 +52,15 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build package
-        if: matrix.type == 'jvm'
+        if: ${{ matrix.type == 'jvm' }}
         run: ./gradlew package
         shell: bash
 
       - name: Build native image
-        if: matrix.type == 'native'
+        if: ${{ matrix.type == 'native' }}
         run: |
           ./gradlew jar
-          ./gradlew --info nativeCompile
+          ./gradlew nativeCompile
         shell: bash
 
       - name: Upload build artifact
