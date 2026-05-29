@@ -228,10 +228,8 @@ graalvmNative {
 	}
 	binaries {
 		named("main") {
-			imageName.set(appName)
-
 //			verbose = true
-			mainClass.set("io.calimero.gui.Main") // yes, this sets the output name for some reason
+			mainClass.set(appName) // yes, this sets the output name for some reason
 
 			val modulePathJars = (classpath.files + nativeImageSerialFfm.files).filter { file ->
 				file.exists() && file.name.endsWith(".jar") &&
@@ -242,9 +240,9 @@ graalvmNative {
 			}
 			buildArgs.addAll(
 				listOf(
-					"--enable-sbom=export",
+					"--module-path", modulePathJars.joinToString(File.pathSeparator),
+					"--module", "io.calimero.gui/io.calimero.gui.Main",
 					"--future-defaults=all",
-//					"--emit build-report",
 					"--initialize-at-build-time",
 					"-march=native",
 					"-Os",
@@ -253,13 +251,15 @@ graalvmNative {
 					"-H:+ReportExceptionStackTraces",
 					"-H:+UnlockExperimentalVMOptions",
 					"-H:-EnableLoggingFeature",
-//					"-H:Name=$appName",
 				)
 			)
 			buildArgs.addAll(addReads)
 			buildArgs.addAll(enableNativeAccess)
-			buildArgs.addAll("--module", "io.calimero.gui/io.calimero.gui.Main")
-			buildArgs.addAll("--module-path", modulePathJars.joinToString(File.pathSeparator))
+
+			val oracleGraalVm = System.getProperty("java.vm.vendor").contains("Oracle", true)
+					&& !System.getProperty("java.vm.name").contains("OpenJDK", true)
+			if (oracleGraalVm)
+				buildArgs.addAll("--enable-sbom=export", "--emit build-report")
 		}
 	}
 }
