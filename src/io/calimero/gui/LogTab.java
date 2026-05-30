@@ -100,7 +100,8 @@ class LogTab extends BaseTabLayout
 
 		@Override
 		public void write(final byte[] buf, final int off, final int len) {
-			if (len == 1 && buf[off] == 0x0a)
+			if (len == 1 && buf[off] == '\n' ||
+			    len == 2 && buf[off] == '\r' && buf[off + 1] == '\n')
 				return;
 			final String s = new String(buf, off, len);
 			addToLogBuffer(name, level, s);
