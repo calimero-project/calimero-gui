@@ -320,21 +320,17 @@ class ProcCommTab extends BaseTabLayout
 			}
 			catch (final KNXException ignore) {}
 		});
-		dpt.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(final SelectionEvent e)
-			{
-				final Object[] data = (Object[]) dpt.getData(dpt.getText());
-				if (data != null && data[1] != null) {
-					value.removeAll();
-					final DPT sub = (DPT) data[1];
-					value.add(sub.getLowerValue());
-					value.add(sub.getUpperValue());
-				}
+		dpt.addListener(SWT.Selection, __ -> {
+			final Object[] data = (Object[]) dpt.getData(dpt.getText());
+			if (data != null && data[1] != null) {
+				value.removeAll();
+				final DPT sub = (DPT) data[1];
+				value.add(sub.getLowerValue());
+				value.add(sub.getUpperValue());
 			}
 		});
 
-		read.addSelectionListener(selected(event -> {
+		read.addListener(SWT.Selection, __ -> {
 			try {
 				final String selectedDpt = dpt.getText();
 				pc.read(fetchDatapoint(selectedDpAddress(), (Object[]) dpt.getData(selectedDpt)));
@@ -342,8 +338,8 @@ class ProcCommTab extends BaseTabLayout
 			catch (final KNXException e1) {
 				asyncAddLog(e1.getMessage());
 			}
-		}));
-		write.addSelectionListener(selected(event -> {
+		});
+		write.addListener(SWT.Selection, __ -> {
 			try {
 				final String selected = dpt.getText();
 				final var dp = fetchDatapoint(selectedDpAddress(), (Object[]) dpt.getData(selected));
@@ -355,42 +351,38 @@ class ProcCommTab extends BaseTabLayout
 			catch (final KNXException e1) {
 				asyncAddLog(e1.getMessage());
 			}
-		}));
+		});
 
-		points.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(final SelectionEvent e)
-			{
-				try {
-					points.setToolTipText(points.getText());
-					value.removeAll();
-					dpt.select(0);
-					final Datapoint dp = model.get(selectedDpAddress());
-					if (dp == null)
-						return;
-					final MainType t = TranslatorTypes.getMainType(dp.dptId().mainNumber());
-					if (t != null) {
-						final String[] items = dpt.getItems();
-						for (int i = 0; i < items.length; i++) {
-							final String item = items[i];
-							final Object[] data = (Object[]) dpt.getData(item);
-							if (data == null)
-								continue;
-							if (data[0] == t && data[1] != null && ((DPT) data[1]).dptId().equals(dp.dptId())) {
-								dpt.select(i);
-								break;
-							}
-						}
-						if (t.getSubTypes().containsKey(dp.getDPT())) {
-							final DPT dpt = t.getSubTypes().get(dp.getDPT());
-							value.add(dpt.getLowerValue());
-							value.add(dpt.getUpperValue());
-						}
+		points.addListener(SWT.Selection, __ -> {
+			try {
+				points.setToolTipText(points.getText());
+				value.removeAll();
+				dpt.select(0);
+				final Datapoint dp = model.get(selectedDpAddress());
+				if (dp == null)
+					return;
+				final MainType t = TranslatorTypes.getMainType(dp.dptId().mainNumber());
+				if (t == null)
+					return;
+				final String[] items = dpt.getItems();
+				for (int i = 0; i < items.length; i++) {
+					final String item = items[i];
+					final Object[] data = (Object[]) dpt.getData(item);
+					if (data == null)
+						continue;
+					if (data[0] == t && data[1] != null && ((DPT) data[1]).dptId().equals(dp.dptId())) {
+						dpt.select(i);
+						break;
 					}
 				}
-				catch (final KNXException e1) {
-					asyncAddLog(e1.getMessage());
+				if (t.getSubTypes().containsKey(dp.getDPT())) {
+					final DPT bounds = t.getSubTypes().get(dp.getDPT());
+					value.add(bounds.getLowerValue());
+					value.add(bounds.getUpperValue());
 				}
+			}
+			catch (final KNXException e1) {
+				asyncAddLog(e1.getMessage());
 			}
 		});
 
