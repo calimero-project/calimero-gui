@@ -2412,6 +2412,33 @@
       ]
     },
     {
+      "type": "org.eclipse.swt.internal.win32.SCROLLBARINFO",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "cbSize"
+        },
+        {
+          "name": "dxyLineButton"
+        },
+        {
+          "name": "rcScrollBar"
+        },
+        {
+          "name": "reserved"
+        },
+        {
+          "name": "rgstate"
+        },
+        {
+          "name": "xyThumbBottom"
+        },
+        {
+          "name": "xyThumbTop"
+        }
+      ]
+    },
+    {
       "type": "org.eclipse.swt.internal.win32.SCRIPT_ANALYSIS",
       "jniAccessible": true,
       "fields": [
@@ -3561,6 +3588,54 @@
           ]
         }
       ]
+    },
+    {
+      "type": "sun.text.resources.cldr.FormatData"
+    },
+    {
+      "type": "sun.text.resources.cldr.FormatData_en"
+    },
+    {
+      "type": "sun.text.resources.cldr.ext.FormatData_en_001",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "sun.text.resources.cldr.ext.FormatData_en_150",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "sun.util.resources.cldr.CalendarData"
+    },
+    {
+      "type": "SunJGSS"
+    },
+    {
+      "type": "SunSASL"
+    },
+    {
+      "type": "XMLDSig"
+    },
+    {
+      "type": "SunPCSC"
+    },
+    {
+      "type": "JdkLDAP"
+    },
+    {
+      "type": "JdkSASL"
+    },
+    {
+      "type": "SunPKCS11"
     }
   ],
   "resources": [
