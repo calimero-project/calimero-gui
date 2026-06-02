@@ -250,6 +250,8 @@ graalvmNative {
 				"-H:+ReportExceptionStackTraces",
 				"-H:+UnlockExperimentalVMOptions",
 				"-H:-EnableLoggingFeature",
+				"-H:IncludeLocales=en,en-150",
+				"-H:+LocalizationOptimizedMode"
 			)
 			buildArgs.addAll(addReads)
 			buildArgs.addAll(enableNativeAccess)
