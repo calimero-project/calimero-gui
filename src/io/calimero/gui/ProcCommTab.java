@@ -46,7 +46,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import io.calimero.KnxRuntimeException;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.events.DisposeEvent;
@@ -56,8 +55,8 @@ import org.eclipse.swt.graphics.FontMetrics;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.RowData;
-import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
@@ -66,12 +65,15 @@ import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Sash;
 import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.ToolBar;
+import org.eclipse.swt.widgets.ToolItem;
 
 import io.calimero.DetachEvent;
 import io.calimero.GroupAddress;
 import io.calimero.KNXAddress;
 import io.calimero.KNXException;
 import io.calimero.KNXFormatException;
+import io.calimero.KnxRuntimeException;
 import io.calimero.datapoint.Datapoint;
 import io.calimero.datapoint.DatapointMap;
 import io.calimero.datapoint.StateDP;
@@ -165,7 +167,7 @@ class ProcCommTab extends BaseTabLayout
 				++eventCounterFiltered;
 				asyncAddListItem(item, null, null);
 			}
-			catch (RuntimeException e1) {
+			catch (final RuntimeException e1) {
 				asyncAddLog(e1);
 			}
 		}
@@ -241,33 +243,67 @@ class ProcCommTab extends BaseTabLayout
 		editArea.setLayoutData(editData);
 		((FormData) list.getLayoutData()).bottom = new FormAttachment(editArea);
 
-		final RowLayout row = new RowLayout(SWT.HORIZONTAL);
-		row.spacing = 10;
-		row.center = true;
-		editArea.setLayout(row);
+		final var editAreaGL = new GridLayout(6, false);
+		editAreaGL.marginWidth = 6;
+		editAreaGL.marginHeight = 4;
+		editAreaGL.horizontalSpacing = 20;
+		editAreaGL.verticalSpacing = 0;
+		editArea.setLayout(editAreaGL);
 
-		final Button load = new Button(editArea, SWT.NONE);
-		load.setText("Load datapoints ...");
-		load.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(final org.eclipse.swt.events.SelectionEvent e)
-			{
-				loadDatapoints();
-			}
-		});
+		final var toolBarLoad = new ToolBar(editArea, SWT.FLAT);
+		toolBarLoad.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
+		final var load = new ToolItem(toolBarLoad, SWT.PUSH);
+		load.setText("Load Datapoints...");
+		load.addListener(SWT.Selection, __ -> loadDatapoints());
+
+		final var toolBarValue = new ToolBar(editArea, SWT.FLAT);
+		toolBarValue.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false));
+		final var dptValueLabel = new ToolItem(toolBarValue, SWT.PUSH);
+		dptValueLabel.setText("Value to Write");
+		dptValueLabel.setEnabled(false);
+
+		new Label(editArea, SWT.NONE); // spacer
+
+		final var toolBarDpt = new ToolBar(editArea, SWT.FLAT);
+		final var dptLabel = new ToolItem(toolBarDpt, SWT.PUSH);
+		dptLabel.setText("Datapoint Type");
+		dptLabel.setEnabled(false);
+
 		points = new Combo(editArea, SWT.DROP_DOWN);
-		setFieldSize(points, 50);
+		setFieldSize(points, 40);
+		points.setToolTipText("Select Datapoint / Enter Datapoint Address");
 
-		final Button read = new Button(editArea, SWT.NONE);
+		final var sep = new Label(editArea, SWT.SEPARATOR | SWT.VERTICAL);
+		final var sepGD = new GridData(SWT.CENTER, SWT.FILL, false, false);
+		sepGD.heightHint = 20;
+		sepGD.widthHint = 25;
+		sep.setLayoutData(sepGD);
+
+		final var read = new Button(editArea, SWT.FLAT);
 		read.setText("Read");
-		final Button write = new Button(editArea, SWT.NONE);
+		read.setLayoutData(new GridData(SWT.DEFAULT, SWT.CENTER, false, false));
+
+		final var writeSegment = new Composite(editArea, SWT.NONE);
+		writeSegment.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
+		final var wsLayout = new GridLayout(2, false);
+		wsLayout.marginWidth = 0;
+		wsLayout.marginHeight = 0;
+		wsLayout.horizontalSpacing = 4;
+		wsLayout.verticalSpacing = 0;
+		writeSegment.setLayout(wsLayout);
+
+		final var write = new Button(writeSegment, SWT.FLAT);
 		write.setText("Write");
-		final Combo value = new Combo(editArea, SWT.DROP_DOWN);
-		setFieldSize(value, 15);
-		final Label unit = new Label(editArea, SWT.NONE);
+
+		final var value = new Combo(writeSegment, SWT.DROP_DOWN | SWT.RIGHT);
+		value.setLayoutData(new GridData(150, SWT.DEFAULT));
+		value.setToolTipText("Datapoint Value");
+
+		new Label(editArea, SWT.SEPARATOR | SWT.VERTICAL).setLayoutData(sepGD);
 
 		// list of all supported DPTs by main number
-		final Combo dpt = new Combo(editArea, SWT.DROP_DOWN | SWT.SIMPLE | SWT.READ_ONLY);
+		final var dpt = new Combo(editArea, SWT.DROP_DOWN | SWT.READ_ONLY);
+		setFieldSize(dpt, 30);
 		dpt.add("");
 		final Map<Integer, MainType> allMainTypes = TranslatorTypes.getAllMainTypes();
 		allMainTypes.forEach((i, main) -> {
@@ -294,8 +330,6 @@ class ProcCommTab extends BaseTabLayout
 					final DPT sub = (DPT) data[1];
 					value.add(sub.getLowerValue());
 					value.add(sub.getUpperValue());
-					unit.setText(sub.getUnit());
-					unit.pack(true);
 				}
 			}
 		});
@@ -351,14 +385,12 @@ class ProcCommTab extends BaseTabLayout
 							final DPT dpt = t.getSubTypes().get(dp.getDPT());
 							value.add(dpt.getLowerValue());
 							value.add(dpt.getUpperValue());
-							unit.setText(dpt.getUnit());
 						}
 					}
 				}
 				catch (final KNXException e1) {
 					asyncAddLog(e1.getMessage());
 				}
-				unit.pack(true);
 			}
 		});
 
@@ -380,7 +412,9 @@ class ProcCommTab extends BaseTabLayout
 		final FontMetrics fm = gc.getFontMetrics();
 		final int width = (int) (columns * fm.getAverageCharacterWidth());
 		gc.dispose();
-		field.setLayoutData(new RowData(field.computeSize(width, 0).x, SWT.DEFAULT));
+		final var gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
+		gd.minimumWidth = width;
+		field.setLayoutData(gd);
 	}
 
 	private void openGroupMonitor()
