@@ -307,7 +307,7 @@ class ProcCommTab extends BaseTabLayout
 		dpt.add("");
 		final Map<Integer, MainType> allMainTypes = TranslatorTypes.getAllMainTypes();
 		allMainTypes.forEach((i, main) -> {
-			dpt.add(main.description());
+			dpt.add(main.description() + " (" + main.mainNumber() + ".*)");
 			dpt.setData(main.description(), new Object[] { main, null });
 			try {
 				new TreeMap<>(main.getSubTypes()).forEach((id, sub) -> {
