@@ -54,7 +54,7 @@ val arch = System.getProperty("os.arch")!!
 
 // SWT is platform dependent
 val swtGroupId = "org.eclipse.platform"
-val swtVersion = "3.133.0"
+val swtVersion = "3.134.0"
 var swtArtifact = "org.eclipse.swt." + when {
 	os.isWindows -> "win32.win32."
 	os.isLinux   -> "gtk.linux."
