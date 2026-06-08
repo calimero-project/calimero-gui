@@ -260,7 +260,7 @@ final class Accordion<T> {
 					final var shell = getShell();
 					final Point size = shell.computeSize(SWT.DEFAULT, SWT.DEFAULT);
 					// on GTK, computeSize underestimates the preferred size, leading to clipping
-					if ("gtk".equals(SWT.getPlatform())) {
+					if (ConnectDialog.isGnomeDesktop) {
 						size.x = (int) (size.x * 1.2);
 						size.y = (int) (size.y * 1.2);
 					}

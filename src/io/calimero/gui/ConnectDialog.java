@@ -43,6 +43,7 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -77,6 +78,14 @@ import io.calimero.knxnetip.util.ServiceFamiliesDIB.ServiceFamily;
  * @author B. Malinowsky
  */
 class ConnectDialog {
+
+	// on Gnome desktop, computeSize underestimates the preferred size, leading to clipping
+	static final boolean isGnomeDesktop;
+	static {
+		final String desktop = System.getenv("XDG_CURRENT_DESKTOP");
+		isGnomeDesktop = "gtk".equals(SWT.getPlatform())
+				&& desktop != null && desktop.toLowerCase(Locale.ROOT).contains("gnome");
+	}
 
 	private static final InetAddress localhost;
 	static {
@@ -400,8 +409,7 @@ class ConnectDialog {
 		shell.setDefaultButton(connect);
 		shell.pack();
 		final Point size = shell.computeSize(SWT.DEFAULT, SWT.DEFAULT);
-		// on GTK, computeSize underestimates the preferred size, leading to clipping
-		if ("gtk".equals(SWT.getPlatform())) {
+		if (isGnomeDesktop) {
 			size.x = (int) (size.x * 1.2);
 			size.y = (int) (size.y * 1.2);
 		}
