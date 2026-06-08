@@ -206,6 +206,11 @@ class BaseTabLayout implements LogNotifier
 					sashData.top      = new FormAttachment(100, -sash.getSize().y);
 				}
 				splitted.layout();
+				if ("gtk".equals(SWT.getPlatform())) {
+					// force gtk to move the sash to its new position
+					sash.setVisible(false);
+					sash.setVisible(true);
+				}
 			}
 		});
 
@@ -577,7 +582,8 @@ class BaseTabLayout implements LogNotifier
 		}
 
 		if (atEnd)
-			list.showItem(list.getItem(list.getItemCount() - 1));
+			// list::showItem doesn't work reliably on gtk, due to gtk's deferred update of its list item structure
+			list.setTopIndex(list.getItemCount() - 1);
 		list.setRedraw(true);
 		list.redraw();
 	}
