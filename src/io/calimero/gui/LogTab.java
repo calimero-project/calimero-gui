@@ -248,6 +248,8 @@ class LogTab extends BaseTabLayout
 				return;
 
 			final List<LogEntry> buf = logBuffer.get(this);
+			if (buf == null)
+				return;
 			synchronized (buf) {
 				for (final var entry : buf) {
 					if (matches(entry.level())) {
