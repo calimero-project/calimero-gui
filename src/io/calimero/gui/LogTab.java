@@ -45,6 +45,7 @@ import java.io.PrintStream;
 import java.lang.System.Logger.Level;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -60,6 +61,7 @@ import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.GridLayout;
@@ -147,20 +149,26 @@ class LogTab extends BaseTabLayout
 
 		final var date = new TableColumn(list, SWT.RIGHT);
 		date.setText("Date");
-		date.setWidth(35);
+		date.setWidth(calcWidth(list, dateFormatter.format(Instant.now())));
 		final var time = new TableColumn(list, SWT.RIGHT);
 		time.setText("Time");
-		time.setWidth(35);
+		time.setWidth(calcWidth(list, timeFormatter.format(Instant.now())));
 		final var level = new TableColumn(list, SWT.LEFT);
 		level.setText("Level");
-		level.setWidth(25);
+		level.setWidth(calcWidth(list, DEBUG.name()));
 		final var logger = new TableColumn(list, SWT.LEFT);
 		logger.setText("Logger");
-		logger.setWidth(85);
+		logger.setWidth(calcWidth(list, "X".repeat((int) (1.3 * this.getClass().getName().length()))));
 		final var msg = new TableColumn(list, SWT.LEFT);
 		msg.setText("Message");
-		msg.setWidth(250);
+		msg.setWidth(100);
 		workArea.layout(true, true);
+		// expand the last column to fill any remaining client-area width
+		final int usedWidth = Arrays.stream(list.getColumns()).mapToInt(TableColumn::getWidth).sum();
+		final int remaining = list.getClientArea().width - usedWidth;
+		if (remaining > 0)
+			msg.setWidth(msg.getWidth() + remaining);
+
 		enableColumnAdjusting();
 
 		final int cmd = System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("mac") ? SWT.COMMAND : SWT.CTRL;
@@ -319,6 +327,16 @@ class LogTab extends BaseTabLayout
 			if (logHistory.size() >= maxHistorySize)
 				logHistory.removeFirst();
 			logHistory.add(entry);
+		}
+	}
+
+	private static int calcWidth(final Composite control, final String text) {
+		final GC gc = new GC(control);
+		try {
+			gc.setFont(control.getFont());
+			return (int) (gc.textExtent(text).x * 1.25);
+		} finally {
+			gc.dispose();
 		}
 	}
 }
