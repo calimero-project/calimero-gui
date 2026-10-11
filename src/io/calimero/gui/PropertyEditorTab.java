@@ -110,6 +110,7 @@ import io.calimero.knxnetip.SecureConnection;
 import io.calimero.link.KNXNetworkLink;
 import io.calimero.mgmt.Description;
 import io.calimero.mgmt.Destination;
+import io.calimero.mgmt.ManagementClient.EraseCode;
 import io.calimero.mgmt.ManagementClientImpl;
 import io.calimero.mgmt.PropertyClient;
 import io.calimero.mgmt.PropertyClient.PropertyKey;
@@ -930,10 +931,9 @@ class PropertyEditorTab extends BaseTabLayout
 				return;
 			try (ManagementClientImpl mgmt = new ManagementClientImpl(toolLink)) {
 				final Destination dst = mgmt.createDestination(device, false);
-				final int eraseCode = 1; // confirmed restart
 				try {
-					final int time = mgmt.restart(dst, eraseCode, 0);
-					asyncAddLog("Restarting device will take " + (time == 0 ? " ≤ 5 " : time) + " seconds");
+					final var time = mgmt.restart(dst, EraseCode.ConfirmedRestart, 0);
+					asyncAddLog("Restarting device may take up to " + (time.isZero() ? 5 : time.toSeconds()) + " seconds");
 				}
 				catch (final KNXTimeoutException e) {
 					asyncAddLog("Resort to basic restart (" + e.getMessage() + ")");
