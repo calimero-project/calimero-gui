@@ -179,12 +179,12 @@ final class Accordion<T> {
 			gridData.heightHint = 1;
 			sep.setLayoutData(gridData);
 
-			final Listener toggleListener = e -> toggle();
+			final Listener toggleListener = __ -> toggle();
 			header.addListener(SWT.MouseDown, toggleListener);
 			titleLabel.addListener(SWT.MouseDown, toggleListener);
 			arrowCanvas.addListener(SWT.MouseDown, toggleListener);
 
-			header.addListener(SWT.MouseDown, e -> { focusedSection = this; });
+			header.addListener(SWT.MouseDown, __ -> focusedSection = this);
 
 			addHover(header);
 			addHover(titleLabel);
